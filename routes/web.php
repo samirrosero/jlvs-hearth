@@ -1,0 +1,263 @@
+<?php
+
+use App\Http\Controllers\AntecedentesPacienteController;
+use App\Http\Controllers\AppointmentController;
+use App\Http\Controllers\AppointmentExecutionController;
+use App\Http\Controllers\AppointmentModalidadController;
+use App\Http\Controllers\AppointmentStatusController;
+use App\Http\Controllers\AttachedDocumentController;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ClinicalHistoryController;
+use App\Http\Controllers\CompanyController;
+use App\Http\Controllers\DoctorController;
+use App\Http\Controllers\HorarioMedicoController;
+use App\Http\Controllers\LogAuditoriaController;
+use App\Http\Controllers\MedicalPrescriptionController;
+use App\Http\Controllers\PasswordResetController;
+use App\Http\Controllers\PatientController;
+use App\Http\Controllers\PortfolioController;
+use App\Http\Controllers\RegistroPacienteController;
+use App\Http\Controllers\RoleController;
+use App\Http\Controllers\ServicioController;
+use App\Http\Controllers\SignosVitalesController;
+use App\Http\Controllers\UsuarioController;
+use Illuminate\Support\Facades\Route;
+
+// ─────────────────────────────────────────────────────────────
+// Autenticación (público)
+// ─────────────────────────────────────────────────────────────
+Route::post('/login', [AuthController::class, 'login'])->name('login');
+Route::post('/forgot-password', [PasswordResetController::class, 'enviarEnlace'])->name('password.email');
+Route::post('/reset-password', [PasswordResetController::class, 'resetear'])->name('password.update');
+
+// ─────────────────────────────────────────────────────────────
+// Registro público de paciente
+// ─────────────────────────────────────────────────────────────
+Route::post('/registro-paciente', [RegistroPacienteController::class, 'store'])->name('registro.paciente');
+
+Route::middleware('auth')->group(function () {
+
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+    Route::get('/me', [AuthController::class, 'me'])->name('me');
+
+    // ─────────────────────────────────────────────────────────
+    // Catálogos compartidos (solo lectura para todos los roles)
+    // ─────────────────────────────────────────────────────────
+    Route::get('/modalidades-cita', [AppointmentModalidadController::class, 'index']);
+    Route::get('/modalidades-cita/{modalidad}', [AppointmentModalidadController::class, 'show']);
+    Route::get('/estados-cita', [AppointmentStatusController::class, 'index']);
+    Route::get('/estados-cita/{estado}', [AppointmentStatusController::class, 'show']);
+
+    // ─────────────────────────────────────────────────────────
+    // Gestión de pacientes
+    // (lectura: todos los roles internos; escritura: admin + gestor_citas)
+    // ─────────────────────────────────────────────────────────
+    Route::middleware('role:administrador,gestor_citas,medico')->group(function () {
+        Route::get('/pacientes', [PatientController::class, 'index']);
+        Route::get('/pacientes/{paciente}', [PatientController::class, 'show']);
+    });
+    Route::middleware('role:administrador,gestor_citas')->group(function () {
+        Route::post('/pacientes', [PatientController::class, 'store']);
+        Route::put('/pacientes/{paciente}', [PatientController::class, 'update']);
+        Route::patch('/pacientes/{paciente}', [PatientController::class, 'update']);
+        Route::delete('/pacientes/{paciente}', [PatientController::class, 'destroy']);
+    });
+
+    // ─────────────────────────────────────────────────────────
+    // Citas
+    // ─────────────────────────────────────────────────────────
+    Route::middleware('role:administrador,gestor_citas,medico,paciente')->group(function () {
+        Route::get('/citas', [AppointmentController::class, 'index']);
+        Route::get('/citas/{cita}', [AppointmentController::class, 'show']);
+    });
+    Route::middleware('role:administrador,gestor_citas')->group(function () {
+        Route::post('/citas', [AppointmentController::class, 'store']);
+        Route::put('/citas/{cita}', [AppointmentController::class, 'update']);
+        Route::patch('/citas/{cita}', [AppointmentController::class, 'update']);
+        Route::delete('/citas/{cita}', [AppointmentController::class, 'destroy']);
+    });
+
+    // ─────────────────────────────────────────────────────────
+    // Ejecuciones de cita (inicio/fin de atención real)
+    // ─────────────────────────────────────────────────────────
+    Route::middleware('role:administrador,medico')->group(function () {
+        Route::get('/ejecuciones', [AppointmentExecutionController::class, 'index']);
+        Route::get('/ejecuciones/{ejecucion}', [AppointmentExecutionController::class, 'show']);
+        Route::post('/ejecuciones', [AppointmentExecutionController::class, 'store']);
+        Route::put('/ejecuciones/{ejecucion}', [AppointmentExecutionController::class, 'update']);
+        Route::patch('/ejecuciones/{ejecucion}', [AppointmentExecutionController::class, 'update']);
+        Route::delete('/ejecuciones/{ejecucion}', [AppointmentExecutionController::class, 'destroy']);
+    });
+
+    // ─────────────────────────────────────────────────────────
+    // Historias clínicas
+    // (lectura: médico, admin, paciente; escritura: médico, admin)
+    // ─────────────────────────────────────────────────────────
+    Route::middleware('role:administrador,medico,paciente')->group(function () {
+        Route::get('/historias-clinicas', [ClinicalHistoryController::class, 'index']);
+        Route::get('/historias-clinicas/{historia}', [ClinicalHistoryController::class, 'show']);
+    });
+    Route::middleware('role:administrador,medico')->group(function () {
+        Route::post('/historias-clinicas', [ClinicalHistoryController::class, 'store']);
+        Route::put('/historias-clinicas/{historia}', [ClinicalHistoryController::class, 'update']);
+        Route::patch('/historias-clinicas/{historia}', [ClinicalHistoryController::class, 'update']);
+        Route::delete('/historias-clinicas/{historia}', [ClinicalHistoryController::class, 'destroy']);
+    });
+
+    // ─────────────────────────────────────────────────────────
+    // Recetas médicas
+    // ─────────────────────────────────────────────────────────
+    Route::middleware('role:administrador,medico,paciente')->group(function () {
+        Route::get('/recetas', [MedicalPrescriptionController::class, 'index']);
+        Route::get('/recetas/{receta}', [MedicalPrescriptionController::class, 'show']);
+    });
+    Route::middleware('role:administrador,medico')->group(function () {
+        Route::post('/recetas', [MedicalPrescriptionController::class, 'store']);
+        Route::put('/recetas/{receta}', [MedicalPrescriptionController::class, 'update']);
+        Route::patch('/recetas/{receta}', [MedicalPrescriptionController::class, 'update']);
+        Route::delete('/recetas/{receta}', [MedicalPrescriptionController::class, 'destroy']);
+    });
+
+    // ─────────────────────────────────────────────────────────
+    // Documentos adjuntos
+    // ─────────────────────────────────────────────────────────
+    Route::middleware('role:administrador,medico,gestor_citas,paciente')->group(function () {
+        Route::get('/documentos', [AttachedDocumentController::class, 'index']);
+        Route::get('/documentos/{documento}', [AttachedDocumentController::class, 'show']);
+    });
+    Route::middleware('role:administrador,medico')->group(function () {
+        Route::post('/documentos', [AttachedDocumentController::class, 'store']);
+        Route::put('/documentos/{documento}', [AttachedDocumentController::class, 'update']);
+        Route::patch('/documentos/{documento}', [AttachedDocumentController::class, 'update']);
+        Route::delete('/documentos/{documento}', [AttachedDocumentController::class, 'destroy']);
+    });
+
+    // ─────────────────────────────────────────────────────────
+    // Servicios/procedimientos — lectura para roles internos
+    // (escritura solo admin, dentro del bloque administrador)
+    // ─────────────────────────────────────────────────────────
+    Route::middleware('role:administrador,gestor_citas,medico')->group(function () {
+        Route::get('/servicios', [ServicioController::class, 'index']);
+        Route::get('/servicios/{servicio}', [ServicioController::class, 'show']);
+    });
+
+    // ─────────────────────────────────────────────────────────
+    // Horarios de médicos
+    // (lectura: admin + gestor_citas; escritura: admin)
+    // ─────────────────────────────────────────────────────────
+    Route::middleware('role:administrador,gestor_citas')->group(function () {
+        Route::get('/horarios', [HorarioMedicoController::class, 'index']);
+        Route::get('/horarios/{horario}', [HorarioMedicoController::class, 'show']);
+    });
+    Route::middleware('role:administrador')->group(function () {
+        Route::post('/horarios', [HorarioMedicoController::class, 'store']);
+        Route::put('/horarios/{horario}', [HorarioMedicoController::class, 'update']);
+        Route::patch('/horarios/{horario}', [HorarioMedicoController::class, 'update']);
+        Route::delete('/horarios/{horario}', [HorarioMedicoController::class, 'destroy']);
+    });
+
+    // ─────────────────────────────────────────────────────────
+    // Signos vitales
+    // (lectura: admin, medico, paciente; escritura: admin, medico)
+    // ─────────────────────────────────────────────────────────
+    Route::middleware('role:administrador,medico,paciente')->group(function () {
+        Route::get('/signos-vitales', [SignosVitalesController::class, 'index']);
+        Route::get('/signos-vitales/{signosVitales}', [SignosVitalesController::class, 'show']);
+    });
+    Route::middleware('role:administrador,medico')->group(function () {
+        Route::post('/signos-vitales', [SignosVitalesController::class, 'store']);
+        Route::put('/signos-vitales/{signosVitales}', [SignosVitalesController::class, 'update']);
+        Route::patch('/signos-vitales/{signosVitales}', [SignosVitalesController::class, 'update']);
+        Route::delete('/signos-vitales/{signosVitales}', [SignosVitalesController::class, 'destroy']);
+    });
+
+    // ─────────────────────────────────────────────────────────
+    // Antecedentes del paciente
+    // (lectura: admin, medico, paciente; escritura: admin, medico)
+    // ─────────────────────────────────────────────────────────
+    Route::middleware('role:administrador,medico,paciente')->group(function () {
+        Route::get('/antecedentes', [AntecedentesPacienteController::class, 'index']);
+        Route::get('/antecedentes/{antecedente}', [AntecedentesPacienteController::class, 'show']);
+    });
+    Route::middleware('role:administrador,medico')->group(function () {
+        Route::post('/antecedentes', [AntecedentesPacienteController::class, 'store']);
+        Route::put('/antecedentes/{antecedente}', [AntecedentesPacienteController::class, 'update']);
+        Route::patch('/antecedentes/{antecedente}', [AntecedentesPacienteController::class, 'update']);
+        Route::delete('/antecedentes/{antecedente}', [AntecedentesPacienteController::class, 'destroy']);
+    });
+
+    // ─────────────────────────────────────────────────────────
+    // Médicos (lectura: admin + gestor_citas; escritura: admin)
+    // ─────────────────────────────────────────────────────────
+    Route::middleware('role:administrador,gestor_citas')->group(function () {
+        Route::get('/medicos', [DoctorController::class, 'index']);
+        Route::get('/medicos/{medico}', [DoctorController::class, 'show']);
+    });
+
+    // ─────────────────────────────────────────────────────────
+    // Portafolios (convenios/EPS) — solo administrador
+    // ─────────────────────────────────────────────────────────
+    Route::middleware('role:administrador')->group(function () {
+        Route::get('/portafolios', [PortfolioController::class, 'index']);
+        Route::get('/portafolios/{portafolio}', [PortfolioController::class, 'show']);
+        Route::post('/portafolios', [PortfolioController::class, 'store']);
+        Route::put('/portafolios/{portafolio}', [PortfolioController::class, 'update']);
+        Route::patch('/portafolios/{portafolio}', [PortfolioController::class, 'update']);
+        Route::delete('/portafolios/{portafolio}', [PortfolioController::class, 'destroy']);
+
+        // Médicos de la empresa (escritura solo admin)
+        Route::post('/medicos', [DoctorController::class, 'store']);
+        Route::put('/medicos/{medico}', [DoctorController::class, 'update']);
+        Route::patch('/medicos/{medico}', [DoctorController::class, 'update']);
+        Route::delete('/medicos/{medico}', [DoctorController::class, 'destroy']);
+
+        // Catálogos: modalidades y estados (escritura)
+        Route::post('/modalidades-cita', [AppointmentModalidadController::class, 'store']);
+        Route::put('/modalidades-cita/{modalidad}', [AppointmentModalidadController::class, 'update']);
+        Route::patch('/modalidades-cita/{modalidad}', [AppointmentModalidadController::class, 'update']);
+        Route::delete('/modalidades-cita/{modalidad}', [AppointmentModalidadController::class, 'destroy']);
+
+        Route::post('/estados-cita', [AppointmentStatusController::class, 'store']);
+        Route::put('/estados-cita/{estado}', [AppointmentStatusController::class, 'update']);
+        Route::patch('/estados-cita/{estado}', [AppointmentStatusController::class, 'update']);
+        Route::delete('/estados-cita/{estado}', [AppointmentStatusController::class, 'destroy']);
+
+        // Roles (solo lectura; escritura reservada para seeder/admin)
+        Route::get('/roles', [RoleController::class, 'index']);
+        Route::get('/roles/{rol}', [RoleController::class, 'show']);
+
+        // Servicios: escritura solo admin
+        Route::post('/servicios', [ServicioController::class, 'store']);
+        Route::put('/servicios/{servicio}', [ServicioController::class, 'update']);
+        Route::patch('/servicios/{servicio}', [ServicioController::class, 'update']);
+        Route::delete('/servicios/{servicio}', [ServicioController::class, 'destroy']);
+
+        // Gestión de usuarios internos (medicos y gestores) — solo admin
+        Route::get('/usuarios', [UsuarioController::class, 'index']);
+        Route::post('/usuarios', [UsuarioController::class, 'store']);
+        Route::get('/usuarios/{usuario}', [UsuarioController::class, 'show']);
+        Route::put('/usuarios/{usuario}', [UsuarioController::class, 'update']);
+        Route::patch('/usuarios/{usuario}', [UsuarioController::class, 'update']);
+        Route::delete('/usuarios/{usuario}', [UsuarioController::class, 'destroy']);
+
+        // Logs de auditoría — solo lectura, solo admin
+        Route::get('/logs', [LogAuditoriaController::class, 'index']);
+        Route::get('/logs/{log}', [LogAuditoriaController::class, 'show']);
+
+        // Empresa propia del administrador
+        Route::get('/mi-empresa', function () {
+            return response()->json(auth()->user()->empresa);
+        })->name('mi-empresa.show');
+
+        Route::put('/mi-empresa', function (\App\Http\Requests\UpdateCompanyRequest $request) {
+            $empresa = auth()->user()->empresa;
+            $empresa->update($request->validated());
+            return response()->json($empresa);
+        })->name('mi-empresa.update');
+    });
+});
+
+// ─────────────────────────────────────────────────────────────
+// Registro de nueva empresa (onboarding de IPS — público)
+// ─────────────────────────────────────────────────────────────
+Route::post('/empresas', [CompanyController::class, 'store'])->name('empresas.store');

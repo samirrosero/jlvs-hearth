@@ -14,19 +14,22 @@ empresas
   ├── pacientes (empresa_id)
   │     └── antecedentes_paciente (paciente_id)
   ├── portafolios (empresa_id)
-  ├── servicios (empresa_id)
-  ├── modalidades_cita  ← global (sin empresa_id)
-  └── estados_cita      ← global (sin empresa_id)
+  └── servicios (empresa_id)
 
 roles
   └── users (rol_id)
 
+modalidades_cita  ← catálogo global (sin empresa_id)
+estados_cita      ← catálogo global (sin empresa_id)
+cie10             ← catálogo global (sin empresa_id)
+
 citas (empresa_id, medico_id, paciente_id, estado_id, modalidad_id, portafolio_id, servicio_id)
-  └── ejecuciones_cita (cita_id)
-        └── historias_clinicas (ejecucion_cita_id, paciente_id)
-              ├── recetas_medicas (historia_clinica_id)
-              ├── documentos_adjuntos (historia_clinica_id)
-              └── signos_vitales (ejecucion_cita_id, paciente_id)
+  ├── ejecuciones_cita (cita_id)
+  │     ├── historias_clinicas (ejecucion_cita_id, paciente_id)
+  │     │     ├── recetas_medicas (historia_clinica_id)
+  │     │     └── documentos_adjuntos (historia_clinica_id)
+  │     └── signos_vitales (ejecucion_cita_id, paciente_id)
+  └── valoraciones (cita_id, paciente_id)
 
 logs_auditoria (usuario_id, empresa_id)
 ```
@@ -38,7 +41,7 @@ logs_auditoria (usuario_id, empresa_id)
 ---
 
 ### `empresas`
-Raíz del modelo multi-tenant. Cada IPS es una empresa.
+Raíz del modelo multi-tenant. Cada IPS que compra el sistema es una empresa.
 
 | Columna | Tipo | Nulo | Descripción |
 |---------|------|------|-------------|
@@ -61,7 +64,7 @@ Catálogo global de perfiles de acceso. No pertenece a ninguna empresa.
 | Columna | Tipo | Nulo | Descripción |
 |---------|------|------|-------------|
 | `id` | BIGINT UNSIGNED | NO | PK |
-| `nombre` | VARCHAR | NO | Identificador del rol (`administrador`, `medico`, `gestor_citas`, `paciente`) |
+| `nombre` | VARCHAR | NO | `administrador`, `medico`, `gestor_citas`, `paciente` (único) |
 | `descripcion` | VARCHAR | SÍ | Descripción legible del rol |
 | `created_at` | TIMESTAMP | SÍ | — |
 | `updated_at` | TIMESTAMP | SÍ | — |
@@ -80,6 +83,8 @@ Credenciales de acceso de todos los usuarios del sistema.
 | `email` | VARCHAR | NO | Correo electrónico (único global, usado para login) |
 | `identificacion` | VARCHAR | NO | Cédula o documento de identidad (único global) |
 | `password` | VARCHAR | NO | Contraseña cifrada (bcrypt) |
+| `activo` | BOOLEAN | NO | `true` por defecto — si es `false` no puede iniciar sesión |
+| `debe_cambiar_password` | BOOLEAN | NO | `true` cuando el gestor crea una cuenta con contraseña temporal |
 | `email_verified_at` | TIMESTAMP | SÍ | Fecha de verificación del correo |
 | `remember_token` | VARCHAR | SÍ | Token para "recordarme" |
 | `created_at` | TIMESTAMP | SÍ | — |
@@ -156,7 +161,7 @@ Convenios o tipos de cobertura que maneja cada IPS (EPS, Particular, Prepagada).
 ---
 
 ### `servicios`
-Catálogo de procedimientos que ofrece la IPS. Define duración para validar disponibilidad.
+Catálogo de procedimientos que ofrece la IPS. La duración se usa para validar disponibilidad del médico.
 
 | Columna | Tipo | Nulo | Descripción |
 |---------|------|------|-------------|
@@ -174,7 +179,7 @@ Catálogo de procedimientos que ofrece la IPS. Define duración para validar dis
 ---
 
 ### `modalidades_cita`
-Catálogo global de modalidades de atención.
+Catálogo global de modalidades de atención. No pertenece a ninguna empresa.
 
 | Columna | Tipo | Nulo | Descripción |
 |---------|------|------|-------------|
@@ -186,7 +191,7 @@ Catálogo global de modalidades de atención.
 ---
 
 ### `estados_cita`
-Catálogo global del ciclo de vida de una cita.
+Catálogo global del ciclo de vida de una cita. No pertenece a ninguna empresa.
 
 | Columna | Tipo | Nulo | Descripción |
 |---------|------|------|-------------|
@@ -195,6 +200,20 @@ Catálogo global del ciclo de vida de una cita.
 | `color_hex` | VARCHAR | SÍ | Color para el calendario del frontend (ej: `#3B82F6`) |
 | `created_at` | TIMESTAMP | SÍ | — |
 | `updated_at` | TIMESTAMP | SÍ | — |
+
+---
+
+### `cie10`
+Catálogo global de la Clasificación Internacional de Enfermedades (versión 10). No pertenece a ninguna empresa. El médico lo usa al crear la historia clínica para seleccionar el diagnóstico oficial.
+
+| Columna | Tipo | Nulo | Descripción |
+|---------|------|------|-------------|
+| `id` | BIGINT UNSIGNED | NO | PK |
+| `codigo` | VARCHAR(10) | NO | Código CIE-10 (ej: `J00`, `I10`, `E11.9`) — único |
+| `descripcion` | VARCHAR | NO | Nombre de la enfermedad (ej: `Rinofaringitis aguda`) |
+| `categoria` | VARCHAR(3) | NO | Letra de categoría para agrupar (ej: `J`, `I`, `E`) — indexado |
+
+> No tiene `timestamps` — es un catálogo estático que no cambia.
 
 ---
 
@@ -209,7 +228,7 @@ Entidad central del sistema. Representa el agendamiento de una consulta médica.
 | `paciente_id` | BIGINT UNSIGNED | NO | FK → `pacientes.id` |
 | `estado_id` | BIGINT UNSIGNED | NO | FK → `estados_cita.id` |
 | `modalidad_id` | BIGINT UNSIGNED | NO | FK → `modalidades_cita.id` |
-| `portafolio_id` | BIGINT UNSIGNED | NO | FK → `portafolios.id` |
+| `portafolio_id` | BIGINT UNSIGNED | **SÍ** | FK → `portafolios.id` (nullable: citas particulares sin convenio) |
 | `servicio_id` | BIGINT UNSIGNED | SÍ | FK → `servicios.id` (nullable) |
 | `fecha` | DATE | NO | Fecha programada de la cita |
 | `hora` | TIME | NO | Hora programada de la cita |
@@ -244,8 +263,10 @@ Registro médico generado durante la atención. Una ejecución → exactamente u
 | `paciente_id` | BIGINT UNSIGNED | NO | FK → `pacientes.id` |
 | `motivo_consulta` | TEXT | NO | ¿Por qué consulta el paciente hoy? |
 | `enfermedad_actual` | TEXT | NO | Descripción detallada de la enfermedad actual |
-| `antecedentes` | JSON | NO | Antecedentes relevantes de esa consulta (array) |
-| `diagnostico` | TEXT | NO | Diagnóstico médico establecido |
+| `antecedentes` | JSON | SÍ | Antecedentes relevantes de esa consulta |
+| `diagnostico` | TEXT | NO | Diagnóstico médico en texto libre |
+| `codigo_cie10` | VARCHAR(10) | SÍ | Código CIE-10 del diagnóstico (ej: `J00`) — FK → `cie10.codigo` |
+| `descripcion_cie10` | VARCHAR | SÍ | Descripción del código seleccionado (se guarda para no depender del catálogo) |
 | `plan_tratamiento` | TEXT | NO | Plan de tratamiento indicado |
 | `evaluacion` | TEXT | SÍ | Evaluación de evolución del paciente |
 | `observaciones` | TEXT | SÍ | Notas adicionales del médico |
@@ -277,7 +298,7 @@ Mediciones clínicas tomadas al inicio de cada consulta. Una ejecución → un r
 ---
 
 ### `antecedentes_paciente`
-Historial médico permanente y acumulado del paciente (separado por tipo).
+Historial médico permanente y acumulado del paciente, separado por tipo.
 
 | Columna | Tipo | Nulo | Descripción |
 |---------|------|------|-------------|
@@ -320,20 +341,35 @@ Metadatos de archivos digitales asociados a una historia clínica.
 
 ---
 
-### `logs_auditoria`
-Trazabilidad de acceso y modificación a datos sensibles. Exigido por Resolución 1995/1999.
+### `valoraciones`
+Calificación que el paciente da a la atención recibida. Una cita → máximo una valoración.
 
 | Columna | Tipo | Nulo | Descripción |
 |---------|------|------|-------------|
 | `id` | BIGINT UNSIGNED | NO | PK |
-| `usuario_id` | BIGINT UNSIGNED | SÍ | FK → `users.id` (nullable: puede haber accesos sin sesión) |
+| `cita_id` | BIGINT UNSIGNED | NO | FK → `citas.id` (único: una valoración por cita) |
+| `paciente_id` | BIGINT UNSIGNED | NO | FK → `pacientes.id` |
+| `puntuacion` | TINYINT | NO | Calificación de 1 a 5 estrellas |
+| `comentario` | TEXT | SÍ | Comentario libre del paciente (máx. 1000 caracteres) |
+| `created_at` | TIMESTAMP | SÍ | — |
+| `updated_at` | TIMESTAMP | SÍ | — |
+
+---
+
+### `logs_auditoria`
+Trazabilidad de acceso y modificación a datos sensibles. Exigido por Resolución 1995/1999 de Minsalud Colombia.
+
+| Columna | Tipo | Nulo | Descripción |
+|---------|------|------|-------------|
+| `id` | BIGINT UNSIGNED | NO | PK |
+| `usuario_id` | BIGINT UNSIGNED | SÍ | FK → `users.id` (nullable) |
 | `empresa_id` | BIGINT UNSIGNED | SÍ | FK → `empresas.id` |
 | `accion` | ENUM | NO | `ver`, `crear`, `actualizar`, `eliminar` |
 | `modelo` | VARCHAR(100) | NO | Modelo afectado (ej: `HistoriaClinica`) |
 | `modelo_id` | BIGINT UNSIGNED | NO | ID del registro afectado |
-| `ip` | VARCHAR(45) | SÍ | Dirección IP del cliente (IPv4 o IPv6) |
-| `detalles` | JSON | SÍ | Campos modificados (solo en actualizar/eliminar) |
-| `created_at` | TIMESTAMP | NO | Generado automáticamente — **no tiene `updated_at`** (logs inmutables) |
+| `ip` | VARCHAR(45) | SÍ | Dirección IP del cliente |
+| `detalles` | JSON | SÍ | Campos modificados (solo en `actualizar`) |
+| `created_at` | TIMESTAMP | NO | **No tiene `updated_at`** — los logs son inmutables |
 
 ---
 
@@ -341,12 +377,15 @@ Trazabilidad de acceso y modificación a datos sensibles. Exigido por Resolució
 
 | Categoría | Tablas |
 |-----------|--------|
-| Sistema / Auth | `roles`, `users` |
 | Multi-tenant base | `empresas` |
-| Catálogos globales | `modalidades_cita`, `estados_cita` |
+| Sistema / Auth | `roles`, `users` |
+| Catálogos globales | `modalidades_cita`, `estados_cita`, `cie10` |
 | Configuración por empresa | `portafolios`, `servicios`, `horarios_medico` |
 | Clínicas | `pacientes`, `medicos`, `antecedentes_paciente` |
 | Flujo de atención | `citas`, `ejecuciones_cita`, `historias_clinicas` |
 | Documentos clínicos | `recetas_medicas`, `documentos_adjuntos`, `signos_vitales` |
+| Retroalimentación | `valoraciones` |
 | Auditoría | `logs_auditoria` |
-| **Total** | **18 tablas** |
+| **Total** | **20 tablas** |
+
+> Laravel también usa 4 tablas internas: `password_reset_tokens`, `sessions`, `cache`, `jobs`. No forman parte del modelo de negocio pero deben existir en la BD.

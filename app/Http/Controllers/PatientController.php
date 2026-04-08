@@ -6,15 +6,33 @@ use App\Models\Paciente;
 use App\Http\Requests\StorePatientRequest;
 use App\Http\Requests\UpdatePatientRequest;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class PatientController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $pacientes = Paciente::where('empresa_id', auth()->user()->empresa_id)
-            ->orderBy('nombre_completo')
-            ->get();
-        return response()->json($pacientes);
+        $query = Paciente::where('empresa_id', auth()->user()->empresa_id);
+
+        // Búsqueda por nombre o identificación
+        if ($request->filled('buscar')) {
+            $termino = $request->input('buscar');
+            $query->where(function ($q) use ($termino) {
+                $q->where('nombre_completo', 'like', "%{$termino}%")
+                  ->orWhere('identificacion', 'like', "%{$termino}%");
+            });
+        }
+        if ($request->filled('sexo')) {
+            $query->where('sexo', $request->input('sexo'));
+        }
+        if ($request->filled('fecha_nacimiento_desde')) {
+            $query->whereDate('fecha_nacimiento', '>=', $request->input('fecha_nacimiento_desde'));
+        }
+        if ($request->filled('fecha_nacimiento_hasta')) {
+            $query->whereDate('fecha_nacimiento', '<=', $request->input('fecha_nacimiento_hasta'));
+        }
+
+        return response()->json($query->orderBy('nombre_completo')->get());
     }
 
     public function store(StorePatientRequest $request): JsonResponse

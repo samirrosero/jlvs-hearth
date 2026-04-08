@@ -20,11 +20,19 @@ class DatabaseSeeder extends Seeder
             RolSeeder::class,
             ModalidadCitaSeeder::class,
             EstadoCitaSeeder::class,
+            Cie10Seeder::class,
         ]);
 
-        // --- 2. Datos de prueba (empresa demo con médicos, horarios y servicios) ---
+        // --- 2. Empresa demo con médicos, horarios y servicios ---
         $this->call([
             EmpresaDemoSeeder::class,
+        ]);
+
+        // --- 3. Datos históricos de fondo (últimos 6 meses) ---
+        // Genera pacientes y citas ficticias para que el dashboard se vea lleno en la demo.
+        // Los usuarios del equipo se crean en vivo durante el sustento.
+        $this->call([
+            DatosHistoricosSeeder::class,
         ]);
     }
 }

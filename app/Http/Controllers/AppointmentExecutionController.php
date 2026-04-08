@@ -6,16 +6,33 @@ use App\Models\EjecucionCita;
 use App\Http\Requests\StoreAppointmentExecutionRequest;
 use App\Http\Requests\UpdateAppointmentExecutionRequest;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class AppointmentExecutionController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $ejecuciones = EjecucionCita::whereHas('cita', function ($q) {
-            $q->where('empresa_id', auth()->user()->empresa_id);
-        })->with('cita.paciente', 'cita.medico.usuario', 'historiaClinica')->get();
+        $this->authorize('viewAny', EjecucionCita::class);
 
-        return response()->json($ejecuciones);
+        $empresaId = auth()->user()->empresa_id;
+
+        $query = EjecucionCita::whereHas('cita', fn ($q) => $q->where('empresa_id', $empresaId))
+            ->with('cita.paciente', 'cita.medico.usuario', 'historiaClinica');
+
+        if ($request->filled('medico_id')) {
+            $query->whereHas('cita', fn ($q) => $q->where('medico_id', $request->integer('medico_id')));
+        }
+        if ($request->filled('paciente_id')) {
+            $query->whereHas('cita', fn ($q) => $q->where('paciente_id', $request->integer('paciente_id')));
+        }
+        if ($request->filled('fecha_desde')) {
+            $query->whereDate('inicio_atencion', '>=', $request->input('fecha_desde'));
+        }
+        if ($request->filled('fecha_hasta')) {
+            $query->whereDate('inicio_atencion', '<=', $request->input('fecha_hasta'));
+        }
+
+        return response()->json($query->orderByDesc('inicio_atencion')->get());
     }
 
     public function store(StoreAppointmentExecutionRequest $request): JsonResponse

@@ -79,4 +79,10 @@ class Cita extends Model
     {
         return $this->hasOne(EjecucionCita::class, 'cita_id');
     }
+
+    // Una cita puede tener una valoración del paciente
+    public function valoracion(): HasOne
+    {
+        return $this->hasOne(Valoracion::class, 'cita_id');
+    }
 }

@@ -27,9 +27,12 @@ class AuthController extends Controller
 
         $request->session()->regenerate();
 
+        $usuario = auth()->user()->load('rol', 'empresa');
+
         return response()->json([
-            'message' => 'Sesión iniciada.',
-            'usuario' => auth()->user()->load('rol', 'empresa'),
+            'message'               => 'Sesión iniciada.',
+            'usuario'               => $usuario,
+            'debe_cambiar_password' => (bool) $usuario->debe_cambiar_password,
         ]);
     }
 

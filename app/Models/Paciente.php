@@ -66,9 +66,4 @@ class Paciente extends Model
         return $this->hasMany(SignosVitales::class, 'paciente_id');
     }
 
-    // Si el paciente tiene cuenta, accede a su usuario
-    public function usuario(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'usuario_id');
-    }
 }

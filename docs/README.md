@@ -12,8 +12,9 @@ Proyecto multi-tenant para IPS colombianas. Backend construido con **Laravel 12*
 | [04-controladores.md](04-controladores.md) | Los 12 controladores de recursos |
 | [05-politicas.md](05-politicas.md) | Políticas de autorización a nivel de fila (9 Policies) |
 | [06-rutas.md](06-rutas.md) | Mapa completo de rutas (95 rutas) |
-| [07-base-de-datos.md](07-base-de-datos.md) | Estructura completa de las 18 tablas con todos sus atributos |
+| [07-base-de-datos.md](07-base-de-datos.md) | Estructura completa de las 20 tablas con todos sus atributos |
 | [08-flujos.md](08-flujos.md) | Todos los flujos del sistema con endpoints, bodies y orden de ejecución |
+| [09-diagrama-eer.md](09-diagrama-eer.md) | Entidades, atributos, relaciones y cardinalidades para el diagrama EER |
 
 ## Arquitectura general
 
@@ -39,10 +40,10 @@ Request
 
 | Rol | Descripción |
 |-----|-------------|
-| `administrador` | Acceso total a su empresa (tenant) |
-| `medico` | Acceso a citas propias, historias, recetas, documentos |
-| `gestor_citas` | Gestión de pacientes y citas |
-| `paciente` | Solo lectura de sus propios registros |
+| `administrador` | Acceso total a su empresa: dashboard, reportes, auditoría, configuración |
+| `medico` | Acceso a sus citas, historias clínicas, recetas, documentos |
+| `gestor_citas` | Gestión de pacientes (incluido registro presencial) y agendamiento de citas |
+| `paciente` | Solo lectura de sus propios registros, puede valorar y descargar su historia en PDF |
 
 ## Multi-tenancy
 

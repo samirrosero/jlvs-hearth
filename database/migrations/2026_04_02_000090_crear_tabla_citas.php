@@ -40,8 +40,10 @@ return new class extends Migration
             $table->foreignId('modalidad_id')           // Modalidad de atención (presencial, telemedicina...)
                 ->constrained('modalidades_cita');
 
-            $table->foreignId('portafolio_id')          // Convenio con el que se atiende (EPS, particular...)
-                ->constrained('portafolios');
+            $table->foreignId('portafolio_id')          // Convenio con el que se atiende (EPS, particular...) — opcional para citas particulares
+                ->nullable()
+                ->constrained('portafolios')
+                ->onDelete('set null');
 
             // --- Datos de la cita ---
             $table->date('fecha');                      // Fecha programada de la cita

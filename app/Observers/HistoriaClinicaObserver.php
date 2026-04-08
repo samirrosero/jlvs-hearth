@@ -8,11 +8,6 @@ use Illuminate\Support\Facades\Request;
 
 class HistoriaClinicaObserver
 {
-    public function retrieved(HistoriaClinica $historia): void
-    {
-        $this->registrar('ver', $historia);
-    }
-
     public function created(HistoriaClinica $historia): void
     {
         $this->registrar('crear', $historia);

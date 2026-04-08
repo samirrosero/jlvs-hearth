@@ -1,6 +1,12 @@
 <?php
 
 use App\Http\Controllers\AntecedentesPacienteController;
+use App\Http\Controllers\CambiarPasswordController;
+use App\Http\Controllers\Cie10Controller;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\RegistroPacienteGestorController;
+use App\Http\Controllers\ReporteController;
+use App\Http\Controllers\ValoracionController;
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\AppointmentExecutionController;
 use App\Http\Controllers\AppointmentModalidadController;
@@ -40,9 +46,30 @@ Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     Route::get('/me', [AuthController::class, 'me'])->name('me');
 
+    // Cambio de contraseña propia — cualquier rol autenticado
+    Route::post('/mi-cuenta/cambiar-password', CambiarPasswordController::class)->name('mi-cuenta.cambiar-password');
+
+    // Dashboard de métricas — administrador únicamente
+    Route::middleware('role:administrador')->get('/dashboard', DashboardController::class)->name('dashboard');
+
+    // Valoraciones — paciente crea, admin y médico leen
+    Route::middleware('role:administrador,medico,paciente')->get('/valoraciones', [ValoracionController::class, 'index']);
+    Route::middleware('role:administrador,medico,paciente')->get('/valoraciones/{valoracion}', [ValoracionController::class, 'show']);
+    Route::middleware('role:paciente')->post('/valoraciones', [ValoracionController::class, 'store']);
+    Route::middleware('role:administrador')->get('/valoraciones/resumen/medicos', [ValoracionController::class, 'resumenMedicos']);
+
+    // Reportes (PDF y Excel) — administrador únicamente
+    Route::middleware('role:administrador')->prefix('reportes')->group(function () {
+        Route::get('/citas/pdf',       [ReporteController::class, 'citasPdf']);
+        Route::get('/citas/excel',     [ReporteController::class, 'citasExcel']);
+        Route::get('/pacientes/pdf',   [ReporteController::class, 'pacientesPdf']);
+        Route::get('/pacientes/excel', [ReporteController::class, 'pacientesExcel']);
+    });
+
     // ─────────────────────────────────────────────────────────
     // Catálogos compartidos (solo lectura para todos los roles)
     // ─────────────────────────────────────────────────────────
+    Route::get('/cie10', [Cie10Controller::class, 'index']);
     Route::get('/modalidades-cita', [AppointmentModalidadController::class, 'index']);
     Route::get('/modalidades-cita/{modalidad}', [AppointmentModalidadController::class, 'show']);
     Route::get('/estados-cita', [AppointmentStatusController::class, 'index']);
@@ -58,6 +85,8 @@ Route::middleware('auth')->group(function () {
     });
     Route::middleware('role:administrador,gestor_citas')->group(function () {
         Route::post('/pacientes', [PatientController::class, 'store']);
+        // Registro presencial: crea paciente con o sin cuenta + contraseña temporal
+        Route::post('/pacientes/registro-gestor', [RegistroPacienteGestorController::class, 'store'])->name('pacientes.registro-gestor');
         Route::put('/pacientes/{paciente}', [PatientController::class, 'update']);
         Route::patch('/pacientes/{paciente}', [PatientController::class, 'update']);
         Route::delete('/pacientes/{paciente}', [PatientController::class, 'destroy']);
@@ -96,6 +125,7 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:administrador,medico,paciente')->group(function () {
         Route::get('/historias-clinicas', [ClinicalHistoryController::class, 'index']);
         Route::get('/historias-clinicas/{historia}', [ClinicalHistoryController::class, 'show']);
+        Route::get('/historias-clinicas/{historia}/pdf', [ClinicalHistoryController::class, 'pdf']);
     });
     Route::middleware('role:administrador,medico')->group(function () {
         Route::post('/historias-clinicas', [ClinicalHistoryController::class, 'store']);

@@ -625,6 +625,284 @@ GET /logs?desde=2026-04-01&hasta=2026-04-30
 
 ---
 
+---
+
+## 14. Registro presencial por el gestor de citas
+
+**Quién:** `gestor_citas`, `administrador`
+**Cuándo:** Un paciente llega presencialmente a la IPS y el gestor lo registra en el sistema
+
+El gestor tiene dos opciones:
+
+### Opción A — Solo perfil (sin cuenta de acceso web)
+
+```
+POST /pacientes/registro-gestor
+Body:
+{
+  "nombre_completo": "Carlos Muñoz",
+  "identificacion": "1090401234",
+  "fecha_nacimiento": "1985-03-12",
+  "sexo": "M",
+  "telefono": "3101234567",
+  "crear_cuenta": false
+}
+```
+
+Se crea el paciente sin usuario — no puede iniciar sesión en el portal.
+
+### Opción B — Perfil + cuenta con contraseña temporal
+
+```
+POST /pacientes/registro-gestor
+Body:
+{
+  "nombre_completo": "Carlos Muñoz",
+  "identificacion": "1090401234",
+  "fecha_nacimiento": "1985-03-12",
+  "sexo": "M",
+  "telefono": "3101234567",
+  "crear_cuenta": true,
+  "email_cuenta": "carlos@correo.com"
+}
+```
+
+**Respuesta `201`:**
+```json
+{
+  "message": "Paciente registrado con cuenta de acceso. Entrega la contraseña temporal al paciente.",
+  "paciente": { ... },
+  "password_temporal": "AXBK-4821"
+}
+```
+
+El gestor anota o imprime la contraseña temporal y se la entrega al paciente. Al primer login, el sistema detecta `debe_cambiar_password: true` y el frontend redirige al formulario de cambio de contraseña.
+
+---
+
+## 15. Cambio de contraseña propia
+
+**Quién:** Cualquier rol autenticado (muy importante para pacientes con contraseña temporal)
+**Cuándo:** El usuario quiere cambiar su contraseña, o el sistema lo obliga en el primer login
+
+```
+POST /mi-cuenta/cambiar-password
+Body:
+{
+  "password_actual": "AXBK-4821",
+  "password": "MiNuevaClaveSegura123",
+  "password_confirmation": "MiNuevaClaveSegura123"
+}
+```
+
+**Respuesta `200`:**
+```json
+{ "message": "Contraseña actualizada correctamente." }
+```
+
+Tras el cambio, `debe_cambiar_password` queda en `false` y el usuario puede navegar normalmente.
+
+**Errores:**
+- `422 "La contraseña actual no es correcta."` — escribió mal la contraseña temporal
+- `422 "La nueva contraseña no puede ser igual a la actual."` — intentó reutilizar la misma
+
+---
+
+## 16. Dashboard de métricas
+
+**Quién:** `administrador`
+**Cuándo:** Entra al panel de administración para ver el estado general de la IPS
+
+```
+GET /dashboard
+```
+
+**Respuesta `200`:**
+```json
+{
+  "totales": {
+    "pacientes": 150,
+    "medicos": 4,
+    "citas": 320,
+    "citas_mes": 42,
+    "ejecuciones": 290,
+    "ejecuciones_mes": 38
+  },
+  "duracion_promedio_minutos": 24.5,
+  "citas_por_estado": [
+    { "estado": "Atendida", "total": 210 },
+    { "estado": "Pendiente", "total": 80 },
+    { "estado": "Cancelada", "total": 30 }
+  ],
+  "citas_por_mes": [
+    { "mes": "2025-11", "total": 45 },
+    { "mes": "2025-12", "total": 38 }
+  ],
+  "pacientes_por_mes": [ ... ],
+  "especialidades_top": [
+    { "especialidad": "Medicina General", "total_citas": 180 }
+  ],
+  "medicos_top": [
+    { "medico": "Dra. Laura García", "especialidad": "Medicina General", "total_citas": 120 }
+  ],
+  "valoraciones": {
+    "total": 95,
+    "promedio": 4.3
+  },
+  "proximas_citas": [ ... ]
+}
+```
+
+---
+
+## 17. Reportes con filtros
+
+**Quién:** `administrador`
+**Cuándo:** Necesita exportar datos para revisión o entrega a la Secretaría de Salud
+
+Todos los reportes aceptan filtros por querystring. Si no se envía ningún filtro, exporta todos los registros.
+
+### Reporte de citas en PDF
+
+```
+GET /reportes/citas/pdf?fecha_desde=2026-01-01&fecha_hasta=2026-04-30&estado_id=3
+```
+Descarga un archivo `reporte-citas-2026-04-07.pdf` en formato tabular.
+
+### Reporte de citas en Excel
+
+```
+GET /reportes/citas/excel?medico_id=2
+```
+Descarga `reporte-citas-2026-04-07.xlsx`.
+
+### Reporte de pacientes en PDF
+
+```
+GET /reportes/pacientes/pdf?sexo=F
+```
+
+### Reporte de pacientes en Excel
+
+```
+GET /reportes/pacientes/excel?buscar=López
+```
+
+**Filtros disponibles para citas:** `fecha_desde`, `fecha_hasta`, `estado_id`, `medico_id`
+**Filtros disponibles para pacientes:** `buscar` (nombre o cédula), `sexo`, `fecha_nacimiento_desde`, `fecha_nacimiento_hasta`
+
+---
+
+## 18. Valoraciones de consulta
+
+**Quién:** `paciente` (crea), `administrador` y `medico` (leen)
+**Cuándo:** Después de una cita, el paciente califica la atención
+
+### El paciente califica una cita
+
+```
+POST /valoraciones
+Body:
+{
+  "cita_id": 15,
+  "puntuacion": 5,
+  "comentario": "Excelente atención, muy puntual."
+}
+```
+
+Reglas:
+- Solo el paciente dueño de la cita puede valorarla
+- Solo se puede valorar una vez por cita
+- Puntuación entre 1 y 5
+
+### Ver valoraciones
+
+```
+GET /valoraciones         ← paciente: ve las suyas / admin-medico: ven todas de la empresa
+GET /valoraciones/{id}
+```
+
+### Resumen por médico (solo admin)
+
+```
+GET /valoraciones/resumen/medicos
+```
+
+**Respuesta:**
+```json
+[
+  {
+    "medico": "Dra. Laura García",
+    "especialidad": "Medicina General",
+    "total_valoraciones": 45,
+    "promedio": 4.62,
+    "cinco_estrellas": 28,
+    "cuatro_estrellas": 12,
+    "tres_estrellas": 4,
+    "dos_estrellas": 1,
+    "una_estrella": 0
+  }
+]
+```
+
+---
+
+## 19. Búsqueda de CIE-10
+
+**Quién:** `medico`, `administrador` (al crear una historia clínica)
+**Cuándo:** El médico busca el código oficial de la enfermedad diagnosticada
+
+```
+GET /cie10?buscar=diabetes
+GET /cie10?buscar=J00
+```
+
+**Respuesta:**
+```json
+[
+  { "codigo": "E11.9", "descripcion": "Diabetes mellitus tipo 2 sin complicaciones", "categoria": "E" },
+  { "codigo": "E10.9", "descripcion": "Diabetes mellitus tipo 1 sin complicaciones", "categoria": "E" }
+]
+```
+
+El médico selecciona uno y ese `codigo` y `descripcion` se envían al crear la historia clínica:
+
+```
+POST /historias-clinicas
+Body:
+{
+  ...,
+  "diagnostico": "Paciente con DM2 compensada, buen control glucémico.",
+  "codigo_cie10": "E11.9",
+  "descripcion_cie10": "Diabetes mellitus tipo 2 sin complicaciones"
+}
+```
+
+Ambos campos quedan en la historia clínica y aparecen en el PDF descargable.
+
+---
+
+## 20. Descarga de historia clínica en PDF
+
+**Quién:** `administrador`, `medico`, `paciente` (solo la suya)
+**Cuándo:** Se necesita el documento físico de la historia clínica
+
+```
+GET /historias-clinicas/{id}/pdf
+```
+
+Descarga un archivo PDF (`historia-clinica-00000001.pdf`) con:
+- Encabezado de la IPS (nombre, NIT, dirección, teléfono)
+- Datos del paciente
+- Datos de la consulta (médico, especialidad, fecha, duración)
+- Signos vitales en tabla
+- Contenido clínico completo (motivo, diagnóstico con código CIE-10, tratamiento)
+- Recetas médicas
+- Bloque de firmas (médico + paciente)
+- Referencia legal: Resolución 1995/1999 Minsalud Colombia
+
+---
+
 ## Resumen de roles y accesos por flujo
 
 | Flujo | administrador | medico | gestor_citas | paciente | público |
@@ -632,7 +910,9 @@ GET /logs?desde=2026-04-01&hasta=2026-04-30
 | Registro IPS | — | — | — | — | ✓ |
 | Login / Logout | ✓ | ✓ | ✓ | ✓ | ✓ |
 | Recuperar contraseña | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Registro de paciente | — | — | — | — | ✓ |
+| Registro de paciente (web) | — | — | — | — | ✓ |
+| Registro de paciente (gestor) | ✓ | — | ✓ | — | — |
+| Cambio de contraseña propia | ✓ | ✓ | ✓ | ✓ | — |
 | Gestión de usuarios | ✓ | — | — | — | — |
 | Gestión de médicos (escritura) | ✓ | — | — | — | — |
 | Gestión de médicos (lectura) | ✓ | — | ✓ | — | — |
@@ -642,7 +922,13 @@ GET /logs?desde=2026-04-01&hasta=2026-04-30
 | Iniciar ejecución | ✓ | ✓ | — | — | — |
 | Signos vitales (escritura) | ✓ | ✓ | — | — | — |
 | Historia clínica (escritura) | ✓ | ✓ | — | — | — |
+| Búsqueda CIE-10 | ✓ | ✓ | ✓ | ✓ | — |
+| Descargar historia en PDF | ✓ | ✓ | — | ✓ (propia) | — |
 | Recetas y documentos (escritura) | ✓ | ✓ | — | — | — |
 | Consulta historial | ✓ | ✓ | — | ✓ (propio) | — |
+| Valorar cita | — | — | — | ✓ | — |
+| Ver valoraciones | ✓ | ✓ | — | ✓ (propias) | — |
+| Dashboard de métricas | ✓ | — | — | — | — |
+| Reportes PDF / Excel | ✓ | — | — | — | — |
 | Administración empresa | ✓ | — | — | — | — |
 | Auditoría | ✓ | — | — | — | — |

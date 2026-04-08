@@ -19,6 +19,8 @@ class StoreClinicalHistoryRequest extends FormRequest
             'enfermedad_actual' => ['required', 'string'],
             'antecedentes'      => ['nullable', 'array'],
             'diagnostico'       => ['required', 'string'],
+            'codigo_cie10'      => ['nullable', 'string', 'max:10', 'exists:cie10,codigo'],
+            'descripcion_cie10' => ['nullable', 'string', 'max:255'],
             'plan_tratamiento'  => ['required', 'string'],
             'evaluacion'        => ['nullable', 'string'],
             'observaciones'     => ['nullable', 'string'],

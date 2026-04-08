@@ -17,6 +17,8 @@ class HistoriaClinica extends Model
         'enfermedad_actual',
         'antecedentes',
         'diagnostico',
+        'codigo_cie10',
+        'descripcion_cie10',
         'plan_tratamiento',
         'evaluacion',
         'observaciones',

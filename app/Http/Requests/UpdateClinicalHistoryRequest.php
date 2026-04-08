@@ -15,6 +15,8 @@ class UpdateClinicalHistoryRequest extends FormRequest
             'enfermedad_actual' => ['sometimes', 'string'],
             'antecedentes'      => ['nullable', 'array'],
             'diagnostico'       => ['sometimes', 'string'],
+            'codigo_cie10'      => ['nullable', 'string', 'max:10', 'exists:cie10,codigo'],
+            'descripcion_cie10' => ['nullable', 'string', 'max:255'],
             'plan_tratamiento'  => ['sometimes', 'string'],
             'evaluacion'        => ['nullable', 'string'],
             'observaciones'     => ['nullable', 'string'],

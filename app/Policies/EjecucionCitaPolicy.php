@@ -7,6 +7,11 @@ use App\Models\User;
 
 class EjecucionCitaPolicy
 {
+    public function viewAny(User $user): bool
+    {
+        return in_array($user->rol?->nombre, ['administrador', 'medico']);
+    }
+
     private function mismaTenant(User $user, EjecucionCita $ejecucion): bool
     {
         return $user->empresa_id === $ejecucion->cita?->empresa_id;

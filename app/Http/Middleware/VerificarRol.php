@@ -20,6 +20,10 @@ class VerificarRol
             return response()->json(['message' => 'No autenticado.'], 401);
         }
 
+        if (!$usuario->activo) {
+            return response()->json(['message' => 'Tu cuenta ha sido desactivada. Contacta al administrador.'], 403);
+        }
+
         if (!in_array($usuario->rol?->nombre, $roles)) {
             return response()->json(['message' => 'No tienes permiso para realizar esta acción.'], 403);
         }

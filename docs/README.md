@@ -13,6 +13,7 @@ Proyecto multi-tenant para IPS colombianas. Backend construido con **Laravel 12*
 | [05-politicas.md](05-politicas.md) | Políticas de autorización a nivel de fila (9 Policies) |
 | [06-rutas.md](06-rutas.md) | Mapa completo de rutas (95 rutas) |
 | [07-base-de-datos.md](07-base-de-datos.md) | Estructura completa de las 18 tablas con todos sus atributos |
+| [08-flujos.md](08-flujos.md) | Todos los flujos del sistema con endpoints, bodies y orden de ejecución |
 
 ## Arquitectura general
 

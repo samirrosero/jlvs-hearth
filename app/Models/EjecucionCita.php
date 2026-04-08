@@ -36,4 +36,10 @@ class EjecucionCita extends Model
     {
         return $this->hasOne(HistoriaClinica::class, 'ejecucion_cita_id');
     }
+
+    // Una ejecución tiene un registro de signos vitales
+    public function signosVitales(): HasOne
+    {
+        return $this->hasOne(SignosVitales::class, 'ejecucion_cita_id');
+    }
 }

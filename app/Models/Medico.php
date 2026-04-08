@@ -34,4 +34,10 @@ class Medico extends Model
     {
         return $this->hasMany(Cita::class, 'medico_id');
     }
+
+    // Un médico tiene definidos sus horarios de atención
+    public function horarios(): HasMany
+    {
+        return $this->hasMany(HorarioMedico::class, 'medico_id');
+    }
 }

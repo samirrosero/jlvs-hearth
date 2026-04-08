@@ -1,11 +1,214 @@
+/* ============================================================
+   JLVS HEARTH — Estilos Globales
+   ============================================================
+   Este archivo contiene:
+   1. Importación de Tailwind CSS (utilidades automáticas)
+   2. Variables de color y fuente del sistema (@theme)
+   3. Clases reutilizables comentadas (.btn-primary, .card, etc.)
+
+   Si solo sabes CSS básico, puedes agregar tus estilos al
+   final de este archivo como CSS normal, por ejemplo:
+       .mi-clase { color: red; font-size: 16px; }
+
+   Para usar las clases de Tailwind en Blade:
+       <div class="flex items-center gap-4 bg-white p-6 rounded-xl">
+   ============================================================ */
+
+/* 1. Importa todas las utilidades de Tailwind CSS */
 @import 'tailwindcss';
 
+/* Le dice a Tailwind dónde buscar clases en el proyecto */
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 @source '../**/*.blade.php';
 @source '../**/*.js';
 
+/* ──────────────────────────────────────────────────────────
+   2. Variables de diseño — paleta de colores JLVS Hearth
+   ──────────────────────────────────────────────────────────
+   Estas variables se convierten en utilidades de Tailwind.
+   Ejemplo: --color-primary  →  bg-primary, text-primary
+   ────────────────────────────────────────────────────────── */
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    /* Fuente principal del sistema */
+    --font-sans: 'Inter', 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+
+    /* Colores de marca JLVS — verde médico (teal) */
+    --color-primary:        #0d9488;   /* Verde principal  — teal-600 */
+    --color-primary-dark:   #0f766e;   /* Verde oscuro (hover) — teal-700 */
+    --color-primary-light:  #ccfbf1;   /* Verde suave (fondos)  — teal-100 */
+
+    /* Azul secundario */
+    --color-secondary:      #0891b2;   /* Cyan-600 */
+    --color-secondary-dark: #0e7490;   /* Cyan-700 */
+
+    /* Estados / alertas */
+    --color-danger:         #dc2626;   /* Rojo error   — red-600  */
+    --color-success:        #16a34a;   /* Verde éxito  — green-600 */
+    --color-warning:        #d97706;   /* Naranja aviso — amber-600 */
 }
+
+/* ──────────────────────────────────────────────────────────
+   3. Clases reutilizables del sistema
+   ──────────────────────────────────────────────────────────
+   Estas clases agrupan múltiples utilidades de Tailwind
+   para no repetir código en los templates Blade.
+   ────────────────────────────────────────────────────────── */
+
+/* ── Botones ─────────────────────────────────────────────
+   Uso: <button class="btn-primary">Guardar</button>
+   Uso: <button class="btn-secondary">Cancelar</button>
+   Uso: <button class="btn-danger">Eliminar</button>       */
+.btn-primary {
+    @apply bg-teal-600 text-white font-semibold py-2 px-5 rounded-lg
+           hover:bg-teal-700 active:bg-teal-800
+           transition-colors duration-150 cursor-pointer
+           disabled:opacity-50 disabled:cursor-not-allowed
+           inline-flex items-center gap-2;
+}
+
+.btn-secondary {
+    @apply border-2 border-teal-600 text-teal-700 font-semibold py-2 px-5 rounded-lg
+           hover:bg-teal-50 active:bg-teal-100
+           transition-colors duration-150 cursor-pointer
+           inline-flex items-center gap-2;
+}
+
+.btn-danger {
+    @apply bg-red-600 text-white font-semibold py-2 px-5 rounded-lg
+           hover:bg-red-700 active:bg-red-800
+           transition-colors duration-150 cursor-pointer
+           disabled:opacity-50 disabled:cursor-not-allowed
+           inline-flex items-center gap-2;
+}
+
+.btn-ghost {
+    @apply text-gray-600 font-medium py-2 px-4 rounded-lg
+           hover:bg-gray-100 transition-colors duration-150 cursor-pointer
+           inline-flex items-center gap-2;
+}
+
+/* ── Campos de formulario ────────────────────────────────
+   Uso: <input class="form-input" type="text" ...>
+   Uso: <select class="form-input">...</select>
+   Uso: <textarea class="form-input" rows="3"></textarea> */
+.form-input {
+    @apply w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800
+           bg-white placeholder-gray-400
+           focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent
+           transition duration-150;
+}
+
+/* ── Etiqueta de campo ───────────────────────────────────
+   Uso: <label class="form-label">Nombre completo</label> */
+.form-label {
+    @apply block text-sm font-medium text-gray-700 mb-1;
+}
+
+/* ── Mensaje de error bajo un campo ─────────────────────
+   Uso: <p class="form-error">El campo es requerido.</p>  */
+.form-error {
+    @apply text-xs text-red-600 mt-1;
+}
+
+/* ── Tarjeta de contenido ────────────────────────────────
+   Uso: <div class="card">...</div>                        */
+.card {
+    @apply bg-white rounded-xl shadow-sm border border-gray-100 p-6;
+}
+
+/* ── Tarjeta de estadística (dashboard) ─────────────────
+   Uso: <div class="stat-card">...</div>                   */
+.stat-card {
+    @apply bg-white rounded-xl shadow-sm border border-gray-100 p-5
+           flex items-center gap-4;
+}
+
+/* ── Tabla de datos ──────────────────────────────────────
+   Uso:
+   <table class="data-table">
+     <thead><tr><th>Nombre</th></tr></thead>
+     <tbody><tr><td>Juan</td></tr></tbody>
+   </table>                                                 */
+.data-table {
+    @apply w-full text-sm text-left text-gray-700;
+}
+.data-table thead {
+    @apply text-xs text-gray-500 uppercase bg-gray-50 border-b border-gray-200;
+}
+.data-table thead th {
+    @apply px-4 py-3 font-semibold;
+}
+.data-table tbody tr {
+    @apply border-b border-gray-100 hover:bg-gray-50 transition-colors duration-100;
+}
+.data-table tbody td {
+    @apply px-4 py-3;
+}
+
+/* ── Badges / Etiquetas de estado ────────────────────────
+   Uso: <span class="badge badge-green">Activo</span>
+   Colores: badge-green, badge-red, badge-yellow,
+            badge-blue, badge-gray, badge-teal           */
+.badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold;
+}
+.badge-green  { @apply bg-green-100  text-green-800;  }
+.badge-red    { @apply bg-red-100    text-red-800;    }
+.badge-yellow { @apply bg-yellow-100 text-yellow-800; }
+.badge-blue   { @apply bg-blue-100   text-blue-800;   }
+.badge-teal   { @apply bg-teal-100   text-teal-800;   }
+.badge-gray   { @apply bg-gray-100   text-gray-600;   }
+
+/* ── Alertas ─────────────────────────────────────────────
+   Uso: <div class="alert alert-error">Hubo un error.</div>
+   Tipos: alert-error, alert-success, alert-info, alert-warning */
+.alert {
+    @apply rounded-lg px-4 py-3 text-sm font-medium;
+}
+.alert-error   { @apply bg-red-50    text-red-700    border border-red-200;    }
+.alert-success { @apply bg-green-50  text-green-700  border border-green-200;  }
+.alert-info    { @apply bg-blue-50   text-blue-700   border border-blue-200;   }
+.alert-warning { @apply bg-yellow-50 text-yellow-700 border border-yellow-200; }
+
+/* ── Links del sidebar (panel de navegación lateral) ─────
+   Uso: <a class="sidebar-link" @click="...">Pacientes</a>
+   Activo: agrega la clase "active" cuando es la sección visible */
+.sidebar-link {
+    @apply flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium
+           text-gray-600 hover:bg-teal-50 hover:text-teal-700
+           transition-colors duration-150 cursor-pointer;
+}
+.sidebar-link.active,
+.sidebar-link[data-active="true"] {
+    @apply bg-teal-50 text-teal-700;
+}
+
+/* ── Icono de carga (spinner) ────────────────────────────
+   Uso: <span class="spinner"></span>                       */
+.spinner {
+    @apply animate-spin rounded-full border-2 border-gray-200 border-t-teal-600 h-5 w-5 inline-block;
+}
+
+/* ── Separador de sección ────────────────────────────────
+   Uso: <hr class="divider">                                */
+.divider {
+    @apply border-t border-gray-100 my-4;
+}
+
+/* ── Modal overlay ───────────────────────────────────────
+   Alpine.js controla la visibilidad con x-show
+   Uso: <div class="modal-overlay" x-show="modal.abierto"> */
+.modal-overlay {
+    @apply fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4;
+}
+.modal-box {
+    @apply bg-white rounded-2xl shadow-xl w-full max-w-lg p-6;
+}
+
+/* ──────────────────────────────────────────────────────────
+   4. Zona libre — escribe aquí tus estilos CSS personalizados
+   ──────────────────────────────────────────────────────────
+   No necesitas saber Tailwind para agregar estilos aquí.
+   Escribe CSS normal y se aplicará a toda la app.
+   ────────────────────────────────────────────────────────── */

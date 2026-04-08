@@ -14,6 +14,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => \App\Http\Middleware\VerificarRol::class,
         ]);
+
+        // Máximo 10 intentos de login por minuto por IP
+        $middleware->throttleApi('10,1');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // Todas las excepciones retornan JSON (sin HTML)

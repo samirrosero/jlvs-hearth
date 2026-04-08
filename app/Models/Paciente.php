@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Paciente extends Model
 {
@@ -51,5 +52,23 @@ class Paciente extends Model
     public function historiasClinicas(): HasMany
     {
         return $this->hasMany(HistoriaClinica::class, 'paciente_id');
+    }
+
+    // Un paciente puede tener muchos antecedentes médicos
+    public function antecedentes(): HasMany
+    {
+        return $this->hasMany(AntecedentesPaciente::class, 'paciente_id');
+    }
+
+    // Un paciente puede tener muchos signos vitales registrados
+    public function signosVitales(): HasMany
+    {
+        return $this->hasMany(SignosVitales::class, 'paciente_id');
+    }
+
+    // Si el paciente tiene cuenta, accede a su usuario
+    public function usuario(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'usuario_id');
     }
 }

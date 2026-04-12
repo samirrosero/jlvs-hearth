@@ -22,8 +22,17 @@
 </head>
 <body>
     <div class="header">
-        <div class="empresa">{{ $empresa->nombre }}</div>
-        <div class="subtitulo">Reporte de Pacientes</div>
+        <table style="width:100%;border:none;">
+            <tr>
+                <td style="width:70px;vertical-align:middle;border:none;padding:0 10px 0 0;">
+                    <img src="{{ public_path('img/logos/logo1.png') }}" style="height:48px;width:auto;">
+                </td>
+                <td style="vertical-align:middle;border:none;padding:0;">
+                    <div class="empresa">{{ $empresa->nombre }}</div>
+                    <div class="subtitulo">Reporte de Pacientes</div>
+                </td>
+            </tr>
+        </table>
         <div class="meta">
             Generado el {{ now()->format('d/m/Y H:i') }}
             &nbsp;·&nbsp; Total: {{ $pacientes->count() }} pacientes

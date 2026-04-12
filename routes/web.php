@@ -1,5 +1,9 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\AdminMedicoController;
+use App\Http\Controllers\Admin\AdminPacienteController;
+use App\Http\Controllers\Admin\LoginController;
 use App\Http\Controllers\AntecedentesPacienteController;
 use App\Http\Controllers\CambiarPasswordController;
 use App\Http\Controllers\Cie10Controller;
@@ -291,3 +295,34 @@ Route::middleware('auth')->group(function () {
 // Registro de nueva empresa (onboarding de IPS — público)
 // ─────────────────────────────────────────────────────────────
 Route::post('/empresas', [CompanyController::class, 'store'])->name('empresas.store');
+
+// ═════════════════════════════════════════════════════════════
+// PANEL DE ADMINISTRACIÓN — Vistas Blade
+// ═════════════════════════════════════════════════════════════
+Route::prefix('admin')->name('admin.')->group(function () {
+
+    // Login / Logout (público dentro del panel)
+    Route::get('/login',  [LoginController::class, 'showLogin'])->name('login');
+    Route::post('/login', [LoginController::class, 'login'])->name('login.post');
+    Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+
+    // Rutas protegidas — solo administrador autenticado
+    Route::middleware(['auth', 'role:administrador'])->group(function () {
+
+        Route::get('/',          fn () => redirect()->route('admin.dashboard'));
+        Route::get('/dashboard', AdminDashboardController::class)->name('dashboard');
+
+        // CRUD #1 — Pacientes
+        Route::resource('/pacientes', AdminPacienteController::class)
+            ->except(['show'])
+            ->names('pacientes');
+
+        // CRUD #2 — Médicos
+        Route::resource('/medicos', AdminMedicoController::class)
+            ->except(['show'])
+            ->names('medicos');
+
+        // Reportes — descarga de PDF/Excel (delega a ReporteController ya existente)
+        Route::get('/reportes', fn () => view('admin.reportes.index'))->name('reportes');
+    });
+});

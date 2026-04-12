@@ -34,6 +34,11 @@ use App\Http\Controllers\UsuarioController;
 use Illuminate\Support\Facades\Route;
 
 // ─────────────────────────────────────────────────────────────
+// Landing page
+// ─────────────────────────────────────────────────────────────
+Route::get('/', fn () => view('welcome'))->name('home');
+
+// ─────────────────────────────────────────────────────────────
 // Autenticación (público)
 // ─────────────────────────────────────────────────────────────
 Route::post('/login', [AuthController::class, 'login'])->name('login');

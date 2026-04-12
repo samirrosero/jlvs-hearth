@@ -1,0 +1,55 @@
+flowchart TB
+
+    subgraph SYS["Sistema JLVS Hearth — Relaciones entre Casos de Uso"]
+
+        subgraph AUTH["🔐 Autenticación"]
+            direction LR
+            UC_LOGIN(["Iniciar sesión"])
+            UC_FORCE_PASS(["Forzar cambio\nde contraseña\n— primer login —"])
+        end
+
+        subgraph CITASMOD["📅 Agendamiento"]
+            direction LR
+            UC_REG_PAC_GES(["Registrar paciente\n(presencial)"])
+            UC_CUENTA_TEMP(["Crear cuenta con\ncontraseña temporal"])
+            UC_AGENDAR(["Agendar cita"])
+            UC_VERIFICAR(["Verificar disponibilidad\ndel médico"])
+        end
+
+        subgraph CLINICO["🏥 Atención Clínica"]
+            direction TB
+            UC_EJECUCION(["Iniciar atención"])
+            UC_SIGNOS(["Registrar\nsignos vitales"])
+            UC_HISTORIA(["Crear historia\nclínica"])
+            UC_CIE10(["Buscar\ncódigo CIE-10"])
+            UC_RECETA(["Emitir receta\nmédica"])
+            UC_DOCS(["Adjuntar\ndocumentos"])
+        end
+
+        subgraph PACMOD["🙋 Portal del Paciente"]
+            direction LR
+            UC_PDF(["Descargar historia\nen PDF"])
+            UC_CONSULTAR_HC(["Consultar historia\nclínica"])
+        end
+
+    end
+
+    %% ════ <<include>> ════════════════════════════════════════════
+    UC_AGENDAR    -->|"«include»"| UC_VERIFICAR
+    UC_HISTORIA   -->|"«include»"| UC_EJECUCION
+    UC_PDF        -->|"«include»"| UC_CONSULTAR_HC
+
+    %% ════ <<extend>> ════════════════════════════════════════════
+    UC_FORCE_PASS  -.->|"«extend»"| UC_LOGIN
+    UC_CUENTA_TEMP -.->|"«extend»"| UC_REG_PAC_GES
+    UC_SIGNOS      -.->|"«extend»"| UC_EJECUCION
+    UC_CIE10       -.->|"«extend»"| UC_HISTORIA
+    UC_RECETA      -.->|"«extend»"| UC_HISTORIA
+    UC_DOCS        -.->|"«extend»"| UC_HISTORIA
+
+    %% ════ Leyenda ════════════════════════════════════════════════
+    subgraph LEYENDA["Leyenda"]
+        direction LR
+        L1(["Caso de uso base"]) -->|"«include»\nobligatorio"| L2(["Sub-caso\nincluido"])
+        L3(["Caso de uso\nopcional"]) -.->|"«extend»\ncondicional"| L4(["Caso de uso\nbase"])
+    end

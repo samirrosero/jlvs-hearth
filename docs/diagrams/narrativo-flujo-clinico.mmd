@@ -1,0 +1,69 @@
+sequenceDiagram
+    actor GES  as 📋 Gestor de Citas
+    actor MED  as 🩺 Médico
+    actor PAC  as 🙋 Paciente
+    participant API as 🖥️ Backend JLVS
+    participant DB  as 🗄️ Base de Datos
+
+    rect rgb(230, 240, 255)
+        Note over GES,DB: FASE 1 — Agendamiento
+        GES->>API: POST /citas { paciente_id, medico_id, fecha, hora }
+        API->>DB: Verifica horario del médico
+        DB-->>API: Disponible
+        API->>DB: Verifica solapamiento de citas activas
+        DB-->>API: Sin conflicto
+        API->>DB: INSERT citas
+        API-->>GES: 201 { id: 5, estado: "Pendiente" }
+    end
+
+    rect rgb(230, 255, 230)
+        Note over MED,DB: FASE 2 — Inicio de atención
+        MED->>API: POST /ejecuciones { cita_id: 5, inicio_atencion }
+        API->>DB: INSERT ejecuciones_cita
+        API-->>MED: 201 { id: 8 }
+    end
+
+    rect rgb(255, 250, 220)
+        Note over MED,DB: FASE 3 — Signos vitales
+        MED->>API: POST /signos-vitales { ejecucion_cita_id: 8, peso, presion, temperatura... }
+        API->>DB: INSERT signos_vitales
+        API-->>MED: 201 OK
+    end
+
+    rect rgb(255, 235, 225)
+        Note over MED,DB: FASE 4 — Historia clínica
+        MED->>API: GET /cie10?buscar=cefalea
+        API-->>MED: [{ codigo: "G44.2", descripcion: "Cefalea tensional" }]
+        MED->>API: POST /historias-clinicas { ejecucion_cita_id: 8, diagnostico, codigo_cie10... }
+        API->>DB: INSERT historias_clinicas
+        API->>DB: INSERT logs_auditoria (Observer — Res. 1995/1999)
+        API-->>MED: 201 { id: 12 }
+    end
+
+    rect rgb(240, 225, 255)
+        Note over MED,DB: FASE 5 — Receta y documentos
+        MED->>API: POST /recetas { historia_clinica_id: 12, medicamentos }
+        API->>DB: INSERT recetas_medicas
+        API-->>MED: 201 OK
+        opt Adjuntar archivos
+            MED->>API: POST /documentos (multipart) { historia_clinica_id: 12, archivo }
+            API->>DB: INSERT documentos_adjuntos
+            API-->>MED: 201 OK
+        end
+    end
+
+    rect rgb(230, 255, 230)
+        Note over MED,DB: FASE 6 — Cierre de atención
+        MED->>API: PATCH /ejecuciones/8 { fin_atencion, duracion_minutos: 20 }
+        API->>DB: UPDATE ejecuciones_cita
+        API-->>MED: 200 OK
+    end
+
+    rect rgb(225, 245, 255)
+        Note over PAC,DB: FASE 7 — El paciente consulta y valora
+        PAC->>API: GET /historias-clinicas/12/pdf
+        API-->>PAC: 📄 historia-clinica-00000012.pdf
+        PAC->>API: POST /valoraciones { cita_id: 5, puntuacion: 5, comentario }
+        API->>DB: INSERT valoraciones
+        API-->>PAC: 201 OK
+    end

@@ -1,0 +1,21 @@
+sequenceDiagram
+    actor PUB  as 🌐 Público (nueva IPS)
+    participant API as 🖥️ Backend JLVS
+    participant DB  as 🗄️ Base de Datos
+
+    rect rgb(230, 240, 255)
+        Note over PUB,DB: Registro de nueva IPS
+        PUB->>API: POST /empresas { nit, nombre, admin_nombre, admin_email, admin_password }
+        API->>DB: BEGIN TRANSACTION
+        API->>DB: INSERT empresas
+        API->>DB: INSERT users (rol = administrador)
+        API->>DB: COMMIT
+        API-->>PUB: 201 { empresa, administrador }
+    end
+
+    rect rgb(230, 255, 230)
+        Note over PUB,API: Primer acceso
+        PUB->>API: POST /login { email, password }
+        API-->>PUB: 200 { usuario: { rol: "administrador" } }
+        Note over PUB: Redirige al Panel de Administración
+    end

@@ -1,0 +1,29 @@
+sequenceDiagram
+    actor GES  as 📋 Gestor de Citas
+    actor PAC  as 🙋 Paciente
+    participant API as 🖥️ Backend JLVS
+    participant DB  as 🗄️ Base de Datos
+
+    rect rgb(255, 250, 220)
+        Note over GES,DB: Registro presencial de paciente
+        GES->>API: POST /pacientes/registro-gestor { nombre, identificacion, crear_cuenta: true, email }
+        API->>DB: INSERT pacientes
+        API->>DB: INSERT users (rol = paciente, debe_cambiar_password: true)
+        API-->>GES: 201 { paciente, password_temporal: "AXBK-4821" }
+        Note over GES,PAC: El gestor entrega la contraseña temporal al paciente
+    end
+
+    rect rgb(230, 255, 230)
+        Note over PAC,DB: Primer login del paciente
+        PAC->>API: POST /login { email, password: "AXBK-4821" }
+        API-->>PAC: 200 { usuario: { debe_cambiar_password: true } }
+        Note over PAC: El frontend detecta debe_cambiar_password y redirige
+    end
+
+    rect rgb(225, 245, 255)
+        Note over PAC,DB: Cambio de contraseña obligatorio
+        PAC->>API: POST /mi-cuenta/cambiar-password { password_actual, password, password_confirmation }
+        API->>DB: UPDATE users SET password, debe_cambiar_password = false
+        API-->>PAC: 200 "Contraseña actualizada correctamente."
+        Note over PAC: El paciente accede al portal normalmente
+    end

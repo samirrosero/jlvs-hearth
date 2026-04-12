@@ -1,0 +1,76 @@
+flowchart LR
+    %% ─── Columna de actores ─────────────────────────────────────
+    subgraph ACTORES["👥 Actores"]
+        direction TB
+        PUB(["🌐 Público"])
+        ADM(["👤 Administrador"])
+        MED(["🩺 Médico"])
+        GES(["📋 Gestor de Citas"])
+        PAC(["🙋 Paciente"])
+    end
+
+    %% ─── Módulos con casos de uso internos ─────────────────────
+    subgraph AUTH["🔐 Autenticación"]
+        A1["• Registrar nueva IPS
+• Iniciar / Cerrar sesión
+• Recuperar contraseña
+• Cambiar contraseña propia
+• Registro de paciente (web)"]
+    end
+
+    subgraph ADMMOD["⚙️ Administración de la IPS"]
+        A2["• Gestionar empresa
+• Gestionar portafolios / EPS
+• Gestionar catálogos
+• Gestionar usuarios internos
+• Gestionar médicos
+• Gestionar horarios del médico
+• Ver dashboard de métricas
+• Generar reportes PDF / Excel
+• Consultar auditoría"]
+    end
+
+    subgraph CITASMOD["📅 Agendamiento"]
+        A3["• Registrar paciente (presencial)
+• Agendar cita
+• Ver citas
+• Cancelar cita"]
+    end
+
+    subgraph CLINICO["🏥 Atención Clínica"]
+        A4["• Iniciar / Cerrar atención
+• Registrar signos vitales
+• Buscar código CIE-10
+• Crear historia clínica
+• Emitir receta médica
+• Adjuntar documentos"]
+    end
+
+    subgraph PACMOD["🙋 Portal del Paciente"]
+        A5["• Consultar historial clínico
+• Descargar historia en PDF
+• Ver antecedentes médicos
+• Valorar consulta
+• Ver valoraciones"]
+    end
+
+    %% ─── Relaciones actor → módulo ──────────────────────────────
+    PUB  --> AUTH
+
+    ADM  --> AUTH
+    ADM  --> ADMMOD
+    ADM  --> CITASMOD
+    ADM  --> CLINICO
+    ADM  --> PACMOD
+
+    MED  --> AUTH
+    MED  --> CITASMOD
+    MED  --> CLINICO
+    MED  --> PACMOD
+
+    GES  --> AUTH
+    GES  --> CITASMOD
+
+    PAC  --> AUTH
+    PAC  --> CITASMOD
+    PAC  --> PACMOD

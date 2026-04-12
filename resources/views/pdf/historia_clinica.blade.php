@@ -181,6 +181,9 @@
     <div class="header">
         <table class="header-grid">
             <tr>
+                <td style="width:60px;vertical-align:middle;padding-right:12px;">
+                    <img src="{{ public_path('img/logos/logo1.png') }}" style="height:52px;width:auto;">
+                </td>
                 <td style="width:60%">
                     <div class="empresa-nombre">{{ $empresa->nombre }}</div>
                     @if($empresa->nit)

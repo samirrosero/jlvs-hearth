@@ -21,7 +21,6 @@ use Illuminate\Support\Facades\Hash;
 
 /**
  * Seeder de fondo — datos históricos de los últimos 6 meses.
- * NO crea usuarios para el equipo: ellos se crean en vivo durante la demo.
  * Solo genera pacientes y citas ficticias para que el dashboard se vea lleno.
  *
  * Ejecutar: php artisan db:seed --class=DatosHistoricosSeeder

@@ -10,7 +10,8 @@
     <title>@yield('title', 'JLVS Hearth')</title>
 
     {{-- Favicon simple con emoji de salud --}}
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏥</text></svg>">
+    <link rel="icon" href="{{ asset('favicon.ico') }}" type="image/x-icon">
+    <link rel="shortcut icon" href="{{ asset('favicon.ico') }}" type="image/x-icon">
 
     {{-- Carga Tailwind CSS + Alpine.js compilados por Vite --}}
     @vite(['resources/css/app.css', 'resources/js/app.js'])

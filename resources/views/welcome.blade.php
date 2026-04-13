@@ -151,8 +151,8 @@
                                     <div class="foto-placeholder" style="display:none;">VS</div>
                                 </div>
                                 <h3>Valeri Solís</h3>
-                                <p class="rol"><!-- Rol por definir --></p>
-                                <p class="descripcion"><!-- Descripción por definir --></p>
+                                <p class="rol">Frontend Developer & Documentación</p>
+                                <p class="descripcion">Responsable del frontend y la documentación del proyecto.</p>
                             </article>
                         </div>
 

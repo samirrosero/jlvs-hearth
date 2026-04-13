@@ -133,13 +133,13 @@
                         <div class="carrusel-slide">
                             <article class="tarjeta-miembro">
                                 <div class="foto-wrapper">
-                                    <img src="{{ asset('teams/julian.png') }}" alt="Julián Peñaloza"
+                                    <img src="{{ asset('teams/julian.jpeg') }}" alt="Julián Peñaloza"
                                          onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
                                     <div class="foto-placeholder" style="display:none;">JP</div>
                                 </div>
-                                <h3>Julián Peñaloza</h3>
-                                <p class="rol"><!-- Rol por definir --></p>
-                                <p class="descripcion"><!-- Descripción por definir --></p>
+                                <h3>Julián Velasquez</h3>
+                                <p class="rol">Frontend Developer</p>
+                                <p class="descripcion">Desarrollador frontend con experiencia en análisis de requisitos y diseño de interfaces de usuario.</p>
                             </article>
                         </div>
 

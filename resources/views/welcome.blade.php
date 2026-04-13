@@ -133,7 +133,7 @@
                         <div class="carrusel-slide">
                             <article class="tarjeta-miembro">
                                 <div class="foto-wrapper">
-                                    <img src="{{ asset('teams/julian.jpeg') }}" alt="Julián Peñaloza"
+                                    <img src="{{ asset('teams/julian.jpeg') }}" alt="Julián Velasquez"
                                          onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
                                     <div class="foto-placeholder" style="display:none;">JP</div>
                                 </div>
@@ -221,7 +221,7 @@
     <footer>
         <img src="{{ asset('img/logos/logo1.png') }}" alt="JLVS Hearth" class="footer-logo">
         <p>JLVS Hearth &copy; {{ date('Y') }} &mdash; Desarrollado por estudiantes de <strong>UNIAJC</strong></p>
-        <p class="equipo-footer">Julián Peñaloza &nbsp;&middot;&nbsp; Valeri Solís &nbsp;&middot;&nbsp; Luis Piamba &nbsp;&middot;&nbsp; Samir Rosero</p>
+        <p class="equipo-footer">Julián Velasquez &nbsp;&middot;&nbsp; Valeri Solís &nbsp;&middot;&nbsp; Luis Piamba &nbsp;&middot;&nbsp; Samir Rosero</p>
     </footer>
 
     {{-- ── LIGHTBOX ──────────────────────────────────────────── --}}

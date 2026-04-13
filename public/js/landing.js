@@ -2,7 +2,7 @@
 (function () {
     const track = document.getElementById('carruselTrack');
     const dots = document.querySelectorAll('.carrusel-dot');
-    const wrapper = document.getElementById('carruselWrapper');
+    const wrapper = document.querySelector('.carrusel-wrapper');
     const total = 4;
     const INTERVALO = 7000;
     let actual = 0;
@@ -55,8 +55,6 @@ if (!track || dots.length !== total || !wrapper) return;
 
     function cerrar() { lightbox.classList.remove('abierto'); }
     btnCerrar.addEventListener('click', cerrar);
-
-    document.getElementById('lightboxCerrar').addEventListener('click', cerrar);
     lightbox.addEventListener('click', function (e) {
         if (e.target === lightbox) cerrar();
     });

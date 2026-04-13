@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminMedicoController;
 use App\Http\Controllers\Admin\AdminPacienteController;
+use App\Http\Controllers\Admin\ChatbotController;
 use App\Http\Controllers\Admin\LoginController;
 use App\Http\Controllers\AntecedentesPacienteController;
 use App\Http\Controllers\CambiarPasswordController;
@@ -329,5 +330,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         // Reportes — descarga de PDF/Excel (delega a ReporteController ya existente)
         Route::get('/reportes', fn () => view('admin.reportes.index'))->name('reportes');
+
+        // Chatbot — asistente virtual con Ollama
+        Route::post('/chatbot', [ChatbotController::class, 'chat'])->name('chatbot');
     });
 });

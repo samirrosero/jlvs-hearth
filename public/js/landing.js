@@ -1,10 +1,13 @@
 // ── Carrusel ──────────────────────────────────────────────────
 (function () {
     const track = document.getElementById('carruselTrack');
-    const dots  = document.querySelectorAll('.carrusel-dot');
+    const dots = document.querySelectorAll('.carrusel-dot');
+    const wrapper = document.getElementById('carruselWrapper');
     const total = 4;
-    let actual  = 0;
-
+    const INTERVALO = 7000;
+    let actual = 0;
+    let timer = null;
+if (!track || dots.length !== total || !wrapper) return;
     function irA(i) {
         actual = (i + total) % total;
         track.style.transform = 'translateX(-' + (actual * 100) + '%)';
@@ -13,19 +16,35 @@
         });
     }
 
-    document.getElementById('btnPrev').addEventListener('click', function () { irA(actual - 1); });
-    document.getElementById('btnNext').addEventListener('click', function () { irA(actual + 1); });
+    function iniciarAutoPlay() {
+        detenerAutoPlay();
+        timer = setInterval(function () { irA(actual + 1); }, INTERVALO);
+    }
+
+    function detenerAutoPlay() {
+        if (timer) {
+            clearInterval(timer);
+            timer = null;
+        }
+    }
+
+    document.getElementById('btnPrev').addEventListener('click', function () { irA(actual - 1); iniciarAutoPlay(); });
+    document.getElementById('btnNext').addEventListener('click', function () { irA(actual + 1); iniciarAutoPlay(); });
     dots.forEach(function (d) {
-        d.addEventListener('click', function () { irA(parseInt(d.dataset.index)); });
+        d.addEventListener('click', function () { irA(parseInt(d.dataset.index)); iniciarAutoPlay(); });
     });
 
-    setInterval(function () { irA(actual + 1); }, 5000);
+    //    pausa al pasar el mouse por encima
+    wrapper.addEventListener('mouseenter', detenerAutoPlay);
+    wrapper.addEventListener('mouseleave', iniciarAutoPlay);
 })();
 
 // ── Lightbox ───────────────────────────────────────────────────
 (function () {
-    var lightbox  = document.getElementById('lightbox');
+    var lightbox = document.getElementById('lightbox');
     var lightboxImg = document.getElementById('lightboxImg');
+    var btnCerrar = document.getElementById('lightboxCerrar');
+    if (!lightbox || !lightboxImg || !btnCerrar) return;
 
     document.querySelectorAll('.foto-wrapper img').forEach(function (img) {
         img.addEventListener('click', function () {
@@ -35,6 +54,7 @@
     });
 
     function cerrar() { lightbox.classList.remove('abierto'); }
+    btnCerrar.addEventListener('click', cerrar);
 
     document.getElementById('lightboxCerrar').addEventListener('click', cerrar);
     lightbox.addEventListener('click', function (e) {

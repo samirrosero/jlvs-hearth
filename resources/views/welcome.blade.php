@@ -164,8 +164,8 @@
                                     <div class="foto-placeholder" style="display:none;">LP</div>
                                 </div>
                                 <h3>Luis Piamba</h3>
-                                <p class="rol"><!-- Rol por definir --></p>
-                                <p class="descripcion"><!-- Descripción por definir --></p>
+                                <p class="rol">Documentador Técnico &amp; Analista de Sistemas</p>
+                                <p class="descripcion">Analizar y especificar los requisitos del sistema, garantizar que el equipo de desarrollo comprenda exactamente qué debe construir mediante representaciones visuales y técnicas.</p>
                             </article>
                         </div>
 

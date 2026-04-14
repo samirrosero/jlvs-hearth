@@ -275,7 +275,8 @@
         }
 
         const historialPrevio = cargarHistorial();
-        const veniaDeNavegacion = historialPrevio.length > 1;
+        const veniaDeNavegacion = localStorage.getItem('jlvs_chatbot_nav') === '1';
+        localStorage.removeItem('jlvs_chatbot_nav');
 
         return {
             abierto: veniaDeNavegacion,
@@ -313,6 +314,7 @@
                         const msgNavegar = { rol: 'bot', texto: `Redirigiendo a ${navegar.label.replace('Ir al ', '').replace('Ver ', '')}...`, acciones: [] };
                         this.mensajes.push(msgNavegar);
                         guardarHistorial(this.mensajes);
+                        localStorage.setItem('jlvs_chatbot_nav', '1');
                         setTimeout(() => { window.location.href = navegar.url; }, 1500);
                     }
 

@@ -218,17 +218,31 @@
             'reportes':  { label: 'Ver Reportes',     url: '{{ route('admin.reportes') }}' },
         };
 
+        const descargas = {
+            'citas-pdf':       { label: 'Descargar Citas PDF',        url: '{{ route('reportes.citas.pdf') }}' },
+            'citas-excel':     { label: 'Descargar Citas Excel',      url: '{{ route('reportes.citas.excel') }}' },
+            'pacientes-pdf':   { label: 'Descargar Pacientes PDF',    url: '{{ route('reportes.pacientes.pdf') }}' },
+            'pacientes-excel': { label: 'Descargar Pacientes Excel',  url: '{{ route('reportes.pacientes.excel') }}' },
+        };
+
         function parsearRespuesta(raw) {
             const acciones = [];
-            let navegar = null;
+            let navegar   = null;
+            let descarga  = null;
 
-            // Detectar [NAVEGAR:ruta] — navegación automática
+            // [NAVEGAR:ruta] — navegación automática
             const matchNav = raw.match(/\[NAVEGAR:(\w+)\]/);
             if (matchNav && rutas[matchNav[1]]) {
                 navegar = rutas[matchNav[1]];
             }
 
-            // Detectar [IR:ruta] — botones de sugerencia
+            // [DESCARGAR:tipo] — descarga automática en nueva pestaña
+            const matchDl = raw.match(/\[DESCARGAR:([\w-]+)\]/);
+            if (matchDl && descargas[matchDl[1]]) {
+                descarga = descargas[matchDl[1]];
+            }
+
+            // [IR:ruta] — botones de sugerencia
             const marcador = /\[IR:(\w+)\]/g;
             let match;
             while ((match = marcador.exec(raw)) !== null) {
@@ -238,19 +252,35 @@
 
             const texto = raw
                 .replace(/\[NAVEGAR:\w+\]/g, '')
+                .replace(/\[DESCARGAR:[\w-]+\]/g, '')
                 .replace(/\[IR:\w+\]/g, '')
                 .replace(/\s{2,}/g, ' ')
                 .trim();
 
-            return { texto, acciones, navegar };
+            return { texto, acciones, navegar, descarga };
         }
 
+        const STORAGE_KEY = 'jlvs_chatbot_historial';
+        const mensajeInicial = [{ rol: 'bot', texto: '¡Hola! Soy el asistente de JLVS Hearth. Puedo contarte el estado actual de tu IPS o ayudarte a navegar por el sistema. ¿En qué te puedo ayudar?', acciones: [] }];
+
+        function cargarHistorial() {
+            try {
+                const guardado = localStorage.getItem(STORAGE_KEY);
+                return guardado ? JSON.parse(guardado) : mensajeInicial;
+            } catch { return mensajeInicial; }
+        }
+
+        function guardarHistorial(mensajes) {
+            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(mensajes)); } catch {}
+        }
+
+        const historialPrevio = cargarHistorial();
+        const veniaDeNavegacion = historialPrevio.length > 1;
+
         return {
-            abierto: false,
+            abierto: veniaDeNavegacion,
             mensaje: '',
-            mensajes: [
-                { rol: 'bot', texto: '¡Hola! Soy el asistente de JLVS Hearth. Puedo contarte el estado actual de tu IPS o ayudarte a navegar por el sistema. ¿En qué te puedo ayudar?', acciones: [] }
-            ],
+            mensajes: historialPrevio,
             cargando: false,
 
             async enviar() {
@@ -258,6 +288,7 @@
                 if (!texto || this.cargando) return;
 
                 this.mensajes.push({ rol: 'user', texto, acciones: [] });
+                guardarHistorial(this.mensajes);
                 this.mensaje = '';
                 this.cargando = true;
                 this.$nextTick(() => this.scrollAbajo());
@@ -274,16 +305,22 @@
 
                     const data = await res.json();
                     const raw = data.respuesta ?? data.error ?? 'Error al obtener respuesta.';
-                    const { texto: textoLimpio, acciones, navegar } = parsearRespuesta(raw);
+                    const { texto: textoLimpio, acciones, navegar, descarga } = parsearRespuesta(raw);
                     this.mensajes.push({ rol: 'bot', texto: textoLimpio, acciones });
+                    guardarHistorial(this.mensajes);
 
                     if (navegar) {
-                        this.mensajes.push({
-                            rol: 'bot',
-                            texto: `Redirigiendo a ${navegar.label.replace('Ir al ', '').replace('Ver ', '')}...`,
-                            acciones: [],
-                        });
+                        const msgNavegar = { rol: 'bot', texto: `Redirigiendo a ${navegar.label.replace('Ir al ', '').replace('Ver ', '')}...`, acciones: [] };
+                        this.mensajes.push(msgNavegar);
+                        guardarHistorial(this.mensajes);
                         setTimeout(() => { window.location.href = navegar.url; }, 1500);
+                    }
+
+                    if (descarga) {
+                        const msgDl = { rol: 'bot', texto: `Generando ${descarga.label.replace('Descargar ', '')}...`, acciones: [] };
+                        this.mensajes.push(msgDl);
+                        guardarHistorial(this.mensajes);
+                        setTimeout(() => { window.open(descarga.url, '_blank'); }, 800);
                     }
                 } catch (e) {
                     this.mensajes.push({ rol: 'bot', texto: 'No se pudo conectar con el asistente.', acciones: [] });

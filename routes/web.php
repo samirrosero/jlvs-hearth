@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminMedicoController;
 use App\Http\Controllers\Admin\AdminPacienteController;
+use App\Http\Controllers\Admin\AdminPasswordResetController;
 use App\Http\Controllers\Admin\ChatbotController;
 use App\Http\Controllers\Admin\LoginController;
 use App\Http\Controllers\AntecedentesPacienteController;
@@ -70,10 +71,10 @@ Route::middleware('auth')->group(function () {
 
     // Reportes (PDF y Excel) — administrador únicamente
     Route::middleware('role:administrador')->prefix('reportes')->group(function () {
-        Route::get('/citas/pdf',       [ReporteController::class, 'citasPdf']);
-        Route::get('/citas/excel',     [ReporteController::class, 'citasExcel']);
-        Route::get('/pacientes/pdf',   [ReporteController::class, 'pacientesPdf']);
-        Route::get('/pacientes/excel', [ReporteController::class, 'pacientesExcel']);
+        Route::get('/citas/pdf',       [ReporteController::class, 'citasPdf'])->name('reportes.citas.pdf');
+        Route::get('/citas/excel',     [ReporteController::class, 'citasExcel'])->name('reportes.citas.excel');
+        Route::get('/pacientes/pdf',   [ReporteController::class, 'pacientesPdf'])->name('reportes.pacientes.pdf');
+        Route::get('/pacientes/excel', [ReporteController::class, 'pacientesExcel'])->name('reportes.pacientes.excel');
     });
 
     // ─────────────────────────────────────────────────────────
@@ -311,6 +312,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/login',  [LoginController::class, 'showLogin'])->name('login');
     Route::post('/login', [LoginController::class, 'login'])->name('login.post');
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+
+    // Recuperación de contraseña (público)
+    Route::get('/forgot-password',        [AdminPasswordResetController::class, 'showForgot'])->name('forgot-password');
+    Route::post('/forgot-password',       [AdminPasswordResetController::class, 'sendLink'])->name('forgot-password.send');
+    Route::get('/reset-password/{token}', [AdminPasswordResetController::class, 'showReset'])->name('reset-password');
+    Route::post('/reset-password',        [AdminPasswordResetController::class, 'reset'])->name('reset-password.update');
 
     // Rutas protegidas — solo administrador autenticado
     Route::middleware(['auth', 'role:administrador'])->group(function () {

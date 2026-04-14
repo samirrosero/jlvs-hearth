@@ -30,12 +30,25 @@
             </select>
         </div>
 
+        {{-- Filtro edad --}}
+        <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Grupo de edad</label>
+            <select name="edad"
+                class="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="">Todos</option>
+                <option value="0-17"  {{ request('edad') === '0-17'  ? 'selected' : '' }}>Menores (0–17)</option>
+                <option value="18-40" {{ request('edad') === '18-40' ? 'selected' : '' }}>Adultos jóvenes (18–40)</option>
+                <option value="41-65" {{ request('edad') === '41-65' ? 'selected' : '' }}>Adultos (41–65)</option>
+                <option value="65+"   {{ request('edad') === '65+'   ? 'selected' : '' }}>Adultos mayores (65+)</option>
+            </select>
+        </div>
+
         <button type="submit"
             class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition">
             🔍 Filtrar
         </button>
 
-        @if (request()->hasAny(['buscar', 'sexo']))
+        @if (request()->hasAny(['buscar', 'sexo', 'edad']))
             <a href="{{ route('admin.pacientes.index') }}"
                class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm rounded-lg transition">
                 ✕ Limpiar
@@ -120,7 +133,7 @@
                         <td colspan="7" class="px-5 py-10 text-center text-gray-400">
                             <div class="text-4xl mb-2">👥</div>
                             <p>No se encontraron pacientes.</p>
-                            @if (request()->hasAny(['buscar', 'sexo']))
+                            @if (request()->hasAny(['buscar', 'sexo', 'edad']))
                                 <a href="{{ route('admin.pacientes.index') }}" class="text-blue-600 hover:underline text-sm mt-1 inline-block">
                                     Ver todos
                                 </a>

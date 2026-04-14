@@ -26,9 +26,23 @@ class AdminMedicoController extends Controller
             );
         }
 
+        if ($request->filled('especialidad')) {
+            $query->where('especialidad', $request->especialidad);
+        }
+
+        if ($request->filled('estado')) {
+            $activo = $request->estado === 'activo';
+            $query->whereHas('usuario', fn ($u) => $u->where('activo', $activo));
+        }
+
+        $especialidades = Medico::where('empresa_id', $empresaId)
+            ->distinct()
+            ->orderBy('especialidad')
+            ->pluck('especialidad');
+
         $medicos = $query->orderBy('id', 'desc')->paginate(10)->withQueryString();
 
-        return view('admin.medicos.index', compact('medicos'));
+        return view('admin.medicos.index', compact('medicos', 'especialidades'));
     }
 
     public function create()

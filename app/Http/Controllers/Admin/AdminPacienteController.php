@@ -24,6 +24,17 @@ class AdminPacienteController extends Controller
             $query->where('sexo', $request->sexo);
         }
 
+        if ($request->filled('edad')) {
+            $hoy = now();
+            match ($request->edad) {
+                '0-17'  => $query->where('fecha_nacimiento', '>', $hoy->copy()->subYears(18)),
+                '18-40' => $query->whereBetween('fecha_nacimiento', [$hoy->copy()->subYears(41), $hoy->copy()->subYears(18)]),
+                '41-65' => $query->whereBetween('fecha_nacimiento', [$hoy->copy()->subYears(66), $hoy->copy()->subYears(41)]),
+                '65+'   => $query->where('fecha_nacimiento', '<=', $hoy->copy()->subYears(65)),
+                default => null,
+            };
+        }
+
         $pacientes = $query->orderBy('nombre_completo')->paginate(10)->withQueryString();
 
         return view('admin.pacientes.index', compact('pacientes'));

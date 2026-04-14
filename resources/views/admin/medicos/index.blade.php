@@ -12,9 +12,34 @@
           class="flex flex-wrap items-end gap-3 flex-1">
 
         <div class="flex-1 min-w-48">
-            <label class="block text-xs font-medium text-gray-600 mb-1">Buscar nombre o especialidad</label>
-            <input type="text" name="buscar" value="{{ request('buscar') }}" placeholder="Ej: Pediatría..."
+            <label class="block text-xs font-medium text-gray-600 mb-1">Buscar nombre</label>
+            <input type="text" name="buscar" value="{{ request('buscar') }}" placeholder="Ej: Juan Pérez..."
                 class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+
+        {{-- Filtro especialidad --}}
+        <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Especialidad</label>
+            <select name="especialidad"
+                class="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="">Todas</option>
+                @foreach ($especialidades as $esp)
+                    <option value="{{ $esp }}" {{ request('especialidad') === $esp ? 'selected' : '' }}>
+                        {{ $esp }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+
+        {{-- Filtro estado --}}
+        <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Estado</label>
+            <select name="estado"
+                class="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="">Todos</option>
+                <option value="activo"   {{ request('estado') === 'activo'   ? 'selected' : '' }}>Activo</option>
+                <option value="inactivo" {{ request('estado') === 'inactivo' ? 'selected' : '' }}>Inactivo</option>
+            </select>
         </div>
 
         <button type="submit"
@@ -22,7 +47,7 @@
             🔍 Filtrar
         </button>
 
-        @if (request()->filled('buscar'))
+        @if (request()->hasAny(['buscar', 'especialidad', 'estado']))
             <a href="{{ route('admin.medicos.index') }}"
                class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm rounded-lg transition">
                 ✕ Limpiar

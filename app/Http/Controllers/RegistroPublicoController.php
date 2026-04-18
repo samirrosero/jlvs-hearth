@@ -148,6 +148,11 @@ class RegistroPublicoController extends Controller
             'password'          => ['required', 'string', 'min:8', 'confirmed'],
             'password_confirmation' => ['required'],
             'foto_documento'    => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:3072'],
+            // Campos específicos por rol (foto_diploma opcional por ahora para facilitar pruebas)
+            'especialidad'      => ['required_if:rol_solicitado,medico', 'nullable', 'string', 'max:100'],
+            'numero_tarjeta_profesional' => ['required_if:rol_solicitado,medico', 'nullable', 'string', 'max:50'],
+            'foto_diploma'      => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:3072'],
+            'documento_acreditacion' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:3072'],
         ]);
 
         // Verificar duplicados
@@ -164,10 +169,23 @@ class RegistroPublicoController extends Controller
             ]);
         }
 
+        // Guardar fotos de documentos
         $fotoPath = null;
         if ($request->hasFile('foto_documento')) {
             $fotoPath = $request->file('foto_documento')
-                ->store("solicitudes/{$empresa->id}", 'public');
+                ->store("solicitudes/{$empresa->id}/documentos", 'public');
+        }
+
+        $fotoDiplomaPath = null;
+        if ($request->hasFile('foto_diploma')) {
+            $fotoDiplomaPath = $request->file('foto_diploma')
+                ->store("solicitudes/{$empresa->id}/diplomas", 'public');
+        }
+
+        $docAcreditacionPath = null;
+        if ($request->hasFile('documento_acreditacion')) {
+            $docAcreditacionPath = $request->file('documento_acreditacion')
+                ->store("solicitudes/{$empresa->id}/acreditaciones", 'public');
         }
 
         SolicitudEmpleador::create([
@@ -179,9 +197,13 @@ class RegistroPublicoController extends Controller
             'correo'             => $request->correo,
             'password'           => Hash::make($request->password),
             'rol_solicitado'     => $request->rol_solicitado,
+            'especialidad'       => $request->especialidad,
+            'numero_tarjeta_profesional' => $request->numero_tarjeta_profesional,
             'departamento'       => $request->departamento,
             'municipio'          => $request->municipio,
             'foto_documento_path' => $fotoPath,
+            'foto_diploma_path' => $fotoDiplomaPath,
+            'documento_acreditacion_path' => $docAcreditacionPath,
             'estado'             => 'pendiente',
         ]);
 
@@ -193,6 +215,6 @@ class RegistroPublicoController extends Controller
         }
 
         return redirect()->route('login', $loginParams)
-            ->with('exito', 'Solicitud enviada. El administrador la revisará y te notificará pronto.');
+            ->with('exito', 'Solicitud enviada. El administrador la revisará y te notificará por correo cuando sea aprobada.');
     }
 }

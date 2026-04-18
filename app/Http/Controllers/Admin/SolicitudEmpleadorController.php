@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Mail\BienvenidaEmpleadorMail;
+use App\Mail\SolicitudRechazadaMail;
 use App\Models\Empresa;
 use App\Models\Rol;
 use App\Models\SolicitudEmpleador;
@@ -11,6 +13,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
@@ -47,7 +50,23 @@ class SolicitudEmpleadorController extends Controller
             return back()->with('error', 'Esta solicitud ya fue procesada.');
         }
 
-        DB::transaction(function () use ($solicitud) {
+        // Verificar que el correo no exista ya en la tabla users
+        if (User::where('email', $solicitud->correo)
+                ->where('empresa_id', $solicitud->empresa_id)
+                ->exists()) {
+            return back()->with('error', 'No se puede aprobar: el correo ' . $solicitud->correo . ' ya está registrado en el sistema. El usuario debe usar la opción de recuperar contraseña.');
+        }
+
+        // Verificar que la identificación no exista ya
+        if (User::where('identificacion', $solicitud->numero_documento)
+                ->where('empresa_id', $solicitud->empresa_id)
+                ->exists()) {
+            return back()->with('error', 'No se puede aprobar: ya existe un usuario con el número de documento ' . $solicitud->numero_documento . '.');
+        }
+
+        $empresa = $solicitud->empresa;
+
+        DB::transaction(function () use ($solicitud, $empresa) {
             $rol = Rol::where('nombre', $solicitud->rol_solicitado)->firstOrFail();
 
             User::create([
@@ -61,10 +80,17 @@ class SolicitudEmpleadorController extends Controller
                 'activo'          => true,
             ]);
 
-            $solicitud->update(['estado' => 'aprobado']);
+            $solicitud->update([
+                'estado' => 'aprobado',
+                'correo_bienvenida_enviado' => true,
+            ]);
+
+            // Enviar correo de bienvenida
+            Mail::to($solicitud->correo)
+                ->send(new BienvenidaEmpleadorMail($solicitud, $empresa));
         });
 
-        return back()->with('exito', 'Solicitud aprobada. El usuario ya puede ingresar al sistema.');
+        return back()->with('exito', 'Solicitud aprobada. El usuario recibirá un correo de bienvenida y ya puede ingresar al sistema.');
     }
 
     // ── Rechazar ─────────────────────────────────────────────────────────
@@ -76,11 +102,17 @@ class SolicitudEmpleadorController extends Controller
             'observaciones' => ['nullable', 'string', 'max:500'],
         ]);
 
+        $empresa = $solicitud->empresa;
+
         $solicitud->update([
             'estado'        => 'rechazado',
             'observaciones' => $request->observaciones,
         ]);
 
-        return back()->with('exito', 'Solicitud rechazada.');
+        // Enviar correo de notificación de rechazo
+        Mail::to($solicitud->correo)
+            ->send(new SolicitudRechazadaMail($solicitud, $empresa));
+
+        return back()->with('exito', 'Solicitud rechazada. Se ha enviado una notificación por correo.');
     }
 }

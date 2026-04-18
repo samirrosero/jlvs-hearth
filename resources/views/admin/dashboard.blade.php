@@ -5,15 +5,19 @@
 
 @section('content')
 
+@php
+    $empresa = auth()->user()?->empresa;
+@endphp
+
 {{-- ── Tarjetas de métricas ─────────────────────────────────────── --}}
 <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
 
     @php
         $cards = [
-            ['label' => 'Pacientes',        'value' => $totalPacientes, 'icon' => asset('img/icons/pacientes.png'),  'color' => 'blue'],
-            ['label' => 'Médicos',           'value' => $totalMedicos,   'icon' => asset('img/icons/medicos.png'),    'color' => 'emerald'],
-            ['label' => 'Citas este mes',    'value' => $citasMes,       'icon' => asset('img/icons/citas-mes.png'), 'color' => 'violet'],
-            ['label' => 'Total citas',       'value' => $totalCitas,     'icon' => asset('img/icons/citas-total.png'), 'color' => 'amber'],
+            ['label' => 'Pacientes',        'value' => $totalPacientes, 'icon' => $empresa?->icono_card_pacientes_url ?? asset('img/icons/pacientes.png'),  'color' => 'blue'],
+            ['label' => 'Médicos',           'value' => $totalMedicos,   'icon' => $empresa?->icono_card_medicos_url ?? asset('img/icons/medicos.png'),    'color' => 'emerald'],
+            ['label' => 'Citas este mes',    'value' => $citasMes,       'icon' => $empresa?->icono_card_citas_url ?? asset('img/icons/citas-mes.png'), 'color' => 'violet'],
+            ['label' => 'Total citas',       'value' => $totalCitas,     'icon' => $empresa?->icono_card_total_url ?? asset('img/icons/citas-total.png'), 'color' => 'amber'],
         ];
         $colorMap = [
             'blue'    => ['bg' => 'bg-blue-50',    'text' => 'text-blue-700',    'icon' => 'bg-blue-100'],

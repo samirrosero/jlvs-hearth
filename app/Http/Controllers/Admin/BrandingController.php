@@ -34,6 +34,18 @@ class BrandingController extends Controller
             'favicon'          => ['nullable', 'image', 'mimes:png,ico,svg', 'max:512'],
             'imagen_login'     => ['nullable', 'image', 'mimes:png,jpg,jpeg,webp', 'max:4096'],
             'imagen_registro'  => ['nullable', 'image', 'mimes:png,jpg,jpeg,webp', 'max:4096'],
+            // Iconos del sidebar (PNG, idealmente 24x24 o 32x32)
+            'icono_dashboard'  => ['nullable', 'image', 'mimes:png,svg,webp', 'max:512'],
+            'icono_pacientes'  => ['nullable', 'image', 'mimes:png,svg,webp', 'max:512'],
+            'icono_medicos'    => ['nullable', 'image', 'mimes:png,svg,webp', 'max:512'],
+            'icono_reportes'   => ['nullable', 'image', 'mimes:png,svg,webp', 'max:512'],
+            'icono_solicitudes'=> ['nullable', 'image', 'mimes:png,svg,webp', 'max:512'],
+            'icono_identidad'  => ['nullable', 'image', 'mimes:png,svg,webp', 'max:512'],
+            // Iconos de las tarjetas del dashboard (PNG, idealmente 40x40 o 48x48)
+            'icono_card_pacientes' => ['nullable', 'image', 'mimes:png,svg,webp', 'max:512'],
+            'icono_card_medicos'   => ['nullable', 'image', 'mimes:png,svg,webp', 'max:512'],
+            'icono_card_citas'     => ['nullable', 'image', 'mimes:png,svg,webp', 'max:512'],
+            'icono_card_total'     => ['nullable', 'image', 'mimes:png,svg,webp', 'max:512'],
         ]);
 
         $datos = $request->only([
@@ -77,6 +89,38 @@ class BrandingController extends Controller
             }
             $datos['imagen_registro_path'] = $request->file('imagen_registro')
                 ->store("empresas/{$empresa->id}", 'public');
+        }
+
+        // ── Iconos del sidebar ─────────────────────────────────────────────
+        $iconosSidebar = [
+            'icono_dashboard', 'icono_pacientes', 'icono_medicos',
+            'icono_reportes', 'icono_solicitudes', 'icono_identidad'
+        ];
+        foreach ($iconosSidebar as $icono) {
+            if ($request->hasFile($icono)) {
+                $pathField = $icono . '_path';
+                if ($empresa->$pathField) {
+                    Storage::disk('public')->delete($empresa->$pathField);
+                }
+                $datos[$pathField] = $request->file($icono)
+                    ->store("empresas/{$empresa->id}/iconos", 'public');
+            }
+        }
+
+        // ── Iconos de las tarjetas del dashboard ────────────────────────────
+        $iconosCards = [
+            'icono_card_pacientes', 'icono_card_medicos',
+            'icono_card_citas', 'icono_card_total'
+        ];
+        foreach ($iconosCards as $icono) {
+            if ($request->hasFile($icono)) {
+                $pathField = $icono . '_path';
+                if ($empresa->$pathField) {
+                    Storage::disk('public')->delete($empresa->$pathField);
+                }
+                $datos[$pathField] = $request->file($icono)
+                    ->store("empresas/{$empresa->id}/iconos", 'public');
+            }
         }
 
         $empresa->update($datos);

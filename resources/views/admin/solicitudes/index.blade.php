@@ -51,7 +51,7 @@
                 @if($rol === 'medico')
                 <div class="mb-3 px-4 py-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 text-xs">
                     <strong>Nota RETHUS:</strong> Antes de aprobar médicos, verifica su registro en el sistema RETHUS del Ministerio de Salud de Colombia.
-                    <a href="https://rethus.minsalud.gov.co" target="_blank" class="underline ml-1 font-semibold">Consultar RETHUS →</a>
+                    <a href="https://web.sispro.gov.co/THS/Cliente/ConsultasPublicas/ConsultaPublicaDeTHxIdentificacion.aspx" target="_blank" class="underline ml-1 font-semibold">Consultar RETHUS →</a>
                 </div>
                 @endif
 
@@ -70,9 +70,29 @@
                                 </span>
                             </div>
                             <p class="text-xs text-gray-500 mt-1">{{ $s->correo }}</p>
+
+                            {{-- Info específica por rol --}}
+                            @if($s->rol_solicitado === 'medico')
+                                @if($s->especialidad)
+                                <p class="text-xs text-emerald-600 mt-1 font-medium">
+                                    🩺 Especialidad: {{ $s->especialidad }}
+                                </p>
+                                @endif
+                                @if($s->numero_tarjeta_profesional)
+                                <p class="text-xs text-gray-500 mt-0.5">
+                                    🎓 Tarjeta Profesional: {{ $s->numero_tarjeta_profesional }}
+                                </p>
+                                @endif
+                                <p class="text-xs text-amber-600 mt-1">
+                                    <a href="https://web.sispro.gov.co/THS/Cliente/ConsultasPublicas/ConsultaPublicaDeTHxIdentificacion.aspx" target="_blank" class="underline">
+                                        Verificar en RETHUS →
+                                    </a>
+                                </p>
+                            @endif
+
                             @if($s->departamento || $s->municipio)
-                            <p class="text-xs text-gray-400 mt-0.5">
-                                {{ implode(', ', array_filter([$s->municipio, $s->departamento])) }}
+                            <p class="text-xs text-gray-400 mt-1">
+                                📍 {{ implode(', ', array_filter([$s->municipio, $s->departamento])) }}
                             </p>
                             @endif
                             <p class="text-xs text-gray-400 mt-1">
@@ -80,14 +100,35 @@
                             </p>
                         </div>
 
-                        {{-- Foto documento --}}
-                        @if($s->foto_url)
-                        <a href="{{ $s->foto_url }}" target="_blank"
-                           class="flex-shrink-0 w-14 h-14 rounded-lg border border-gray-200 overflow-hidden hover:opacity-80 transition">
-                            <img src="{{ $s->foto_url }}" alt="Documento"
-                                 class="w-full h-full object-cover">
-                        </a>
-                        @endif
+                        {{-- Documentos --}}
+                        <div class="flex flex-col gap-2 flex-shrink-0">
+                            {{-- Foto documento de identidad --}}
+                            @if($s->foto_url)
+                            <a href="{{ $s->foto_url }}" target="_blank" title="Documento de identidad"
+                               class="w-14 h-14 rounded-lg border border-gray-200 overflow-hidden hover:opacity-80 transition relative">
+                                <img src="{{ $s->foto_url }}" alt="Documento" class="w-full h-full object-cover">
+                                <span class="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-[8px] text-center py-0.5">ID</span>
+                            </a>
+                            @endif
+
+                            {{-- Foto diploma (solo médicos) --}}
+                            @if($s->foto_diploma_url)
+                            <a href="{{ $s->foto_diploma_url }}" target="_blank" title="Diploma / Tarjeta profesional"
+                               class="w-14 h-14 rounded-lg border border-gray-200 overflow-hidden hover:opacity-80 transition relative">
+                                <img src="{{ $s->foto_diploma_url }}" alt="Diploma" class="w-full h-full object-cover">
+                                <span class="absolute bottom-0 left-0 right-0 bg-emerald-600/80 text-white text-[8px] text-center py-0.5">DIPLOMA</span>
+                            </a>
+                            @endif
+
+                            {{-- Documento de acreditación adicional --}}
+                            @if($s->documento_acreditacion_url)
+                            <a href="{{ $s->documento_acreditacion_url }}" target="_blank" title="Certificación adicional"
+                               class="w-14 h-14 rounded-lg border border-gray-200 overflow-hidden hover:opacity-80 transition relative">
+                                <img src="{{ $s->documento_acreditacion_url }}" alt="Certificación" class="w-full h-full object-cover">
+                                <span class="absolute bottom-0 left-0 right-0 bg-blue-600/80 text-white text-[8px] text-center py-0.5">CERT</span>
+                            </a>
+                            @endif
+                        </div>
 
                         {{-- Acciones --}}
                         <div class="flex flex-col gap-2 flex-shrink-0">
@@ -138,34 +179,34 @@
     </div>
     @endif
 
-</div>
+    {{-- ── Modal rechazar ──────────────────────────────────────────────── --}}
+    <div x-show="rechazarId !== null" x-cloak
+         class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+         @keydown.escape.window="rechazarId = null">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+            <h3 class="text-base font-bold text-gray-800 mb-1">Rechazar solicitud</h3>
+            <p class="text-sm text-gray-500 mb-4">Opcionalmente indica el motivo del rechazo.</p>
 
-{{-- ── Modal rechazar ──────────────────────────────────────────────── --}}
-<div x-show="rechazarId !== null" x-cloak
-     class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-     @keydown.escape.window="rechazarId = null">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
-        <h3 class="text-base font-bold text-gray-800 mb-1">Rechazar solicitud</h3>
-        <p class="text-sm text-gray-500 mb-4">Opcionalmente indica el motivo del rechazo.</p>
-
-        <template x-if="rechazarId !== null">
-            <form :action="`/admin/solicitudes/${rechazarId}/rechazar`" method="POST">
-                @csrf @method('PATCH')
-                <textarea name="observaciones" x-model="obs" rows="3"
-                          placeholder="Motivo del rechazo (opcional)..."
-                          class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 resize-none mb-4"></textarea>
-                <div class="flex gap-3 justify-end">
-                    <button type="button" @click="rechazarId = null"
-                            class="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition">
-                        Cancelar
-                    </button>
-                    <button type="submit"
-                            class="px-4 py-2 text-sm bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition">
-                        Confirmar rechazo
-                    </button>
-                </div>
-            </form>
-        </template>
+            <template x-if="rechazarId !== null">
+                <form :action="`{{ url('/admin/solicitudes') }}/${rechazarId}/rechazar`" method="POST">
+                    @csrf @method('PATCH')
+                    <textarea name="observaciones" x-model="obs" rows="3"
+                              placeholder="Motivo del rechazo (opcional)..."
+                              class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 resize-none mb-4"></textarea>
+                    <div class="flex gap-3 justify-end">
+                        <button type="button" @click="rechazarId = null"
+                                class="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition">
+                            Cancelar
+                        </button>
+                        <button type="submit"
+                                class="px-4 py-2 text-sm bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition">
+                            Confirmar rechazo
+                        </button>
+                    </div>
+                </form>
+            </template>
+        </div>
     </div>
+
 </div>
 @endsection

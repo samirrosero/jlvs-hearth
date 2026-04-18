@@ -31,9 +31,29 @@ class Empresa extends Model
         'color_pdf',
         'slogan_login',
         'slogan_registro',
+        // Iconos del sidebar admin
+        'icono_dashboard_path',
+        'icono_pacientes_path',
+        'icono_medicos_path',
+        'icono_reportes_path',
+        'icono_solicitudes_path',
+        'icono_identidad_path',
+        // Iconos de las tarjetas del dashboard
+        'icono_card_pacientes_path',
+        'icono_card_medicos_path',
+        'icono_card_citas_path',
+        'icono_card_total_path',
     ];
 
-    protected $appends = ['logo_url', 'favicon_url', 'imagen_login_url', 'imagen_registro_url'];
+    protected $appends = [
+        'logo_url', 'favicon_url', 'imagen_login_url', 'imagen_registro_url',
+        // Iconos sidebar admin
+        'icono_dashboard_url', 'icono_pacientes_url', 'icono_medicos_url',
+        'icono_reportes_url', 'icono_solicitudes_url', 'icono_identidad_url',
+        // Iconos tarjetas dashboard
+        'icono_card_pacientes_url', 'icono_card_medicos_url',
+        'icono_card_citas_url', 'icono_card_total_url',
+    ];
 
     protected function casts(): array
     {
@@ -80,6 +100,50 @@ class Empresa extends Model
         return $this->logo_path
             ? storage_path('app/public/' . $this->logo_path)
             : public_path('img/logos/logo1.png');
+    }
+
+    // ── Iconos del sidebar administrativo ───────────────────────────────
+    public function getIconoDashboardUrlAttribute(): ?string
+    {
+        return $this->icono_dashboard_path ? Storage::disk('public')->url($this->icono_dashboard_path) : null;
+    }
+    public function getIconoPacientesUrlAttribute(): ?string
+    {
+        return $this->icono_pacientes_path ? Storage::disk('public')->url($this->icono_pacientes_path) : null;
+    }
+    public function getIconoMedicosUrlAttribute(): ?string
+    {
+        return $this->icono_medicos_path ? Storage::disk('public')->url($this->icono_medicos_path) : null;
+    }
+    public function getIconoReportesUrlAttribute(): ?string
+    {
+        return $this->icono_reportes_path ? Storage::disk('public')->url($this->icono_reportes_path) : null;
+    }
+    public function getIconoSolicitudesUrlAttribute(): ?string
+    {
+        return $this->icono_solicitudes_path ? Storage::disk('public')->url($this->icono_solicitudes_path) : null;
+    }
+    public function getIconoIdentidadUrlAttribute(): ?string
+    {
+        return $this->icono_identidad_path ? Storage::disk('public')->url($this->icono_identidad_path) : null;
+    }
+
+    // ── Iconos de las tarjetas del dashboard ──────────────────────────────
+    public function getIconoCardPacientesUrlAttribute(): ?string
+    {
+        return $this->icono_card_pacientes_path ? Storage::disk('public')->url($this->icono_card_pacientes_path) : null;
+    }
+    public function getIconoCardMedicosUrlAttribute(): ?string
+    {
+        return $this->icono_card_medicos_path ? Storage::disk('public')->url($this->icono_card_medicos_path) : null;
+    }
+    public function getIconoCardCitasUrlAttribute(): ?string
+    {
+        return $this->icono_card_citas_path ? Storage::disk('public')->url($this->icono_card_citas_path) : null;
+    }
+    public function getIconoCardTotalUrlAttribute(): ?string
+    {
+        return $this->icono_card_total_path ? Storage::disk('public')->url($this->icono_card_total_path) : null;
     }
 
     // Una empresa tiene muchos usuarios

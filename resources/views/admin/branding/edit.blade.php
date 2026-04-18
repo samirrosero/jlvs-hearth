@@ -274,6 +274,100 @@
             </div>
         </div>
 
+        {{-- ══ FILA 3: Iconos del Panel Administrativo ═════════════════════════ --}}
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-100">
+                <h2 class="text-sm font-semibold text-gray-800">Iconos del panel administrativo</h2>
+                <p class="text-xs text-gray-400 mt-0.5">Personaliza los iconos del menú lateral y las tarjetas del dashboard. Formatos: PNG, SVG o WEBP.</p>
+            </div>
+            <div class="p-6 space-y-8">
+
+                {{-- Iconos del Sidebar --}}
+                <div>
+                    <p class="text-[11px] font-semibold text-gray-400 uppercase tracking-widest mb-3">Menú lateral (Sidebar)</p>
+                    <p class="text-xs text-gray-500 mb-4">Tamaño recomendado: 24x24 o 32x32 píxeles</p>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+                        @php
+                            $iconosSidebar = [
+                                'icono_dashboard'   => ['label' => 'Dashboard',      'preview' => $empresa->icono_dashboard_url],
+                                'icono_pacientes' => ['label' => 'Pacientes',      'preview' => $empresa->icono_pacientes_url],
+                                'icono_medicos'   => ['label' => 'Médicos',        'preview' => $empresa->icono_medicos_url],
+                                'icono_reportes'  => ['label' => 'Reportes',       'preview' => $empresa->icono_reportes_url],
+                                'icono_solicitudes'=> ['label' => 'Solicitudes',   'preview' => $empresa->icono_solicitudes_url],
+                                'icono_identidad' => ['label' => 'Identidad Visual','preview' => $empresa->icono_identidad_url],
+                            ];
+                        @endphp
+                        @foreach($iconosSidebar as $key => $info)
+                        <div>
+                            <p class="text-xs font-medium text-gray-600 mb-2">{{ $info['label'] }}</p>
+                            <div class="upload-zone-sm" onclick="document.getElementById('{{ $key }}-input').click()">
+                                @if($info['preview'])
+                                    <img id="{{ $key }}-preview" src="{{ $info['preview'] }}" alt="{{ $info['label'] }}" class="h-8 w-8 mx-auto object-contain">
+                                @else
+                                    <img id="{{ $key }}-preview" src="" alt="" class="h-8 w-8 mx-auto object-contain hidden">
+                                    <svg class="w-6 h-6 mx-auto text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14"/>
+                                    </svg>
+                                @endif
+                            </div>
+                            <input type="file" name="{{ $key }}" id="{{ $key }}-input" accept="image/png,image/svg+xml,image/webp" class="hidden"
+                                   onchange="previewIcon(this,'{{ $key }}-preview')">
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+
+                {{-- Iconos de las Tarjetas del Dashboard --}}
+                <div>
+                    <p class="text-[11px] font-semibold text-gray-400 uppercase tracking-widest mb-3">Tarjetas del Dashboard</p>
+                    <p class="text-xs text-gray-500 mb-4">Tamaño recomendado: 40x40 o 48x48 píxeles. Se usan en las estadísticas del inicio.</p>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                        @php
+                            $iconosCards = [
+                                'icono_card_pacientes' => ['label' => 'Pacientes', 'preview' => $empresa->icono_card_pacientes_url],
+                                'icono_card_medicos'   => ['label' => 'Médicos',   'preview' => $empresa->icono_card_medicos_url],
+                                'icono_card_citas'     => ['label' => 'Citas',     'preview' => $empresa->icono_card_citas_url],
+                                'icono_card_total'     => ['label' => 'Total',     'preview' => $empresa->icono_card_total_url],
+                            ];
+                        @endphp
+                        @foreach($iconosCards as $key => $info)
+                        <div>
+                            <p class="text-xs font-medium text-gray-600 mb-2">{{ $info['label'] }}</p>
+                            <div class="upload-zone-sm" onclick="document.getElementById('{{ $key }}-input').click()">
+                                @if($info['preview'])
+                                    <img id="{{ $key }}-preview" src="{{ $info['preview'] }}" alt="{{ $info['label'] }}" class="h-10 w-10 mx-auto object-contain">
+                                @else
+                                    <img id="{{ $key }}-preview" src="" alt="" class="h-10 w-10 mx-auto object-contain hidden">
+                                    <svg class="w-6 h-6 mx-auto text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14"/>
+                                    </svg>
+                                @endif
+                            </div>
+                            <input type="file" name="{{ $key }}" id="{{ $key }}-input" accept="image/png,image/svg+xml,image/webp" class="hidden"
+                                   onchange="previewIcon(this,'{{ $key }}-preview')">
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <style>
+            .upload-zone-sm {
+                border: 2px dashed #e5e7eb;
+                border-radius: 0.75rem;
+                padding: 12px;
+                text-align: center;
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+            .upload-zone-sm:hover {
+                border-color: #9ca3af;
+                background: #f9fafb;
+            }
+        </style>
+
         {{-- ══ GUARDAR ══════════════════════════════════════════════════════════ --}}
         <div class="flex items-center justify-between">
             <p class="text-xs text-gray-400">Los cambios se aplican de inmediato en todas las vistas de esta IPS.</p>
@@ -297,6 +391,21 @@ function previewImg(input, targetId) {
         if (targetId === 'logo-preview') {
             document.getElementById('sb-logo').src = e.target.result;
         }
+    };
+    reader.readAsDataURL(input.files[0]);
+}
+
+function previewIcon(input, previewId) {
+    if (!input.files?.[0]) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+        const img = document.getElementById(previewId);
+        img.src = e.target.result;
+        img.classList.remove('hidden');
+        // Ocultar el SVG placeholder si existe
+        const parent = img.parentElement;
+        const svg = parent.querySelector('svg');
+        if (svg) svg.style.display = 'none';
     };
     reader.readAsDataURL(input.files[0]);
 }

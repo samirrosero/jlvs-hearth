@@ -71,32 +71,32 @@
                 $nav = [
                     [
                         'route' => 'admin.dashboard',
-                        'icon'  => asset('img/icons/dashboard.png'),
+                        'icon'  => $empresa?->icono_dashboard_url ?? asset('img/icons/dashboard.png'),
                         'label' => 'Dashboard',
                     ],
                     [
                         'route' => 'admin.pacientes.index',
-                        'icon'  => asset('img/icons/pacientes.png'),
+                        'icon'  => $empresa?->icono_pacientes_url ?? asset('img/icons/pacientes.png'),
                         'label' => 'Pacientes',
                     ],
                     [
                         'route' => 'admin.medicos.index',
-                        'icon'  => asset('img/icons/medicos.png'),
+                        'icon'  => $empresa?->icono_medicos_url ?? asset('img/icons/medicos.png'),
                         'label' => 'Médicos',
                     ],
                     [
                         'route' => 'admin.reportes',
-                        'icon'  => asset('img/icons/reportes.png'),
+                        'icon'  => $empresa?->icono_reportes_url ?? asset('img/icons/reportes.png'),
                         'label' => 'Reportes',
                     ],
                     [
                         'route' => 'admin.solicitudes.index',
-                        'icon'  => asset('img/icons/pacientes.png'),
+                        'icon'  => $empresa?->icono_solicitudes_url ?? asset('img/icons/pacientes.png'),
                         'label' => 'Solicitudes personal',
                     ],
                     [
                         'route' => 'admin.branding',
-                        'icon'  => asset('img/icons/dashboard.png'),
+                        'icon'  => $empresa?->icono_identidad_url ?? asset('img/icons/dashboard.png'),
                         'label' => 'Identidad Visual',
                     ],
                 ];

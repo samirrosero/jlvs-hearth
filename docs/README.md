@@ -11,10 +11,12 @@ Proyecto multi-tenant para IPS colombianas. Backend construido con **Laravel 12*
 | [03-form-requests.md](03-form-requests.md) | Validaciones de entrada (24 Form Requests) |
 | [04-controladores.md](04-controladores.md) | Los 12 controladores de recursos |
 | [05-politicas.md](05-politicas.md) | Políticas de autorización a nivel de fila (9 Policies) |
-| [06-rutas.md](06-rutas.md) | Mapa completo de rutas (95 rutas) |
-| [07-base-de-datos.md](07-base-de-datos.md) | Estructura completa de las 20 tablas con todos sus atributos |
+| [06-rutas.md](06-rutas.md) | Mapa completo de rutas (100+ rutas) |
+| [07-base-de-datos.md](07-base-de-datos.md) | Estructura completa de las 21 tablas con todos sus atributos |
 | [08-flujos.md](08-flujos.md) | Todos los flujos del sistema con endpoints, bodies y orden de ejecución |
 | [09-diagrama-eer.md](09-diagrama-eer.md) | Entidades, atributos, relaciones y cardinalidades para el diagrama EER |
+| [10-diagramas-casos-uso.md](10-diagramas-casos-uso.md) | Diagramas de casos de uso del sistema |
+| [11-onboarding-y-registro.md](11-onboarding-y-registro.md) | Onboarding de IPS, registro público, branding y solicitudes de empleadores |
 
 ## Arquitectura general
 
@@ -52,3 +54,33 @@ El aislamiento entre empresas (IPS) se aplica en **tres niveles**:
 1. **Form Request** — `Rule::exists('tabla')->where('empresa_id', $empresaId)` impide referenciar registros de otro tenant.
 2. **Controller `index()`** — `->where('empresa_id', auth()->user()->empresa_id)` en todas las consultas de listado.
 3. **Policy** — cada método verifica que el `empresa_id` del recurso coincida con el del usuario autenticado.
+
+## Nuevas funcionalidades (Abril 2026)
+
+### 1. Onboarding de IPS
+Registro público de nuevas IPS sin autenticación. Crea automáticamente la empresa y su administrador inicial.
+
+### 2. Registro Público
+- **Afiliados (pacientes)**: Se registran directamente y pueden acceder inmediatamente
+- **Empleadores (médicos/gestores)**: Envían solicitud que requiere aprobación del administrador
+
+### 3. Branding/Identidad Visual
+Cada IPS puede personalizar:
+- Logo, favicon e imágenes de login/registro
+- Paleta de colores por rol (admin, médico, gestor, paciente)
+- Slogans personalizados para login y registro
+- Color para PDFs de reportes e historias clínicas
+
+### 4. Gestión de Solicitudes de Empleadores
+Flujo de aprobación/rechazo desde el panel administrativo con:
+- Verificación de documento con foto
+- Creación automática de usuario al aprobar
+- Observaciones en caso de rechazo
+
+### 5. Panel de Administración Blade
+Interfaz web administrativa con:
+- Login con número de documento
+- Dashboard con métricas
+- CRUD de pacientes y médicos
+- Gestión de reportes (PDF/Excel)
+- Chatbot asistente con Ollama

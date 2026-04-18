@@ -1,9 +1,12 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\SolicitudEmpleadorController;
+use App\Http\Controllers\RegistroPublicoController;
 use App\Http\Controllers\Admin\AdminMedicoController;
 use App\Http\Controllers\Admin\AdminPacienteController;
 use App\Http\Controllers\Admin\AdminPasswordResetController;
+use App\Http\Controllers\Admin\BrandingController;
 use App\Http\Controllers\Admin\ChatbotController;
 use App\Http\Controllers\Admin\LoginController;
 use App\Http\Controllers\AntecedentesPacienteController;
@@ -21,6 +24,7 @@ use App\Http\Controllers\AttachedDocumentController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ClinicalHistoryController;
 use App\Http\Controllers\CompanyController;
+use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\DoctorController;
 use App\Http\Controllers\HorarioMedicoController;
 use App\Http\Controllers\LogAuditoriaController;
@@ -40,21 +44,45 @@ use Illuminate\Support\Facades\Route;
 // ─────────────────────────────────────────────────────────────
 Route::get('/', fn () => view('welcome'))->name('home');
 
+// Onboarding — registro de nueva IPS (público)
+Route::get('/adquirir',  [OnboardingController::class, 'show'])->name('onboarding.show');
+Route::post('/adquirir', [OnboardingController::class, 'store'])->name('onboarding.store');
+
 // ─────────────────────────────────────────────────────────────
 // Autenticación (público)
 // ─────────────────────────────────────────────────────────────
-Route::post('/login', [AuthController::class, 'login'])->name('login');
+Route::post('/api/login', [AuthController::class, 'login'])->name('api.login');
 Route::post('/forgot-password', [PasswordResetController::class, 'enviarEnlace'])->name('password.email');
 Route::post('/reset-password', [PasswordResetController::class, 'resetear'])->name('password.update');
 
 // ─────────────────────────────────────────────────────────────
-// Registro público de paciente
+// Autenticación Blade (panel)
+// ─────────────────────────────────────────────────────────────
+Route::get('/login',  [LoginController::class, 'showLogin'])->name('login');
+Route::post('/login', [LoginController::class, 'login'])->name('login.post');
+Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+
+// Recuperación de contraseña
+Route::get('/forgot-password',        [AdminPasswordResetController::class, 'showForgot'])->name('forgot-password');
+Route::post('/forgot-password',       [AdminPasswordResetController::class, 'sendLink'])->name('forgot-password.send');
+Route::get('/reset-password/{token}', [AdminPasswordResetController::class, 'showReset'])->name('reset-password');
+Route::post('/reset-password',        [AdminPasswordResetController::class, 'reset'])->name('reset-password.update');
+
+// ─────────────────────────────────────────────────────────────
+// Registro público (Blade) — afiliados y empleadores
+// ─────────────────────────────────────────────────────────────
+Route::get('/registro',             [RegistroPublicoController::class, 'show'])->name('registro.show');
+Route::post('/registro/afiliado',   [RegistroPublicoController::class, 'registrarAfiliado'])->name('registro.afiliado');
+Route::post('/registro/empleador',  [RegistroPublicoController::class, 'registrarEmpleador'])->name('registro.empleador');
+
+// ─────────────────────────────────────────────────────────────
+// Registro público de paciente (API — legacy)
 // ─────────────────────────────────────────────────────────────
 Route::post('/registro-paciente', [RegistroPacienteController::class, 'store'])->name('registro.paciente');
 
 Route::middleware('auth')->group(function () {
 
-    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+    Route::post('/api/logout', [AuthController::class, 'logout'])->name('api.logout');
     Route::get('/me', [AuthController::class, 'me'])->name('me');
 
     // Cambio de contraseña propia — cualquier rol autenticado
@@ -308,16 +336,6 @@ Route::post('/empresas', [CompanyController::class, 'store'])->name('empresas.st
 // ═════════════════════════════════════════════════════════════
 Route::prefix('admin')->name('admin.')->group(function () {
 
-    // Login / Logout (público dentro del panel)
-    Route::get('/login',  [LoginController::class, 'showLogin'])->name('login');
-    Route::post('/login', [LoginController::class, 'login'])->name('login.post');
-    Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
-
-    // Recuperación de contraseña (público)
-    Route::get('/forgot-password',        [AdminPasswordResetController::class, 'showForgot'])->name('forgot-password');
-    Route::post('/forgot-password',       [AdminPasswordResetController::class, 'sendLink'])->name('forgot-password.send');
-    Route::get('/reset-password/{token}', [AdminPasswordResetController::class, 'showReset'])->name('reset-password');
-    Route::post('/reset-password',        [AdminPasswordResetController::class, 'reset'])->name('reset-password.update');
 
     // Rutas protegidas — solo administrador autenticado
     Route::middleware(['auth', 'role:administrador'])->group(function () {
@@ -337,6 +355,15 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         // Reportes — descarga de PDF/Excel (delega a ReporteController ya existente)
         Route::get('/reportes', fn () => view('admin.reportes.index'))->name('reportes');
+
+        // Identidad visual (branding) de la IPS
+        Route::get('/branding',  [BrandingController::class, 'edit'])->name('branding');
+        Route::post('/branding', [BrandingController::class, 'update'])->name('branding.update');
+
+        // Solicitudes de personal (empleadores pendientes)
+        Route::get('/solicitudes',                            [SolicitudEmpleadorController::class, 'index'])->name('solicitudes.index');
+        Route::patch('/solicitudes/{solicitud}/aprobar',      [SolicitudEmpleadorController::class, 'aprobar'])->name('solicitudes.aprobar');
+        Route::patch('/solicitudes/{solicitud}/rechazar',     [SolicitudEmpleadorController::class, 'rechazar'])->name('solicitudes.rechazar');
 
         // Chatbot — asistente virtual con Ollama
         Route::post('/chatbot', [ChatbotController::class, 'chat'])->name('chatbot');

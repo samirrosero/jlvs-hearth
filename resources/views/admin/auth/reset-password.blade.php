@@ -20,7 +20,7 @@
             <h2 class="text-xl font-semibold text-gray-800 mb-2">Nueva contraseña</h2>
             <p class="text-sm text-gray-500 mb-6">Elige una contraseña segura de al menos 8 caracteres.</p>
 
-            <form method="POST" action="{{ route('admin.reset-password.update') }}" class="space-y-5">
+            <form method="POST" action="{{ route('reset-password.update') }}" class="space-y-5">
                 @csrf
 
                 <input type="hidden" name="token" value="{{ $token }}">

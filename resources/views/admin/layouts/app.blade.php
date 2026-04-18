@@ -4,26 +4,65 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Panel Admin') — JLVS Hearth</title>
-    <link rel="icon" href="{{ asset('favicon.ico') }}" type="image/x-icon">
-    <link rel="shortcut icon" href="{{ asset('favicon.ico') }}" type="image/x-icon">
+    @php $empresa = auth()->user()?->empresa; @endphp
+    <title>@yield('title', 'Panel Admin') — {{ $empresa?->nombre ?? 'JLVS Hearth' }}</title>
+    @php $fv = ($empresa?->favicon_url ?? asset('favicon.ico')) . '?v=' . ($empresa?->updated_at?->timestamp ?? '1'); @endphp
+    <link rel="icon" href="{{ $fv }}" type="image/x-icon">
+    <link rel="shortcut icon" href="{{ $fv }}" type="image/x-icon">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <style>
+        :root {
+            --color-sidebar:    {{ $empresa?->color_admin    ?? '#1e293b' }};
+            --color-primario:   {{ $empresa?->color_primario ?? '#1e40af' }};
+            --color-secundario: {{ $empresa?->color_secundario ?? '#1e3a8a' }};
+        }
+        /* ── Sidebar temático ────────────────────────────────── */
+        #app-sidebar {
+            background-color: var(--color-sidebar) !important;
+            border-right-color: rgba(255,255,255,.08) !important;
+        }
+        #app-sidebar .sidebar-logo-text { color: rgba(255,255,255,.85); }
+        #app-sidebar .sidebar-empresa   { color: rgba(255,255,255,.55); }
+        #app-sidebar .nav-item {
+            color: rgba(255,255,255,.65);
+        }
+        #app-sidebar .nav-item:hover {
+            background-color: rgba(255,255,255,.1);
+            color: #fff;
+        }
+        #app-sidebar .nav-item.activo {
+            background-color: rgba(255,255,255,.18);
+            color: #fff;
+        }
+        #app-sidebar .nav-item img { filter: brightness(0) invert(1); opacity: .7; }
+        #app-sidebar .nav-item.activo img,
+        #app-sidebar .nav-item:hover img { opacity: 1; }
+        #app-sidebar .sidebar-divider   { border-color: rgba(255,255,255,.1); }
+        #app-sidebar .sidebar-username  { color: rgba(255,255,255,.9); }
+        #app-sidebar .sidebar-role      { color: rgba(255,255,255,.5); }
+        #app-sidebar .sidebar-logout {
+            color: rgba(255,255,255,.55);
+        }
+        #app-sidebar .sidebar-logout:hover { color: #fff; }
+        #app-sidebar .sidebar-logout img { filter: brightness(0) invert(1); opacity: .55; }
+        #app-sidebar .sidebar-logout:hover img { opacity: 1; }
+    </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     @stack('styles')
 </head>
 <body class="bg-gray-100 antialiased" x-data="{ sidebarOpen: false }">
 
     {{-- ── Sidebar ─────────────────────────────────────────────── --}}
-    <aside
-        class="fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 flex flex-col transition-transform duration-300
-               md:translate-x-0"
+    <aside id="app-sidebar"
+        class="fixed inset-y-0 left-0 z-50 w-64 flex flex-col transition-transform duration-300 md:translate-x-0"
         :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'"
     >
         {{-- Logo --}}
-        <div class="flex items-center gap-3 px-5 py-4 border-b border-gray-200">
-            <img src="{{ asset('img/logos/logo1.png') }}" alt="JLVS Hearth"
-                 class="h-10 w-auto flex-shrink-0">
-            <p class="text-gray-500 text-xs truncate">{{ auth()->user()->empresa->nombre }}</p>
+        <div class="flex items-center gap-3 px-5 py-4 sidebar-divider border-b">
+            <img src="{{ $empresa?->logo_url ?? asset('img/logos/logo1.png') }}"
+                 alt="{{ $empresa?->nombre ?? 'JLVS Hearth' }}"
+                 class="h-10 w-auto flex-shrink-0 object-contain">
+            <p class="sidebar-empresa text-xs truncate">{{ $empresa?->nombre }}</p>
         </div>
 
         {{-- Navegación --}}
@@ -50,31 +89,39 @@
                         'icon'  => asset('img/icons/reportes.png'),
                         'label' => 'Reportes',
                     ],
+                    [
+                        'route' => 'admin.solicitudes.index',
+                        'icon'  => asset('img/icons/pacientes.png'),
+                        'label' => 'Solicitudes personal',
+                    ],
+                    [
+                        'route' => 'admin.branding',
+                        'icon'  => asset('img/icons/dashboard.png'),
+                        'label' => 'Identidad Visual',
+                    ],
                 ];
             @endphp
 
             @foreach ($nav as $item)
                 <a href="{{ route($item['route']) }}"
-                   class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition
-                          {{ request()->routeIs($item['route']) || request()->routeIs($item['route'].'*')
-                             ? 'bg-gray-100 text-gray-900'
-                             : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}">
+                   class="nav-item flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition
+                          {{ request()->routeIs($item['route']) || request()->routeIs($item['route'].'*') ? 'activo' : '' }}">
                     <img src="{{ $item['icon'] }}" alt="{{ $item['label'] }}"
-                         class="w-5 h-5 flex-shrink-0 opacity-70">
+                         class="w-5 h-5 flex-shrink-0">
                     {{ $item['label'] }}
                 </a>
             @endforeach
         </nav>
 
         {{-- Usuario + Logout --}}
-        <div class="border-t border-gray-200 px-4 py-4">
-            <p class="text-xs text-gray-700 font-medium truncate">{{ auth()->user()->nombre }}</p>
-            <p class="text-xs text-gray-400 mb-3">Administrador</p>
-            <form method="POST" action="{{ route('admin.logout') }}">
+        <div class="sidebar-divider border-t px-4 py-4">
+            <p class="sidebar-username text-xs font-medium truncate">{{ auth()->user()->nombre }}</p>
+            <p class="sidebar-role text-xs mb-3">Administrador</p>
+            <form method="POST" action="{{ route('logout') }}">
                 @csrf
                 <button type="submit"
-                    class="w-full text-left text-sm text-gray-500 hover:text-gray-900 flex items-center gap-2 transition">
-                    <img src="{{ asset('img/icons/logout.png') }}" alt="Cerrar sesión" class="w-4 h-4 flex-shrink-0 opacity-70">
+                    class="sidebar-logout w-full text-left text-sm flex items-center gap-2 transition">
+                    <img src="{{ asset('img/icons/logout.png') }}" alt="Cerrar sesión" class="w-4 h-4 flex-shrink-0">
                     Cerrar sesión
                 </button>
             </form>

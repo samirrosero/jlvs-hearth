@@ -10,15 +10,19 @@ Descripción de todos los flujos de negocio del sistema, en el orden en que ocur
 2. [Login y autenticación](#2-login-y-autenticación)
 3. [Recuperación de contraseña](#3-recuperación-de-contraseña)
 4. [Registro de paciente](#4-registro-de-paciente)
-5. [Gestión de usuarios internos](#5-gestión-de-usuarios-internos)
-6. [Gestión de médicos](#6-gestión-de-médicos)
-7. [Gestión de horarios del médico](#7-gestión-de-horarios-del-médico)
-8. [Agendamiento de cita](#8-agendamiento-de-cita)
-9. [Atención de la cita (flujo principal clínico)](#9-atención-de-la-cita-flujo-principal-clínico)
-10. [Recetas y documentos adjuntos](#10-recetas-y-documentos-adjuntos)
-11. [Consulta de historial por el paciente](#11-consulta-de-historial-por-el-paciente)
-12. [Administración de la empresa](#12-administración-de-la-empresa)
-13. [Auditoría](#13-auditoría)
+5. [Registro público de afiliados (nuevo)](#5-registro-público-de-afiliados)
+6. [Registro público de empleadores (nuevo)](#6-registro-público-de-empleadores)
+7. [Gestión de solicitudes de empleadores (nuevo)](#7-gestión-de-solicitudes-de-empleadores)
+8. [Branding e identidad visual (nuevo)](#8-branding-e-identidad-visual)
+9. [Gestión de usuarios internos](#9-gestión-de-usuarios-internos)
+10. [Gestión de médicos](#10-gestión-de-médicos)
+11. [Gestión de horarios del médico](#11-gestión-de-horarios-del-médico)
+12. [Agendamiento de cita](#12-agendamiento-de-cita)
+13. [Atención de la cita (flujo principal clínico)](#13-atención-de-la-cita-flujo-principal-clínico)
+14. [Recetas y documentos adjuntos](#14-recetas-y-documentos-adjuntos)
+15. [Consulta de historial por el paciente](#15-consulta-de-historial-por-el-paciente)
+16. [Administración de la empresa](#16-administración-de-la-empresa)
+17. [Auditoría](#17-auditoría)
 
 ---
 
@@ -199,7 +203,178 @@ POST /registro-paciente
 
 ---
 
-## 5. Gestión de usuarios internos
+## 5. Registro público de afiliados
+
+**Quién:** Público (sin autenticación) - Vista Blade `/registro`
+**Cuándo:** Un paciente quiere registrarse directamente en el portal
+
+```
+POST /registro/afiliado
+```
+
+**Body:**
+```json
+{
+  "tipo_documento": "CC",
+  "numero_documento": "1234567890",
+  "nombres": "María Elena",
+  "apellidos": "Gómez Pérez",
+  "correo": "maria@correo.com",
+  "correo_confirmation": "maria@correo.com",
+  "password": "claveSegura123",
+  "password_confirmation": "claveSegura123"
+}
+```
+
+**Resultado:**
+- Se crea el `User` con `rol = paciente`
+- Se crea el `Paciente` vinculado al usuario
+- El paciente puede iniciar sesión inmediatamente
+
+**Validaciones:**
+- El número de documento no puede existir ya en la IPS
+- El correo debe ser único en la IPS
+- Contraseña mínimo 8 caracteres
+
+---
+
+## 6. Registro público de empleadores
+
+**Quién:** Público (sin autenticación) - Vista Blade `/registro`
+**Cuándo:** Un médico, gestor o administrador quiere solicitar acceso al sistema
+
+```
+POST /registro/empleador
+```
+
+**Body:**
+```json
+{
+  "tipo_documento": "CC",
+  "numero_documento": "9876543210",
+  "rol_solicitado": "medico",
+  "nombres": "Dr. Carlos",
+  "apellidos": "Rodríguez López",
+  "departamento": "Bogotá D.C.",
+  "municipio": "Bogotá",
+  "correo": "carlos@clinica.com",
+  "correo_confirmation": "carlos@clinica.com",
+  "password": "claveSegura123",
+  "password_confirmation": "claveSegura123",
+  "foto_documento": [archivo imagen opcional]
+}
+```
+
+**Roles disponibles:** `administrador`, `medico`, `gestor_citas`
+
+**Resultado:**
+- Se crea una `SolicitudEmpleador` en estado `pendiente`
+- El administrador recibe la solicitud para revisión
+- El solicitante debe esperar aprobación
+
+**Validaciones:**
+- No puede haber una solicitud pendiente con el mismo correo
+- El correo no puede estar registrado ya en el sistema
+- La foto del documento es opcional pero recomendada
+
+---
+
+## 7. Gestión de solicitudes de empleadores
+
+**Quién:** `administrador`
+**Cuándo:** Desde el panel `/admin/solicitudes`
+
+### Ver solicitudes pendientes
+
+```
+GET /admin/solicitudes
+```
+
+Muestra:
+- Solicitudes agrupadas por rol solicitado
+- Solicitudes aprobadas (últimas 20)
+- Solicitudes rechazadas (últimas 20)
+
+### Aprobar solicitud
+
+```
+PATCH /admin/solicitudes/{id}/aprobar
+```
+
+**Resultado:**
+- Se crea el `User` con los datos de la solicitud
+- Se asigna el rol solicitado
+- La solicitud cambia a estado `aprobado`
+- El usuario puede iniciar sesión inmediatamente
+
+### Rechazar solicitud
+
+```
+PATCH /admin/solicitudes/{id}/rechazar
+```
+
+**Body:**
+```json
+{
+  "observaciones": "Documento no legible, favor enviar nueva foto"
+}
+```
+
+**Resultado:**
+- La solicitud cambia a estado `rechazado`
+- Se guardan las observaciones para el solicitante
+
+---
+
+## 8. Branding e identidad visual
+
+**Quién:** `administrador`
+**Cuándo:** Desde el panel `/admin/branding`
+
+### Configurar branding de la IPS
+
+```
+GET /admin/branding   → Vista del formulario
+POST /admin/branding  → Guardar cambios
+```
+
+**Body (multipart/form-data):**
+```
+slogan_login: "Tu salud, nuestra prioridad"
+slogan_registro: "Únete a la mejor red de salud"
+color_primario: #1e40af
+color_secundario: #1e3a8a
+color_admin: #1e293b
+color_doctor: #064e3b
+color_gestor: #4c1d95
+color_paciente: #0c4a6e
+color_pdf: #1e40af
+logo: [archivo imagen png/jpg/svg/webp max 2MB]
+favicon: [archivo imagen png/ico/svg max 512KB]
+imagen_login: [archivo imagen max 4MB]
+imagen_registro: [archivo imagen max 4MB]
+```
+
+### Campos de colores
+
+| Campo | Uso | Default |
+|-------|-----|---------|
+| `color_primario` | Botones, acentos, elementos activos | `#1e40af` |
+| `color_secundario` | Textos de título, acentos secundarios | `#1e3a8a` |
+| `color_admin` | Fondo sidebar panel administración | `#1e293b` |
+| `color_doctor` | Fondo sidebar panel médico | `#064e3b` |
+| `color_gestor` | Fondo sidebar panel gestor | `#4c1d95` |
+| `color_paciente` | Fondo sidebar portal paciente | `#0c4a6e` |
+| `color_pdf` | Encabezados y tablas en PDFs | `#1e40af` |
+
+**Resultado:**
+- Las imágenes se almacenan en `storage/app/public/empresas/{id}/`
+- Los colores se aplican inmediatamente en todas las vistas
+- Los PDFs usan el color configurado para encabezados
+
+---
+
+## 9. Gestión de usuarios internos
 
 **Quién:** `administrador`
 **Cuándo:** Necesita crear, ver o desactivar médicos y gestores de citas
@@ -244,7 +419,7 @@ No borra el registro — marca `activo = false`. El usuario no podrá iniciar se
 
 ---
 
-## 6. Gestión de médicos
+## 10. Gestión de médicos
 
 **Quién:** `administrador`
 **Cuándo:** Necesita registrar el perfil profesional de un médico
@@ -279,7 +454,7 @@ DELETE /medicos/{id}
 
 ---
 
-## 7. Gestión de horarios del médico
+## 11. Gestión de horarios del médico
 
 **Quién:** `administrador`
 **Cuándo:** Define en qué días y horas atiende cada médico
@@ -320,7 +495,7 @@ GET /horarios?medico_id=2&dia=1
 
 ---
 
-## 8. Agendamiento de cita
+## 12. Agendamiento de cita
 
 **Quién:** `administrador`, `gestor_citas`
 **Cuándo:** Se agenda una consulta para un paciente
@@ -371,7 +546,7 @@ No borra — marca `activo = false`.
 
 ---
 
-## 9. Atención de la cita (flujo principal clínico)
+## 13. Atención de la cita (flujo principal clínico)
 
 **Quién:** `medico` (con apoyo de `administrador`)
 **Cuándo:** El paciente llega a la IPS y es atendido
@@ -465,7 +640,7 @@ Body:
 
 ---
 
-## 10. Recetas y documentos adjuntos
+## 14. Recetas y documentos adjuntos
 
 **Quién:** `medico`, `administrador`
 **Cuándo:** Durante o después de la consulta, vinculados a la historia clínica
@@ -502,7 +677,7 @@ El archivo se guarda en `storage/app/documentos/`. Solo se guardan los metadatos
 
 ---
 
-## 11. Consulta de historial por el paciente
+## 15. Consulta de historial por el paciente
 
 **Quién:** `paciente`
 **Cuándo:** El paciente consulta su información desde el portal
@@ -539,7 +714,7 @@ GET /antecedentes?tipo=alergico
 
 ---
 
-## 12. Administración de la empresa
+## 16. Administración de la empresa
 
 **Quién:** `administrador`
 **Cuándo:** Gestiona la configuración de su IPS
@@ -594,7 +769,7 @@ Body: { "nombre": "Consulta Medicina General", "duracion_minutos": 20 }
 
 ---
 
-## 13. Auditoría
+## 17. Auditoría
 
 **Quién:** `administrador`
 **Cuándo:** Consulta quién accedió o modificó historias clínicas (Resolución 1995/1999)
@@ -907,10 +1082,13 @@ Descarga un archivo PDF (`historia-clinica-00000001.pdf`) con:
 
 | Flujo | administrador | medico | gestor_citas | paciente | público |
 |-------|:---:|:---:|:---:|:---:|:---:|
-| Registro IPS | — | — | — | — | ✓ |
+| Registro IPS (onboarding) | — | — | — | — | ✓ |
 | Login / Logout | ✓ | ✓ | ✓ | ✓ | ✓ |
 | Recuperar contraseña | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Registro de paciente (web) | — | — | — | — | ✓ |
+| Registro afiliado (público) | — | — | — | — | ✓ |
+| Registro empleador (solicitud) | — | — | — | — | ✓ |
+| Aprobar/rechazar solicitudes | ✓ | — | — | — | — |
+| Branding / Identidad visual | ✓ | — | — | — | — |
 | Registro de paciente (gestor) | ✓ | — | ✓ | — | — |
 | Cambio de contraseña propia | ✓ | ✓ | ✓ | ✓ | — |
 | Gestión de usuarios | ✓ | — | — | — | — |

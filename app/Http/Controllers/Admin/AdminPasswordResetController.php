@@ -24,7 +24,7 @@ class AdminPasswordResetController extends Controller
 
         // Apuntar el enlace del correo a nuestra ruta del panel admin
         ResetPassword::createUrlUsing(function ($user, string $token) {
-            return route('admin.reset-password', ['token' => $token, 'email' => $user->email]);
+            return route('reset-password', ['token' => $token, 'email' => $user->email]);
         });
 
         $estado = Password::sendResetLink($request->only('email'));
@@ -62,7 +62,7 @@ class AdminPasswordResetController extends Controller
         );
 
         if ($estado === Password::PASSWORD_RESET) {
-            return redirect()->route('admin.login')
+            return redirect()->route('login')
                 ->with('exito', 'Contraseña restablecida correctamente. Ya puedes iniciar sesión.');
         }
 

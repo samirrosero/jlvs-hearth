@@ -22,7 +22,7 @@
             <nav class="header-nav">
                 <a href="#caracteristicas">Funcionalidades</a>
                 <a href="#equipo">Equipo</a>
-                <a href="{{ route('admin.login') }}" class="btn-header">Acceder al panel</a>
+                <a href="{{ route('login') }}" class="btn-header">Demo Prueba</a>
             </nav>
         </div>
     </header>
@@ -45,8 +45,8 @@
                     Resolución 1995 de 1999 del Minsalud.
                 </p>
                 <div class="hero-btns">
-                    <a href="{{ route('admin.login') }}" class="btn-primario">
-                        Obtener una demo
+                    <a href="{{ route('onboarding.show') }}" class="btn-primario">
+                        Registrar mi IPS
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                             <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
                         </svg>
@@ -206,8 +206,8 @@
             <div class="cta-inner">
                 <h2>¿Listo para modernizar tu IPS?</h2>
                 <p>Solicita una demostración y descubre cómo JLVS Hearth puede transformar la gestión clínica de tu institución de salud.</p>
-                <a href="{{ route('admin.login') }}" class="btn-blanco">
-                    Acceder a la demo
+                <a href="{{ route('onboarding.show') }}" class="btn-blanco">
+                    Registrar mi IPS
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
                     </svg>

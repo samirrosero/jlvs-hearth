@@ -14,7 +14,8 @@ empresas
   ├── pacientes (empresa_id)
   │     └── antecedentes_paciente (paciente_id)
   ├── portafolios (empresa_id)
-  └── servicios (empresa_id)
+  ├── servicios (empresa_id)
+  └── solicitudes_empleador (empresa_id)  ← nuevo
 
 roles
   └── users (rol_id)
@@ -53,6 +54,19 @@ Raíz del modelo multi-tenant. Cada IPS que compra el sistema es una empresa.
 | `direccion` | VARCHAR | SÍ | Dirección de la sede principal |
 | `ciudad` | VARCHAR | SÍ | Ciudad donde opera |
 | `activo` | BOOLEAN | NO | `true` por defecto — soft delete lógico |
+| `logo_path` | VARCHAR | SÍ | Ruta del logo en storage público |
+| `favicon_path` | VARCHAR | SÍ | Ruta del favicon en storage público |
+| `imagen_login_path` | VARCHAR | SÍ | Ruta imagen del panel de login |
+| `imagen_registro_path` | VARCHAR | SÍ | Ruta imagen del panel de registro |
+| `slogan_login` | VARCHAR(200) | SÍ | Slogan personalizado para login |
+| `slogan_registro` | VARCHAR(200) | SÍ | Slogan personalizado para registro |
+| `color_primario` | VARCHAR | NO | Color primario (botones, acentos) — default: `#1e40af` |
+| `color_secundario` | VARCHAR | NO | Color secundario (textos) — default: `#1e3a8a` |
+| `color_admin` | VARCHAR | NO | Fondo sidebar panel admin — default: `#1e293b` |
+| `color_doctor` | VARCHAR | NO | Fondo sidebar panel médico — default: `#064e3b` |
+| `color_gestor` | VARCHAR | NO | Fondo sidebar panel gestor — default: `#4c1d95` |
+| `color_paciente` | VARCHAR | NO | Fondo sidebar portal paciente — default: `#0c4a6e` |
+| `color_pdf` | VARCHAR | NO | Color encabezados PDFs — default: `#1e40af` |
 | `created_at` | TIMESTAMP | SÍ | — |
 | `updated_at` | TIMESTAMP | SÍ | — |
 
@@ -82,6 +96,7 @@ Credenciales de acceso de todos los usuarios del sistema.
 | `nombre` | VARCHAR | NO | Nombre completo del usuario |
 | `email` | VARCHAR | NO | Correo electrónico (único global, usado para login) |
 | `identificacion` | VARCHAR | NO | Cédula o documento de identidad (único global) |
+| `tipo_documento` | VARCHAR | NO | Tipo de documento: `CC`, `TI`, `CE`, `PP`, `NUIP`, `RC` — default: `CC` |
 | `password` | VARCHAR | NO | Contraseña cifrada (bcrypt) |
 | `activo` | BOOLEAN | NO | `true` por defecto — si es `false` no puede iniciar sesión |
 | `debe_cambiar_password` | BOOLEAN | NO | `true` cuando el gestor crea una cuenta con contraseña temporal |
@@ -101,12 +116,14 @@ Datos personales de los pacientes registrados en una IPS.
 | `usuario_id` | BIGINT UNSIGNED | SÍ | FK → `users.id` (nullable: el paciente puede no tener login) |
 | `empresa_id` | BIGINT UNSIGNED | NO | FK → `empresas.id` |
 | `nombre_completo` | VARCHAR | NO | Nombre y apellidos completos |
+| `apellidos` | VARCHAR | SÍ | Apellidos separados (para formatos específicos) |
 | `fecha_nacimiento` | DATE | NO | Fecha de nacimiento |
 | `sexo` | ENUM | NO | `M`, `F`, `Otro` |
 | `telefono` | VARCHAR | NO | Teléfono de contacto |
 | `correo` | VARCHAR | SÍ | Correo electrónico |
 | `direccion` | VARCHAR | SÍ | Dirección de residencia |
 | `identificacion` | VARCHAR | NO | Cédula o documento (único POR empresa) |
+| `tipo_documento` | VARCHAR | NO | Tipo de documento: `CC`, `TI`, `CE`, `PP`, `NUIP`, `RC` — default: `CC` |
 | `created_at` | TIMESTAMP | SÍ | — |
 | `updated_at` | TIMESTAMP | SÍ | — |
 

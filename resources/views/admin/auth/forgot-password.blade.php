@@ -36,7 +36,7 @@
                 </div>
             @endif
 
-            <form method="POST" action="{{ route('admin.forgot-password.send') }}" class="space-y-5">
+            <form method="POST" action="{{ route('forgot-password.send') }}" class="space-y-5">
                 @csrf
 
                 <div>
@@ -56,7 +56,7 @@
             </form>
 
             <div class="text-center mt-5">
-                <a href="{{ route('admin.login') }}" class="text-sm text-blue-600 hover:underline">
+                <a href="{{ route('login') }}" class="text-sm text-blue-600 hover:underline">
                     ← Volver al inicio de sesión
                 </a>
             </div>

@@ -2,15 +2,20 @@
 
 Archivo: [routes/web.php](../routes/web.php)
 
-71 rutas en total. Autenticación por sesión Laravel (no API tokens).
+100+ rutas en total. Autenticación por sesión Laravel (no API tokens).
 
 ---
 
 ## Estructura general
 
 ```
-POST   /login           — público
-POST   /empresas        — público (onboarding IPS)
+POST   /login              — público
+POST   /empresas           — público (onboarding IPS - API)
+GET    /adquirir           — público (onboarding IPS - Vista)
+POST   /adquirir           — público (onboarding IPS - Guardar)
+GET    /registro           — público (registro afiliados/empleadores - Vista)
+POST   /registro/afiliado  — público (registro paciente)
+POST   /registro/empleador — público (solicitud empleador)
 
 middleware('auth') ──────────────────────────────────────────────
 │
@@ -196,8 +201,63 @@ Se usa closure porque el administrador opera sobre **su propia empresa** (obteni
 
 ---
 
+## Rutas del Panel de Administración (Blade)
+
+Prefijo: `/admin` — Solo accesible a usuarios con rol `administrador` autenticados por sesión.
+
+### Autenticación del panel
+| Método | URI | Controlador | Descripción |
+|--------|-----|-------------|-------------|
+| GET | `/login` | LoginController@showLogin | Vista de login con branding de la IPS |
+| POST | `/login` | LoginController@login | Autenticación por número de documento |
+| POST | `/logout` | LoginController@logout | Cierre de sesión |
+| GET | `/forgot-password` | AdminPasswordResetController@showForgot | Vista de recuperación de contraseña |
+| POST | `/forgot-password` | AdminPasswordResetController@sendLink | Enviar enlace de recuperación |
+| GET | `/reset-password/{token}` | AdminPasswordResetController@showReset | Vista de restablecimiento |
+| POST | `/reset-password` | AdminPasswordResetController@reset | Guardar nueva contraseña |
+
+### Dashboard y CRUDs del panel
+| Método | URI | Controlador | Descripción |
+|--------|-----|-------------|-------------|
+| GET | `/admin` | redirect | Redirige a dashboard |
+| GET | `/admin/dashboard` | AdminDashboardController | Dashboard con métricas de la IPS |
+| GET | `/admin/pacientes` | AdminPacienteController@index | Lista de pacientes (vista) |
+| GET | `/admin/pacientes/create` | AdminPacienteController@create | Formulario crear paciente |
+| POST | `/admin/pacientes` | AdminPacienteController@store | Guardar paciente |
+| GET | `/admin/pacientes/{id}/edit` | AdminPacienteController@edit | Formulario editar paciente |
+| PUT | `/admin/pacientes/{id}` | AdminPacienteController@update | Actualizar paciente |
+| DELETE | `/admin/pacientes/{id}` | AdminPacienteController@destroy | Eliminar paciente |
+| GET | `/admin/medicos` | AdminMedicoController@index | Lista de médicos (vista) |
+| GET | `/admin/medicos/create` | AdminMedicoController@create | Formulario crear médico |
+| POST | `/admin/medicos` | AdminMedicoController@store | Guardar médico |
+| GET | `/admin/medicos/{id}/edit` | AdminMedicoController@edit | Formulario editar médico |
+| PUT | `/admin/medicos/{id}` | AdminMedicoController@update | Actualizar médico |
+| DELETE | `/admin/medicos/{id}` | AdminMedicoController@destroy | Eliminar médico |
+| GET | `/admin/reportes` | - | Vista de reportes PDF/Excel |
+
+### Branding y Personalización
+| Método | URI | Controlador | Descripción |
+|--------|-----|-------------|-------------|
+| GET | `/admin/branding` | BrandingController@edit | Vista de configuración de branding |
+| POST | `/admin/branding` | BrandingController@update | Guardar cambios de branding |
+
+### Gestión de Solicitudes de Empleadores
+| Método | URI | Controlador | Descripción |
+|--------|-----|-------------|-------------|
+| GET | `/admin/solicitudes` | SolicitudEmpleadorController@index | Lista de solicitudes pendientes/aprobadas/rechazadas |
+| PATCH | `/admin/solicitudes/{id}/aprobar` | SolicitudEmpleadorController@aprobar | Aprobar solicitud y crear usuario |
+| PATCH | `/admin/solicitudes/{id}/rechazar` | SolicitudEmpleadorController@rechazar | Rechazar solicitud con observaciones |
+
+### Chatbot Asistente
+| Método | URI | Controlador | Descripción |
+|--------|-----|-------------|-------------|
+| POST | `/admin/chatbot` | ChatbotController@chat | Endpoint del asistente virtual (Ollama) |
+
+---
+
 ## Notas de diseño
 
 - `PUT` y `PATCH` apuntan al mismo método `update()` — el controller acepta actualizaciones parciales o totales indistintamente.
 - No se usan `Route::resource()` para mantener control explícito sobre los permisos de cada ruta.
 - Los nombres de ruta en español (`/citas`, `/pacientes`, `/historias-clinicas`) son intencionales para consistencia con el dominio del negocio colombiano.
+- El panel de administración (`/admin/*`) usa vistas Blade y autenticación por sesión tradicional de Laravel, separado de la API REST que usa el frontend.

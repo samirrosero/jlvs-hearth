@@ -4,8 +4,6 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Cita;
-use App\Models\Medico;
-use App\Models\Paciente;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
@@ -24,8 +22,8 @@ class ChatbotController extends Controller
             'model'  => 'gemma3:4b',
             'stream' => false,
             'messages' => [
-                ['role' => 'system',  'content' => $this->buildPrompt($datos)],
-                ['role' => 'user',    'content' => $request->input('mensaje')],
+                ['role' => 'system', 'content' => $this->buildPrompt($datos)],
+                ['role' => 'user',   'content' => $request->input('mensaje')],
             ],
         ]);
 
@@ -42,49 +40,73 @@ class ChatbotController extends Controller
 
     private function recopilarDatos(int $empresaId): array
     {
-        $hoy = now()->toDateString();
+        $hoy  = now()->toDateString();
+        $datos = ['fecha_hoy' => now()->translatedFormat('l j \d\e F \d\e Y')];
 
-        return [
-            'total_pacientes'      => Paciente::where('empresa_id', $empresaId)->count(),
-            'total_medicos'        => Medico::where('empresa_id', $empresaId)->count(),
-            'citas_hoy'            => Cita::where('empresa_id', $empresaId)->where('fecha', $hoy)->count(),
-            'citas_pendientes'     => Cita::where('empresa_id', $empresaId)->whereHas('estado', fn ($q) => $q->where('nombre', 'like', '%pendiente%'))->count(),
-            'fecha_hoy'            => now()->translatedFormat('l j \d\e F \d\e Y'),
-        ];
+        // Conteos dinámicos definidos en config/chatbot.php
+        foreach (config('chatbot.datos') as $item) {
+            $query = $item['model']::where('empresa_id', $empresaId);
+            if (!empty($item['where'])) {
+                $query->where($item['where']);
+            }
+            $datos[$item['clave']] = $query->count();
+        }
+
+        // Citas: lógica especial con relación a estado
+        $datos['citas_hoy']        = Cita::where('empresa_id', $empresaId)->where('fecha', $hoy)->count();
+        $datos['citas_pendientes'] = Cita::where('empresa_id', $empresaId)
+            ->whereHas('estado', fn ($q) => $q->where('nombre', 'like', '%pendiente%'))
+            ->count();
+
+        return $datos;
     }
 
     private function buildPrompt(array $d): string
     {
+        $secciones     = collect(config('chatbot.secciones'));
+        $clavesValidas = $secciones->pluck('clave')->join(', ');
+
+        $listaSecciones = $secciones
+            ->map(fn ($s) => "- {$s['label']}: {$s['descripcion']}")
+            ->join("\n");
+
+        $listaDatos = collect(config('chatbot.datos'))
+            ->map(fn ($item) => "- {$item['label']}: {$d[$item['clave']]}")
+            ->join("\n");
+
         return <<<PROMPT
 Eres el asistente virtual de JLVS Hearth, software médico para IPS colombianas.
 Ayudas al administrador a entender el estado del sistema y a navegar por él.
 
 === DATOS ACTUALES DE LA IPS ===
-- Pacientes registrados: {$d['total_pacientes']}
-- Médicos registrados: {$d['total_medicos']}
+{$listaDatos}
 - Citas programadas para hoy ({$d['fecha_hoy']}): {$d['citas_hoy']}
 - Citas pendientes: {$d['citas_pendientes']}
 
 === SECCIONES DE LA PLATAFORMA ===
-- Dashboard: métricas generales
-- Pacientes: listado, registro y edición
-- Médicos: listado, registro y edición
-- Reportes: PDF y Excel de citas y pacientes
+{$listaSecciones}
 
 === MARCADORES ===
 Tienes tres tipos de marcadores. Úsalos al final de la oración relevante:
 
-1. [NAVEGAR:seccion] — ÚNICAMENTE cuando el usuario usa palabras como "llévame", "muéstrame", "ir a", "abre", "navega", "quiero ir".
+1. [NAVEGAR:seccion] — SOLO cuando el usuario pide EXPLÍCITAMENTE desplazarse a una pantalla.
+   Palabras que lo activan: "llévame", "ir a", "abre", "navega", "quiero ir", "muéstrame la pantalla/sección".
+   Ejemplos CORRECTOS:
    - "llévame a pacientes" → [NAVEGAR:pacientes]
-   - "muéstrame los médicos" → [NAVEGAR:medicos]
+   - "quiero ir a solicitudes" → [NAVEGAR:solicitudes]
    - "abre el dashboard" → [NAVEGAR:dashboard]
-   NUNCA uses [NAVEGAR:] en saludos, preguntas informativas o respuestas generales.
-   Solo un [NAVEGAR:] por respuesta.
-   Secciones válidas: dashboard, pacientes, medicos, reportes
+   Ejemplos INCORRECTOS — NUNCA uses [NAVEGAR:] en estos casos:
+   - "¿cuántos pacientes hay?" → solo responde el número, SIN marcador
+   - "¿cuántos médicos tengo?" → solo responde el número, SIN marcador
+   - "¿cuántas citas hay hoy?" → solo responde el número, SIN marcador
+   - cualquier pregunta sobre datos, estadísticas o información → SIN marcador
+   - saludos o preguntas generales → SIN marcador
+   Solo un [NAVEGAR:] por respuesta. Si no hay intención explícita de navegar, NO lo uses.
+   Secciones válidas: {$clavesValidas}
 
 2. [IR:seccion] — cuando mencionas una sección como sugerencia.
    Ejemplo: "Puedes ver el listado [IR:pacientes]"
-   Secciones válidas: dashboard, pacientes, medicos, reportes
+   Secciones válidas: {$clavesValidas}
 
 3. [DESCARGAR:tipo] — cuando el usuario pide generar o descargar un reporte.
    - "reporte de citas en PDF" → [DESCARGAR:citas-pdf]

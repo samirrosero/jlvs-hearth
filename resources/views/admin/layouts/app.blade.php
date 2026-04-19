@@ -258,12 +258,11 @@
     <script>
     function chatbot() {
 
-        const rutas = {
-            'dashboard': { label: 'Ir al Dashboard',  url: '{{ route('admin.dashboard') }}' },
-            'pacientes': { label: 'Ver Pacientes',    url: '{{ route('admin.pacientes.index') }}' },
-            'medicos':   { label: 'Ver Médicos',      url: '{{ route('admin.medicos.index') }}' },
-            'reportes':  { label: 'Ver Reportes',     url: '{{ route('admin.reportes') }}' },
-        };
+        const rutas = @json(
+            collect(config('chatbot.secciones'))->mapWithKeys(fn ($s) => [
+                $s['clave'] => ['label' => $s['boton'], 'url' => route($s['ruta'])],
+            ])
+        );
 
         const descargas = {
             'citas-pdf':       { label: 'Descargar Citas PDF',        url: '{{ route('reportes.citas.pdf') }}' },

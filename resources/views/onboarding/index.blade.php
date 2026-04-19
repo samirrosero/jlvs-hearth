@@ -203,10 +203,22 @@
                            class="{{ $errors->has('nit') ? 'err' : '' }}">
                 </div>
 
-                <div class="field">
-                    <label>Ciudad</label>
-                    <input type="text" name="ciudad" value="{{ old('ciudad') }}"
-                           placeholder="Ej: Cali">
+                <div class="field" x-data="ubicacionSelector('{{ route('ubicacion.departamentos') }}', '{{ url('ubicacion/municipios') }}')">
+                    <label>Departamento</label>
+                    <select x-model="depSeleccionado" @change="cargarMunicipios()">
+                        <option value="" x-text="departamentos.length ? 'Selecciona un departamento' : 'Cargando...'"></option>
+                        <template x-for="dep in departamentos" :key="dep.codigo">
+                            <option :value="dep.nombre" x-text="dep.nombre"></option>
+                        </template>
+                    </select>
+
+                    <label class="mt-3 block">Ciudad / Municipio</label>
+                    <select name="ciudad" x-model="munSeleccionado" :disabled="!depSeleccionado || cargandoMun">
+                        <option value="" x-text="cargandoMun ? 'Cargando...' : (depSeleccionado ? 'Selecciona un municipio' : 'Selecciona un departamento primero')"></option>
+                        <template x-for="mun in municipios" :key="mun">
+                            <option :value="mun" x-text="mun"></option>
+                        </template>
+                    </select>
                 </div>
 
                 <div class="field">

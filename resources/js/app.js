@@ -7,7 +7,52 @@ import Alpine from 'alpinejs';
 // Documentación: https://alpinejs.dev
 // ──────────────────────────────────────────────────────────────────────────────
 window.Alpine = Alpine;
-Alpine.start();
+
+// ──────────────────────────────────────────────────────────────────────────────
+// ubicacionSelector — componente Alpine para selects en cascada de Colombia
+// Debe registrarse ANTES de Alpine.start()
+// Uso: x-data="ubicacionSelector(urlDepartamentos, urlBaseMunicipios)"
+// ──────────────────────────────────────────────────────────────────────────────
+window.ubicacionSelector = function (urlDepartamentos, urlBaseMunicipios) {
+    return {
+        departamentos:   [],
+        municipios:      [],
+        depSeleccionado: '',
+        munSeleccionado: '',
+        cargandoMun:     false,
+        _codigoDep:      '',
+
+        async init() {
+            try {
+                const res  = await fetch(urlDepartamentos);
+                const data = await res.json();
+                this.departamentos = data;
+            } catch (e) {
+                console.warn('No se pudieron cargar los departamentos:', e);
+            }
+        },
+
+        async cargarMunicipios() {
+            this.munSeleccionado = '';
+            this.municipios      = [];
+
+            const dep = this.departamentos.find(d => d.nombre === this.depSeleccionado);
+            if (!dep?.codigo) return;
+
+            this._codigoDep  = dep.codigo;
+            this.cargandoMun = true;
+            try {
+                const res  = await fetch(`${urlBaseMunicipios}/${dep.codigo}`);
+                const data = await res.json();
+                this.municipios = data;
+            } catch (e) {
+                console.warn('No se pudieron cargar los municipios:', e);
+            } finally {
+                this.cargandoMun = false;
+            }
+        },
+    };
+};
 
 // ──────────────────────────────────────────────────────────────────────────────
 // api — helper global para llamadas a la API de Laravel
@@ -84,3 +129,5 @@ window.api = {
         return { status: res.status };
     },
 };
+
+Alpine.start();

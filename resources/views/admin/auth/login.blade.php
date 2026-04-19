@@ -207,24 +207,14 @@
                 @csrf
                 <input type="hidden" name="tipo_usuario" :value="tab">
 
-                {{-- Tipo + Número de documento --}}
+                {{-- Correo o número de documento --}}
                 <div class="field">
-                    <label>Tipo y número de documento</label>
-                    <div class="field-row">
-                        <select name="tipo_documento" x-model="tipoDoc">
-                            <option value="CC">CC</option>
-                            <option value="TI">TI</option>
-                            <option value="CE">CE</option>
-                            <option value="PP">PP</option>
-                            <option value="NUIP">NUIP</option>
-                            <option value="RC">RC</option>
-                        </select>
-                        <input type="text" name="identificacion"
-                               value="{{ old('identificacion') }}"
-                               placeholder="Número de documento"
-                               required autofocus
-                               class="{{ $errors->has('identificacion') ? 'err' : '' }}">
-                    </div>
+                    <label>Correo o número de identificación</label>
+                    <input type="text" name="login"
+                           value="{{ old('login') }}"
+                           placeholder="correo@ejemplo.com o número de documento"
+                           required autofocus autocomplete="username"
+                           class="{{ $errors->has('login') ? 'err' : '' }}">
                 </div>
 
                 {{-- Contraseña --}}
@@ -283,7 +273,7 @@
 </div>
 <script>
 function loginPage() {
-    return { tab: 'afiliado', tipoDoc: 'CC', verPass: false };
+    return { tab: 'afiliado', verPass: false };
 }
 </script>
 </body>

@@ -10,10 +10,17 @@ class AuthController extends Controller
 {
     public function login(Request $request): JsonResponse
     {
-        $credenciales = $request->validate([
-            'email'    => ['required', 'email'],
+        $request->validate([
+            'login'    => ['required', 'string'],
             'password' => ['required', 'string'],
         ]);
+
+        $login    = trim($request->input('login'));
+        $esCorreo = str_contains($login, '@');
+
+        $credenciales = $esCorreo
+            ? ['email'          => $login, 'password' => $request->input('password')]
+            : ['identificacion' => $login, 'password' => $request->input('password')];
 
         if (!Auth::attempt($credenciales, $request->boolean('remember'))) {
             return response()->json(['message' => 'Credenciales incorrectas.'], 401);

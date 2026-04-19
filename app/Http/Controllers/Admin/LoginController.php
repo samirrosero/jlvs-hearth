@@ -49,18 +49,21 @@ class LoginController extends Controller
     public function login(Request $request)
     {
         $request->validate([
-            'identificacion' => ['required', 'string'],
-            'password'       => ['required', 'string'],
-            'tipo_usuario'   => ['required', 'in:afiliado,empleador'],
+            'login'        => ['required', 'string'],
+            'password'     => ['required', 'string'],
+            'tipo_usuario' => ['required', 'in:afiliado,empleador'],
         ]);
 
-        // Autenticar por número de documento (identificacion) en vez de email
-        if (!Auth::attempt(
-            ['identificacion' => $request->identificacion, 'password' => $request->password],
-            $request->boolean('remember')
-        )) {
+        $login    = trim($request->input('login'));
+        $esCorreo = str_contains($login, '@');
+
+        $credenciales = $esCorreo
+            ? ['email'          => $login, 'password' => $request->password]
+            : ['identificacion' => $login, 'password' => $request->password];
+
+        if (!Auth::attempt($credenciales, $request->boolean('remember'))) {
             return back()
-                ->withErrors(['identificacion' => 'Número de documento o contraseña incorrectos.'])
+                ->withErrors(['login' => 'Correo/documento o contraseña incorrectos.'])
                 ->withInput();
         }
 
@@ -69,7 +72,7 @@ class LoginController extends Controller
         if (!$user->activo) {
             Auth::logout();
             return back()
-                ->withErrors(['email' => 'Tu cuenta está desactivada. Contacta al administrador.'])
+                ->withErrors(['login' => 'Tu cuenta está desactivada. Contacta al administrador.'])
                 ->withInput();
         }
 
@@ -78,19 +81,17 @@ class LoginController extends Controller
 
         // Validar rol según el tab seleccionado
         if ($tipoUsuario === 'afiliado') {
-            // Solo pacientes pueden entrar por el tab de Afiliados
             if ($rol !== 'paciente') {
                 Auth::logout();
                 return back()
-                    ->withErrors(['identificacion' => 'Este acceso es solo para pacientes. Los empleadores deben usar el tab "Empleadores".'])
+                    ->withErrors(['login' => 'Este acceso es solo para pacientes. Los empleadores deben usar el tab "Empleadores".'])
                     ->withInput();
             }
         } elseif ($tipoUsuario === 'empleador') {
-            // Solo empleadores (admin, médico, gestor) pueden entrar por el tab de Empleadores
             if (!in_array($rol, self::ROLES_PANEL)) {
                 Auth::logout();
                 return back()
-                    ->withErrors(['identificacion' => 'Este acceso es solo para personal de la IPS. Los pacientes deben usar el tab "Afiliados".'])
+                    ->withErrors(['login' => 'Este acceso es solo para personal de la IPS. Los pacientes deben usar el tab "Afiliados".'])
                     ->withInput();
             }
         }

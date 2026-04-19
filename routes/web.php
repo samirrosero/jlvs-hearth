@@ -27,6 +27,7 @@ use App\Http\Controllers\AppointmentStatusController;
 use App\Http\Controllers\AttachedDocumentController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ClinicalHistoryController;
+use App\Http\Controllers\UbicacionController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\DoctorController;
@@ -51,6 +52,12 @@ Route::get('/', fn () => view('welcome'))->name('home');
 // Onboarding — registro de nueva IPS (público)
 Route::get('/adquirir',  [OnboardingController::class, 'show'])->name('onboarding.show');
 Route::post('/adquirir', [OnboardingController::class, 'store'])->name('onboarding.store');
+
+// Ubicación — departamentos y municipios de Colombia (DIVIPOLA)
+Route::prefix('ubicacion')->name('ubicacion.')->group(function () {
+    Route::get('/departamentos',       [UbicacionController::class, 'departamentos'])->name('departamentos');
+    Route::get('/municipios/{codigo}', [UbicacionController::class, 'municipios'])->name('municipios');
+});
 
 // ─────────────────────────────────────────────────────────────
 // Autenticación (público)

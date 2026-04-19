@@ -347,16 +347,23 @@
                         <input type="text" name="apellidos" placeholder="Apellidos" required>
                     </div>
 
-                    {{-- Departamento --}}
-                    <div class="field">
+                    {{-- Departamento / Municipio (DIVIPOLA) --}}
+                    <div class="field" x-data="ubicacionSelector('{{ route('ubicacion.departamentos') }}', '{{ url('ubicacion/municipios') }}')">
                         <label>Departamento</label>
-                        <input type="text" name="departamento" placeholder="Ej: Valle del Cauca">
-                    </div>
+                        <select name="departamento" x-model="depSeleccionado" @change="cargarMunicipios()" required>
+                            <option value="" x-text="departamentos.length ? 'Selecciona un departamento' : 'Cargando...'"></option>
+                            <template x-for="dep in departamentos" :key="dep.codigo">
+                                <option :value="dep.nombre" x-text="dep.nombre"></option>
+                            </template>
+                        </select>
 
-                    {{-- Municipio --}}
-                    <div class="field">
-                        <label>Municipio</label>
-                        <input type="text" name="municipio" placeholder="Ej: Cali">
+                        <label class="mt-3 block">Municipio</label>
+                        <select name="municipio" x-model="munSeleccionado" :disabled="!depSeleccionado || cargandoMun">
+                            <option value="" x-text="cargandoMun ? 'Cargando...' : (depSeleccionado ? 'Selecciona un municipio' : 'Selecciona un departamento primero')"></option>
+                            <template x-for="mun in municipios" :key="mun">
+                                <option :value="mun" x-text="mun"></option>
+                            </template>
+                        </select>
                     </div>
 
                     {{-- Correo --}}

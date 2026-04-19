@@ -101,7 +101,7 @@ class LoginController extends Controller
         return match($rol) {
             'paciente'      => redirect()->route('home'), // Los pacientes van al portal público
             'administrador' => redirect()->route('admin.dashboard'),
-            'medico'        => redirect()->route('admin.dashboard'), // panel médico — próximamente
+            'medico'        => redirect()->route('medico.dashboard'),
             'gestor_citas'  => redirect()->route('admin.dashboard'), // panel gestor — próximamente
             default         => redirect()->route('admin.dashboard'),
         };

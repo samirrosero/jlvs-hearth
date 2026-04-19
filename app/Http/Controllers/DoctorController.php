@@ -30,6 +30,18 @@ class DoctorController extends Controller
         return response()->json($query->get());
     }
 
+    public function especialidades(): JsonResponse
+    {
+        $especialidades = Medico::where('empresa_id', auth()->user()->empresa_id)
+            ->whereNotNull('especialidad')
+            ->where('especialidad', '!=', '')
+            ->distinct()
+            ->orderBy('especialidad')
+            ->pluck('especialidad');
+
+        return response()->json($especialidades);
+    }
+
     public function store(StoreDoctorRequest $request): JsonResponse
     {
         $medico = Medico::create(array_merge(

@@ -44,7 +44,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                               d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
-                    <p class="text-sm font-medium">Sin solicitudes pendientes</p>
+                    <p class="text-sm font-medium">Sin solicitudes</p>
                     <p class="text-xs mt-1">No hay {{ $info['label'] }} esperando aprobación</p>
                 </div>
             @else

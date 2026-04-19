@@ -56,6 +56,13 @@ return [
             'ruta'        => 'admin.solicitudes.index',
             'boton'       => 'Ver Solicitudes',
         ],
+        [
+            'clave'       => 'horarios',
+            'label'       => 'Horarios',
+            'descripcion' => 'configuración de la disponibilidad semanal de cada médico',
+            'ruta'        => 'admin.horarios',
+            'boton'       => 'Ver Horarios',
+        ],
     ],
 
     /*

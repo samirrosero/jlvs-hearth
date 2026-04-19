@@ -8,6 +8,10 @@ use App\Http\Controllers\Admin\AdminPacienteController;
 use App\Http\Controllers\Admin\AdminPasswordResetController;
 use App\Http\Controllers\Admin\BrandingController;
 use App\Http\Controllers\Admin\ChatbotController;
+use App\Http\Controllers\Admin\AdminHorarioController;
+use App\Http\Controllers\Medico\MedicoDashboardController;
+use App\Http\Controllers\Medico\MedicoCitasController;
+use App\Http\Controllers\Medico\MedicoPacientesController;
 use App\Http\Controllers\Admin\LoginController;
 use App\Http\Controllers\AntecedentesPacienteController;
 use App\Http\Controllers\CambiarPasswordController;
@@ -258,6 +262,10 @@ Route::middleware('auth')->group(function () {
     // ─────────────────────────────────────────────────────────
     // Médicos (lectura: admin + gestor_citas; escritura: admin)
     // ─────────────────────────────────────────────────────────
+    Route::middleware('role:administrador,gestor_citas,medico,paciente')->group(function () {
+        Route::get('/especialidades', [DoctorController::class, 'especialidades']);
+    });
+
     Route::middleware('role:administrador,gestor_citas')->group(function () {
         Route::get('/medicos', [DoctorController::class, 'index']);
         Route::get('/medicos/{medico}', [DoctorController::class, 'show']);
@@ -332,6 +340,22 @@ Route::middleware('auth')->group(function () {
 Route::post('/empresas', [CompanyController::class, 'store'])->name('empresas.store');
 
 // ═════════════════════════════════════════════════════════════
+// PANEL MÉDICO — Vistas Blade
+// ═════════════════════════════════════════════════════════════
+Route::prefix('medico')->name('medico.')->middleware(['auth', 'role:medico'])->group(function () {
+    Route::get('/', fn () => redirect()->route('medico.dashboard'));
+    Route::get('/dashboard', MedicoDashboardController::class)->name('dashboard');
+
+    Route::get('/citas',              [MedicoCitasController::class, 'index'])->name('citas');
+    Route::get('/citas/{cita}',       [MedicoCitasController::class, 'atender'])->name('citas.atender');
+
+    Route::get('/pacientes',                [MedicoPacientesController::class, 'index'])->name('pacientes');
+    Route::get('/pacientes/{paciente}',     [MedicoPacientesController::class, 'show'])->name('pacientes.show');
+
+    Route::post('/chatbot', [ChatbotController::class, 'chat'])->name('chatbot');
+});
+
+// ═════════════════════════════════════════════════════════════
 // PANEL DE ADMINISTRACIÓN — Vistas Blade
 // ═════════════════════════════════════════════════════════════
 Route::prefix('admin')->name('admin.')->group(function () {
@@ -364,6 +388,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/solicitudes',                            [SolicitudEmpleadorController::class, 'index'])->name('solicitudes.index');
         Route::patch('/solicitudes/{solicitud}/aprobar',      [SolicitudEmpleadorController::class, 'aprobar'])->name('solicitudes.aprobar');
         Route::patch('/solicitudes/{solicitud}/rechazar',     [SolicitudEmpleadorController::class, 'rechazar'])->name('solicitudes.rechazar');
+
+        // Horarios de médicos
+        Route::get('/horarios',  [AdminHorarioController::class, 'index'])->name('horarios');
+        Route::post('/horarios', [AdminHorarioController::class, 'guardar'])->name('horarios.guardar');
 
         // Chatbot — asistente virtual con Ollama
         Route::post('/chatbot', [ChatbotController::class, 'chat'])->name('chatbot');

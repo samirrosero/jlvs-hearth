@@ -95,6 +95,11 @@
                         'label' => 'Solicitudes personal',
                     ],
                     [
+                        'route' => 'admin.horarios',
+                        'icon'  => $empresa?->icono_medicos_url ?? asset('img/icons/medicos.png'),
+                        'label' => 'Horarios',
+                    ],
+                    [
                         'route' => 'admin.branding',
                         'icon'  => $empresa?->icono_identidad_url ?? asset('img/icons/dashboard.png'),
                         'label' => 'Identidad Visual',

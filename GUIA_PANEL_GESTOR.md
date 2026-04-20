@@ -377,33 +377,22 @@ resources/views/gestor/
 
 ## 6. Formulario inteligente de cita (create.blade.php)
 
-Este es el formulario clave. El flujo de selección usa Alpine.js + fetch:
+Este es el formulario clave. El flujo usa Alpine.js + los endpoints del backend.
+**No calcules slots manualmente** — el backend ya tiene dos endpoints para eso.
 
 ```
-Paso 1: Selecciona especialidad
-        → GET /especialidades
-        → dropdown se puebla dinámicamente
-
-Paso 2: Selecciona médico
-        → GET /medicos?especialidad=Pediatría
-        → solo muestra médicos de esa especialidad en la empresa
-
-Paso 3: Selecciona fecha
-        → GET /horarios?medico_id=3
-        → deshabilita en el <input type="date"> los días que el médico no trabaja
-
-Paso 4: Selecciona hora
-        → calcula slots cada 30 min entre hora_inicio y hora_fin del horario
-        → descuenta horas ya ocupadas: GET /citas?medico_id=3&fecha=2026-04-25
-        → muestra solo slots libres
-
-Paso 5: Selecciona paciente (buscador)
-        → buscar en los pacientes de la empresa
-
-Paso 6: Selecciona servicio y modalidad (dropdowns simples)
-
-Paso 7: POST /gestor/citas → store()
+Paso 1: Selecciona especialidad  →  GET /especialidades
+Paso 2: Selecciona médico        →  GET /medicos?especialidad=X
+Paso 3: Selecciona mes/fecha     →  GET /medicos/{id}/dias-disponibles?mes=YYYY-MM
+                                    (el calendario bloquea los días sin horario)
+Paso 4: Selecciona hora          →  GET /citas/disponibilidad?medico_id=X&fecha=Y&servicio_id=Z
+                                    (el backend devuelve solo los slots libres)
+Paso 5: Selecciona paciente      →  buscador en los pacientes de la empresa
+Paso 6: Servicio + modalidad     →  dropdowns simples
+Paso 7: Confirmar                →  POST /gestor/citas → store()
 ```
+
+> Si en el paso 4 `disponible` es `false` → mostrar opción de **Lista de espera** (ver sección 7.3)
 
 ### Estructura Alpine.js para el formulario:
 
@@ -419,24 +408,35 @@ Paso 7: POST /gestor/citas → store()
     </select>
 
     <!-- Paso 2: Médico -->
-    <select x-model="medicoId" @change="cargarHorario()" :disabled="!especialidad">
+    <select x-model="medicoId" @change="cargarDiasDelMes()" :disabled="!especialidad">
         <option value="">Selecciona médico</option>
         <template x-for="m in medicos" :key="m.id">
             <option :value="m.id" x-text="m.usuario.nombre"></option>
         </template>
     </select>
 
-    <!-- Paso 3: Fecha -->
+    <!-- Paso 3: Fecha (solo habilita días disponibles) -->
     <input type="date" x-model="fecha" @change="cargarSlots()"
            :disabled="!medicoId" :min="hoy">
-    <!-- Tip: deshabilitar días según diasDisponibles (array de dia_semana) -->
+    <p x-show="fecha && slotsLibres.length === 0 && !cargando" class="text-sm text-red-500">
+        El médico no tiene disponibilidad ese día.
+    </p>
 
-    <!-- Paso 4: Hora (slots) -->
-    <select x-model="hora" :disabled="!fecha">
+    <!-- Paso 4: Hora (slots del backend) -->
+    <select x-model="hora" :disabled="slotsLibres.length === 0">
+        <option value="">Selecciona hora</option>
         <template x-for="slot in slotsLibres" :key="slot">
             <option :value="slot" x-text="slot"></option>
         </template>
     </select>
+
+    <!-- Lista de espera si no hay slots -->
+    <div x-show="sinDisponibilidad" class="bg-amber-50 border border-amber-200 rounded-lg p-4 mt-2">
+        <p class="text-sm text-amber-800">No hay slots disponibles para esa fecha.</p>
+        <button type="button" @click="abrirListaEspera()" class="mt-2 text-sm text-amber-700 underline">
+            Registrar en lista de espera
+        </button>
+    </div>
 
 </div>
 
@@ -444,83 +444,76 @@ Paso 7: POST /gestor/citas → store()
 function formularioCita() {
     return {
         especialidades: [],
-        medicos: [],
-        especialidad: '',
-        medicoId: '',
-        fecha: '',
-        hora: '',
-        diasDisponibles: [],   // [1,2,3,4,5] = lunes a viernes
-        slotsLibres: [],
+        medicos:        [],
+        slotsLibres:    [],
+        diasHabilitados: [],  // fechas 'YYYY-MM-DD' del mes actual con horario
+        especialidad:   '',
+        medicoId:       '',
+        servicioId:     '',
+        fecha:          '',
+        hora:           '',
+        cargando:       false,
+        sinDisponibilidad: false,
         hoy: new Date().toISOString().split('T')[0],
+        mesActual: new Date().toISOString().slice(0, 7), // 'YYYY-MM'
 
         async init() {
-            const res = await fetch('/especialidades', {
-                headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf() }
-            });
+            const res = await fetch('/especialidades', { headers: headers() });
             this.especialidades = await res.json();
         },
 
         async cargarMedicos() {
-            this.medicoId = ''; this.medicos = [];
-            const res = await fetch(`/medicos?especialidad=${this.especialidad}`, {
-                headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf() }
-            });
+            this.medicoId = ''; this.medicos = []; this.slotsLibres = [];
+            const res = await fetch(`/medicos?especialidad=${this.especialidad}`, { headers: headers() });
             this.medicos = await res.json();
         },
 
-        async cargarHorario() {
-            this.fecha = ''; this.slotsLibres = [];
-            const res = await fetch(`/horarios?medico_id=${this.medicoId}`, {
-                headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf() }
-            });
-            const horarios = await res.json();
-            // dia_semana: 0=domingo, 1=lunes ... 6=sábado
-            this.diasDisponibles = horarios.filter(h => h.activo).map(h => h.dia_semana);
-            // Guardar también las horas para calcular slots
-            this.horarioPorDia = Object.fromEntries(horarios.map(h => [h.dia_semana, h]));
+        // Llamar cuando cambia el médico O cuando el usuario navega a otro mes en el calendario
+        async cargarDiasDelMes(mes = null) {
+            this.fecha = ''; this.slotsLibres = []; this.sinDisponibilidad = false;
+            if (!this.medicoId) return;
+            const m = mes ?? this.mesActual;
+            const res = await fetch(`/medicos/${this.medicoId}/dias-disponibles?mes=${m}`, { headers: headers() });
+            const data = await res.json();
+            this.diasHabilitados = data.dias_disponibles ?? [];
+        },
+
+        // Verifica si una fecha está habilitada (para colorear el calendario si lo implementas)
+        esDiaDisponible(fecha) {
+            return this.diasHabilitados.includes(fecha);
         },
 
         async cargarSlots() {
             if (!this.fecha || !this.medicoId) return;
-            const diaSemana = new Date(this.fecha + 'T00:00:00').getDay(); // 0=dom, 1=lun...
-            const horario   = this.horarioPorDia?.[diaSemana];
-            if (!horario) { this.slotsLibres = []; return; }
+            this.cargando = true; this.slotsLibres = []; this.sinDisponibilidad = false;
+            const url = `/citas/disponibilidad?medico_id=${this.medicoId}&fecha=${this.fecha}`
+                + (this.servicioId ? `&servicio_id=${this.servicioId}` : '');
+            const res  = await fetch(url, { headers: headers() });
+            const data = await res.json();
+            this.slotsLibres       = data.slots ?? [];
+            this.sinDisponibilidad = !data.disponible;
+            this.cargando = false;
+        },
 
-            // Citas ya ocupadas en esa fecha
-            const res = await fetch(`/citas?medico_id=${this.medicoId}`, {
-                headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf() }
-            });
-            const data    = await res.json();
-            // La API devuelve paginación, ajusta según la respuesta real
-            const citas   = Array.isArray(data) ? data : (data.data ?? []);
-            const ocupadas = citas
-                .filter(c => c.fecha === this.fecha)
-                .map(c => c.hora.substring(0, 5));
-
-            // Generar slots cada 30 minutos
-            this.slotsLibres = generarSlots(horario.hora_inicio, horario.hora_fin, 30)
-                .filter(slot => !ocupadas.includes(slot));
+        abrirListaEspera() {
+            // Aquí puedes abrir un modal o redirigir al formulario de lista de espera
+            // con medicoId, fecha y servicioId precargados
         },
     };
 }
 
-function generarSlots(inicio, fin, intervaloMin) {
-    const slots = [];
-    let [h, m] = inicio.split(':').map(Number);
-    const [hf, mf] = fin.split(':').map(Number);
-    while (h < hf || (h === hf && m < mf)) {
-        slots.push(`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`);
-        m += intervaloMin;
-        if (m >= 60) { h++; m -= 60; }
-    }
-    return slots;
-}
-
-function csrf() {
-    return document.querySelector('meta[name="csrf-token"]').content;
+function headers() {
+    return {
+        'Accept': 'application/json',
+        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+    };
 }
 </script>
 ```
+
+> **Tip de UX para el calendario:** si usas una librería como Flatpickr o Pikaday,
+> puedes pasar `diasHabilitados` a la opción `enable` del calendario para que el
+> usuario solo pueda seleccionar días con horario activo.
 
 ---
 
@@ -531,20 +524,192 @@ function csrf() {
 | GET | `/especialidades` | Especialidades de la empresa |
 | GET | `/medicos` | Médicos (filtra por `?especialidad=X` o `?buscar=nombre`) |
 | GET | `/medicos/{id}` | Detalle de un médico |
-| GET | `/horarios?medico_id=X` | Horario semanal de un médico |
-| GET | `/citas` | Citas de la empresa |
+| GET | `/medicos/{id}/dias-disponibles?mes=YYYY-MM` | **Días del mes que trabaja el médico** (ver sección 7.1) |
+| GET | `/citas/disponibilidad?medico_id=X&fecha=Y` | **Slots libres de un médico** (ver sección 7.2) |
+| GET | `/citas` | Citas de la empresa (filtra por `?fecha=`, `?medico_id=`, `?estado_id=`, `?modalidad_id=`) |
 | POST | `/citas` | Crear cita |
-| PUT/PATCH | `/citas/{id}` | Editar cita |
+| PUT/PATCH | `/citas/{id}` | Editar cita / cambiar estado |
 | DELETE | `/citas/{id}` | Eliminar cita |
 | GET | `/pacientes` | Pacientes de la empresa |
 | POST | `/pacientes` | Crear paciente |
 | GET | `/estados-cita` | Estados de cita |
 | GET | `/modalidades-cita` | Modalidades |
 | GET | `/servicios` | Servicios/procedimientos |
+| GET | `/lista-espera` | Lista de espera (ver sección 7.3) |
+| POST | `/lista-espera` | Registrar paciente en lista de espera |
+| PATCH | `/lista-espera/{id}` | Actualizar estado de lista de espera |
+| DELETE | `/lista-espera/{id}` | Eliminar registro de lista de espera |
 
 > **Nota:** Todos estos endpoints retornan JSON y ya están protegidos con el middleware
 > `role:gestor_citas`. Solo necesitas llamarlos con el header `Accept: application/json`
 > y el token CSRF.
+
+---
+
+### 7.1 Días disponibles del médico — `GET /medicos/{id}/dias-disponibles`
+
+Devuelve qué días del mes el médico tiene horario activo registrado por el administrador.
+Úsalo para deshabilitar en el calendario los días que no trabaja.
+
+**Parámetros:**
+| Parámetro | Tipo | Requerido | Descripción |
+|-----------|------|-----------|-------------|
+| `mes` | string (YYYY-MM) | ✅ | Mes a consultar |
+
+**Ejemplo de respuesta:**
+```json
+{
+    "medico_id": 5,
+    "mes": "2026-04",
+    "dias_disponibles": ["2026-04-21", "2026-04-22", "2026-04-24", "2026-04-28", "2026-04-29"]
+}
+```
+
+> Solo devuelve días **desde hoy en adelante** — las fechas pasadas no aparecen aunque el médico tenga horario.
+
+---
+
+### 7.2 Slots libres del día — `GET /citas/disponibilidad`
+
+Devuelve los horarios libres de un médico para una fecha y servicio específicos.
+**Usa este endpoint en lugar de calcular slots manualmente.**
+
+**Parámetros:**
+| Parámetro | Tipo | Requerido | Descripción |
+|-----------|------|-----------|-------------|
+| `medico_id` | integer | ✅ | ID del médico |
+| `fecha` | date (YYYY-MM-DD) | ✅ | Fecha a consultar |
+| `servicio_id` | integer | ❌ | Determina la duración del slot (default: 30 min) |
+
+**Ejemplo de respuesta:**
+```json
+{
+  "disponible": true,
+  "slots": ["08:00", "08:20", "08:40", "09:00", "09:20", "10:00"],
+  "fecha": "2026-04-21",
+  "duracion_minutos": 20,
+  "servicio": "Consulta Medicina General"
+}
+```
+
+**Respuesta cuando no hay disponibilidad:**
+```json
+{
+  "disponible": false,
+  "slots": [],
+  "mensaje": "El médico no tiene horario disponible ese día."
+}
+```
+
+**Uso en Alpine.js:**
+```js
+async cargarSlots() {
+    if (!this.medicoId || !this.fecha) return;
+    const res = await fetch(
+        `/citas/disponibilidad?medico_id=${this.medicoId}&fecha=${this.fecha}&servicio_id=${this.servicioId}`,
+        { headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf() } }
+    );
+    const data = await res.json();
+    this.slotsLibres = data.slots ?? [];
+    this.hayDisponibilidad = data.disponible;
+},
+```
+
+> **Importante:** El endpoint ya excluye los slots de citas canceladas y "No asistió",
+> por lo que esos horarios vuelven a aparecer como disponibles automáticamente.
+
+---
+
+### 7.3 Lista de espera — `/lista-espera`
+
+Cuando no hay disponibilidad, el gestor puede registrar al paciente en lista de espera.
+
+**Crear registro:**
+```js
+// POST /lista-espera
+{
+  "paciente_id": 5,
+  "medico_id": 4,           // opcional
+  "servicio_id": 1,          // opcional
+  "fecha_solicitada": "2026-04-21",
+  "notas": "Paciente llegó presencial, no hay slots disponibles"
+}
+```
+
+**Respuesta:**
+```json
+{
+  "id": 1,
+  "estado": "esperando",
+  "paciente": { "nombre_completo": "...", "identificacion": "..." },
+  "medico": { ... },
+  "servicio": { "nombre": "Consulta Medicina General" },
+  "fecha_solicitada": "2026-04-21"
+}
+```
+
+**Cuando se libera un slot (otro paciente cancela o no asiste), el gestor agenda la cita y actualiza la lista:**
+```js
+// PATCH /lista-espera/{id}
+{
+  "estado": "asignado",
+  "cita_id": 130,   // ID de la cita que se le asignó
+  "notas": "Se le asignó la cita liberada de las 10:00"
+}
+```
+
+**Estados posibles:**
+| Estado | Significado |
+|--------|-------------|
+| `esperando` | Paciente en espera, sin slot asignado |
+| `asignado` | Se le encontró un slot y se le agendó cita |
+| `descartado` | No se encontró disponibilidad o el paciente desistió |
+
+**Filtros disponibles para listar:**
+```
+GET /lista-espera?estado=esperando
+GET /lista-espera?fecha=2026-04-21
+GET /lista-espera?medico_id=4
+```
+
+---
+
+### 7.4 Cambiar estado de una cita
+
+El gestor cambia el estado de las citas según lo que ocurra en ventanilla:
+
+```js
+// Confirmar llegada del paciente
+PATCH /citas/{id}  →  { "estado_id": 2 }   // Confirmada
+
+// Paciente no llegó en los 15 minutos de gracia
+PATCH /citas/{id}  →  { "estado_id": 5 }   // No asistió  ← libera el slot automáticamente
+
+// Cancelar cita
+PATCH /citas/{id}  →  { "estado_id": 4 }   // Cancelada   ← libera el slot automáticamente
+```
+
+**IDs de estados:**
+| ID | Estado | Color |
+|----|--------|-------|
+| 1 | Pendiente | 🟡 #FFA500 |
+| 2 | Confirmada | 🔵 #007BFF |
+| 3 | Atendida | 🟢 #28A745 |
+| 4 | Cancelada | 🔴 #DC3545 |
+| 5 | No asistió | ⚫ #6C757D |
+
+---
+
+### 7.5 Reglas de agendamiento por modalidad
+
+| Modalidad | ID | Quién agenda | Restricción de fecha |
+|-----------|----|-------------|----------------------|
+| Presencial | 1 | Gestor o paciente | Mismo día permitido (solo gestor) |
+| Telemedicina | 2 | Paciente (portal) | Mínimo **pasado mañana** |
+| Domiciliaria | 3 | Gestor | Mínimo **pasado mañana** |
+
+> El backend ya valida esto automáticamente en `StoreAppointmentRequest`.
+> El gestor puede agendar presencial el mismo día, el paciente virtual no.
 
 ---
 

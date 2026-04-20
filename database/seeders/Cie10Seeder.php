@@ -135,6 +135,24 @@ class Cie10Seeder extends Seeder
             ['codigo' => 'S80.9', 'descripcion' => 'Traumatismo superficial de la pierna, no especificado',   'categoria' => 'S'],
             ['codigo' => 'S93.4', 'descripcion' => 'Esguince y torcedura del tobillo',                        'categoria' => 'S'],
             ['codigo' => 'T14.9', 'descripcion' => 'Traumatismo no especificado',                              'categoria' => 'T'],
+
+            // ── Síntomas y signos generales (R) ───────────────────────
+            ['codigo' => 'R05',   'descripcion' => 'Tos',                                                      'categoria' => 'R'],
+            ['codigo' => 'R05.1', 'descripcion' => 'Tos aguda',                                                'categoria' => 'R'],
+            ['codigo' => 'R05.4', 'descripcion' => 'Tos crónica',                                              'categoria' => 'R'],
+            ['codigo' => 'R05.9', 'descripcion' => 'Tos no especificada',                                      'categoria' => 'R'],
+            ['codigo' => 'R50.9', 'descripcion' => 'Fiebre, no especificada',                                  'categoria' => 'R'],
+            ['codigo' => 'R51',   'descripcion' => 'Cefalea',                                                  'categoria' => 'R'],
+            ['codigo' => 'R10.4', 'descripcion' => 'Dolor abdominal, no especificado',                        'categoria' => 'R'],
+            ['codigo' => 'R06.0', 'descripcion' => 'Disnea',                                                   'categoria' => 'R'],
+            ['codigo' => 'R06.2', 'descripcion' => 'Sibilancias',                                              'categoria' => 'R'],
+            ['codigo' => 'R07.9', 'descripcion' => 'Dolor en el pecho, no especificado',                      'categoria' => 'R'],
+            ['codigo' => 'R11',   'descripcion' => 'Náusea y vómito',                                          'categoria' => 'R'],
+            ['codigo' => 'R00.0', 'descripcion' => 'Taquicardia, no especificada',                             'categoria' => 'R'],
+            ['codigo' => 'R03.0', 'descripcion' => 'Presión arterial elevada',                                 'categoria' => 'R'],
+            ['codigo' => 'R42',   'descripcion' => 'Mareo y desvanecimiento',                                  'categoria' => 'R'],
+            ['codigo' => 'R53',   'descripcion' => 'Malestar y fatiga',                                        'categoria' => 'R'],
+            ['codigo' => 'R68.9', 'descripcion' => 'Síntoma general, no especificado',                        'categoria' => 'R'],
         ];
 
         DB::table('cie10')->insertOrIgnore($codigos);

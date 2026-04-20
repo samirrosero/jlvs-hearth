@@ -39,7 +39,7 @@ return new class extends Migration
             // --- Contenido clínico ---
             $table->text('motivo_consulta');            // ¿Por qué consulta el paciente hoy?
             $table->text('enfermedad_actual');          // Descripción detallada de la enfermedad actual
-            $table->json('antecedentes');               // Antecedentes: familiares, quirúrgicos, alérgicos, etc.
+            $table->json('antecedentes')->nullable();   // Antecedentes: familiares, quirúrgicos, alérgicos, etc.
             $table->text('diagnostico');                // Diagnóstico médico establecido
             $table->text('plan_tratamiento');           // Plan de tratamiento indicado
             $table->text('evaluacion')->nullable();     // Evaluación de evolución del paciente

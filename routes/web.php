@@ -27,6 +27,8 @@ use App\Http\Controllers\AppointmentStatusController;
 use App\Http\Controllers\AttachedDocumentController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ClinicalHistoryController;
+use App\Http\Controllers\DisponibilidadController;
+use App\Http\Controllers\ListaEsperaController;
 use App\Http\Controllers\UbicacionController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\OnboardingController;
@@ -154,6 +156,20 @@ Route::middleware('auth')->group(function () {
         Route::put('/citas/{cita}', [AppointmentController::class, 'update']);
         Route::patch('/citas/{cita}', [AppointmentController::class, 'update']);
         Route::delete('/citas/{cita}', [AppointmentController::class, 'destroy']);
+    });
+
+    // Disponibilidad — slots libres y días disponibles de un médico
+    Route::middleware('role:administrador,gestor_citas,paciente')->group(function () {
+        Route::get('/citas/disponibilidad',                    DisponibilidadController::class)->name('citas.disponibilidad');
+        Route::get('/medicos/{medico}/dias-disponibles',       [DisponibilidadController::class, 'diasDisponibles'])->name('medicos.dias-disponibles');
+    });
+
+    // Lista de espera — pacientes sin slot disponible
+    Route::middleware('role:administrador,gestor_citas')->group(function () {
+        Route::get('/lista-espera',                  [ListaEsperaController::class, 'index']);
+        Route::post('/lista-espera',                 [ListaEsperaController::class, 'store']);
+        Route::patch('/lista-espera/{listaEspera}',  [ListaEsperaController::class, 'update']);
+        Route::delete('/lista-espera/{listaEspera}', [ListaEsperaController::class, 'destroy']);
     });
 
     // ─────────────────────────────────────────────────────────

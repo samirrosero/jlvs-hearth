@@ -6,19 +6,22 @@
 @section('content')
 
 @php
-    $ejecucion = $cita->ejecucion;
-    $historia  = $ejecucion?->historiaClinica;
-    $signos    = $ejecucion?->signosVitales;
-    $receta    = $historia?->recetasMedicas->first();
+    $ejecucion    = $cita->ejecucion;
+    $historia     = $ejecucion?->historiaClinica;
+    $signos       = $ejecucion?->signosVitales;
+    $receta       = $historia?->recetasMedicas?->first();
+    $consultaData = [
+        'cita_id'   => $cita->id,
+        'ejecucion' => $ejecucion,
+        'historia'  => $historia,
+        'signos'    => $signos,
+        'receta'    => $receta,
+    ];
 @endphp
 
-<div x-data="consulta(@json([
-    'cita_id'        => $cita->id,
-    'ejecucion'      => $ejecucion,
-    'historia'       => $historia,
-    'signos'         => $signos,
-    'receta'         => $receta,
-]))" class="space-y-6">
+<div x-data='consulta(@json($consultaData))'
+     @cie10-seleccionado="formHistoria.codigo_cie10 = $event.detail.codigo; formHistoria.descripcion_cie10 = $event.detail.descripcion; formHistoria.diagnostico = $event.detail.codigo + ' - ' + $event.detail.descripcion"
+     class="space-y-6">
 
     {{-- ── Cabecera: info cita + paciente ───────────────────────── --}}
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -456,13 +459,7 @@ function cie10Search() {
             this.abierto = this.resultados.length > 0;
         },
         seleccionar(item) {
-            // Actualiza el formHistoria del componente padre
-            const padre = this.$el.closest('[x-data]').__x.$data;
-            if (padre?.formHistoria) {
-                padre.formHistoria.codigo_cie10      = item.codigo;
-                padre.formHistoria.descripcion_cie10 = item.descripcion;
-                padre.formHistoria.diagnostico       = `${item.codigo} - ${item.descripcion}`;
-            }
+            this.$dispatch('cie10-seleccionado', item);
             this.query   = item.codigo;
             this.abierto = false;
         },

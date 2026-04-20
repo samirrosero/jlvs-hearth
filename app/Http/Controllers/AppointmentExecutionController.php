@@ -50,7 +50,21 @@ class AppointmentExecutionController extends Controller
     public function update(UpdateAppointmentExecutionRequest $request, EjecucionCita $ejecucion): JsonResponse
     {
         $this->authorize('update', $ejecucion);
-        $ejecucion->update($request->validated());
+
+        $data = $request->validated();
+
+        if (!empty($data['fin_atencion']) && $ejecucion->inicio_atencion) {
+            $inicio = \Carbon\Carbon::parse($ejecucion->inicio_atencion);
+            $fin    = \Carbon\Carbon::parse($data['fin_atencion']);
+            $data['duracion_minutos'] = (int) $inicio->diffInMinutes($fin);
+
+            $estadoAtendida = \App\Models\EstadoCita::where('nombre', 'like', '%tendida%')->first();
+            if ($estadoAtendida) {
+                $ejecucion->cita()->update(['estado_id' => $estadoAtendida->id]);
+            }
+        }
+
+        $ejecucion->update($data);
         return response()->json($ejecucion);
     }
 

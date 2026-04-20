@@ -16,8 +16,8 @@ class Cie10Controller extends Controller
     {
         $query = Cie10::query();
 
-        if ($request->filled('buscar')) {
-            $termino = $request->input('buscar');
+        $termino = $request->input('q') ?? $request->input('buscar');
+        if ($termino) {
             $query->where(function ($q) use ($termino) {
                 $q->where('codigo', 'like', "%{$termino}%")
                   ->orWhere('descripcion', 'like', "%{$termino}%");

@@ -50,25 +50,28 @@ class MedicoDashboardController extends Controller
         $totalValoraciones = Valoracion::whereHas('cita', fn ($q) => $q->where('medico_id', $medicoId))
             ->count();
 
+        // Agenda completa de hoy ordenada por hora
+        $agendaHoy = Cita::where('medico_id', $medicoId)
+            ->where('fecha', $hoy->toDateString())
+            ->where('activo', true)
+            ->with('paciente', 'estado', 'servicio', 'modalidad', 'ejecucion')
+            ->orderBy('hora')
+            ->get();
+
+        // Próximas citas (días futuros, no hoy)
         $proximasCitas = Cita::where('medico_id', $medicoId)
             ->where('activo', true)
-            ->where(fn ($q) => $q
-                ->where('fecha', '>', $hoy->toDateString())
-                ->orWhere(fn ($q2) => $q2
-                    ->where('fecha', $hoy->toDateString())
-                    ->where('hora', '>=', $hoy->toTimeString())
-                )
-            )
+            ->where('fecha', '>', $hoy->toDateString())
             ->with('paciente', 'estado', 'servicio')
             ->orderBy('fecha')->orderBy('hora')
-            ->limit(8)
+            ->limit(6)
             ->get();
 
         return view('medico.dashboard', compact(
             'medico', 'citasHoy', 'citasMes', 'totalPacientes', 'citasPendientes',
             'citasPorEstado', 'citasPorMes',
             'promedioValoraciones', 'totalValoraciones',
-            'proximasCitas'
+            'agendaHoy', 'proximasCitas'
         ));
     }
 }

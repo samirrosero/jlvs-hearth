@@ -4,50 +4,35 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    {{-- Al inicio del <head> --}}
     @php $empresa = auth()->user()?->empresa; @endphp
-    <title>@yield('title', 'Panel Médico') — {{ $empresa?->nombre ?? 'JLVS Hearth' }}</title>
+    
+    {{-- Título con nombre de la IPS --}}
+    <title>@yield('title') — {{ $empresa?->nombre ?? 'JLVS Hearth' }}</title>
+
+    {{-- Favicon dinámico --}}
     @php $fv = ($empresa?->favicon_url ?? asset('favicon.ico')) . '?v=' . ($empresa?->updated_at?->timestamp ?? '1'); @endphp
     <link rel="icon" href="{{ $fv }}" type="image/x-icon">
-    <link rel="shortcut icon" href="{{ $fv }}" type="image/x-icon">
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    
+    {{-- Colores del sidebar via CSS variables --}}
     <style>
         :root {
-            --color-sidebar:    {{ $empresa?->color_doctor   ?? '#0f172a' }};
-            --color-primario:   {{ $empresa?->color_primario ?? '#0369a1' }};
+            --color-sidebar:    {{ $empresa?->color_paciente   ?? '#0f172a' }};
+            --color-primario:   {{ $empresa?->color_primario   ?? '#0369a1' }};
             --color-secundario: {{ $empresa?->color_secundario ?? '#075985' }};
         }
-        #medico-sidebar {
-            background-color: var(--color-sidebar) !important;
-            border-right-color: rgba(255,255,255,.08) !important;
-        }
-        #medico-sidebar .sidebar-logo-text { color: rgba(255,255,255,.85); }
-        #medico-sidebar .sidebar-empresa   { color: rgba(255,255,255,.55); }
-        #medico-sidebar .nav-item {
-            color: rgba(255,255,255,.65);
-        }
-        #medico-sidebar .nav-item:hover {
-            background-color: rgba(255,255,255,.1);
-            color: #fff;
-        }
-        #medico-sidebar .nav-item.activo {
-            background-color: rgba(255,255,255,.18);
-            color: #fff;
-        }
-        #medico-sidebar .nav-item img { filter: brightness(0) invert(1); opacity: .7; }
-        #medico-sidebar .nav-item.activo img,
-        #medico-sidebar .nav-item:hover img { opacity: 1; }
-        #medico-sidebar .sidebar-divider   { border-color: rgba(255,255,255,.1); }
-        #medico-sidebar .sidebar-username  { color: rgba(255,255,255,.9); }
-        #medico-sidebar .sidebar-role      { color: rgba(255,255,255,.5); }
-        #medico-sidebar .sidebar-logout    { color: rgba(255,255,255,.55); }
-        #medico-sidebar .sidebar-logout:hover { color: #fff; }
-        #medico-sidebar .sidebar-logout img { filter: brightness(0) invert(1); opacity: .55; }
-        #medico-sidebar .sidebar-logout:hover img { opacity: 1; }
-    </style>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+        
+        #paciente-sidebar { background-color: var(--color-sidebar) !important; }
+</style>
+
+ {{-- Logo en el sidebar --}}
+ <img src="{{ $empresa?->logo_url ?? asset('img/logos/logo1.png') }}"
+     alt="{{ $empresa?->nombre ?? 'JLVS Hearth' }}"
+     class="h-10 w-auto object-contain">
     @stack('styles')
 </head>
-<body class="bg-gray-100 antialiased" x-data="{ sidebarOpen: false }">
+<body class="bg-gray-50 antialiased" x-data="{ sidebarOpen: false }">
 
     {{-- ── Sidebar ─────────────────────────────────────────────── --}}
     <aside id="paciente-sidebar"
@@ -59,7 +44,7 @@
             <img src="{{ $empresa?->logo_url ?? asset('img/logos/logo1.png') }}"
                  alt="{{ $empresa?->nombre ?? 'JLVS Hearth' }}"
                  class="h-10 w-auto flex-shrink-0 object-contain">
-            <p class="sidebar-empresa text-xs truncate">{{ $empresa?->nombre }}</p>
+            <p class="text-white/50 text-[10px] uppercase tracking-wider font-bold truncate">{{ $empresa?->nombre }}</p>
         </div>
 
         {{-- Navegación --}}
@@ -67,42 +52,48 @@
             @php
                 $nav = [
                     [
-                        'route' => 'medico.dashboard',
+                        'route' => 'paciente.dashboard',
                         'icon'  => $empresa?->icono_dashboard_url ?? asset('img/icons/dashboard.png'),
-                        'label' => 'Dashboard',
+                        'label' => 'Inicio',
                     ],
                     [
-                        'route' => 'medico.citas',
-                        'match' => 'medico.citas*',
+                        'route' => 'paciente.citas',
+                        'match' => 'paciente.citas*',
                         'icon'  => $empresa?->icono_card_citas_url ?? asset('img/icons/citas-mes.png'),
                         'label' => 'Mis Citas',
                     ],
                     [
-                        'route' => 'medico.pacientes',
-                        'match' => 'medico.pacientes*',
+                        'route' => 'paciente.historial',
+                        'match' => 'paciente.historial*',
                         'icon'  => $empresa?->icono_pacientes_url ?? asset('img/icons/pacientes.png'),
-                        'label' => 'Mis Pacientes',
+                        'label' => 'Mi Historial',
                     ],
                 ];
             @endphp
 
             @foreach ($nav as $item)
-                @if (Route::has($item['route']))
                 <a href="{{ route($item['route']) }}"
                    class="nav-item flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition
-                          {{ request()->routeIs($item['match'] ?? $item['route']) ? 'activo' : '' }}">
-                    <img src="{{ $item['icon'] }}" alt="{{ $item['label'] }}" class="w-5 h-5 flex-shrink-0">
+                          {{ request()->routeIs($item['route']) || (isset($item['match']) && request()->is($item['match'])) ? 'activo' : '' }}">
+                    <img src="{{ $item['icon'] }}" alt="{{ $item['label'] }}"
+                         class="w-5 h-5 flex-shrink-0">
                     {{ $item['label'] }}
                 </a>
-                @endif
             @endforeach
         </nav>
 
         {{-- Usuario + Logout --}}
         <div class="sidebar-divider border-t px-4 py-4">
-            <p class="sidebar-username text-xs font-medium truncate">{{ auth()->user()->nombre }}</p>
-            <p class="sidebar-role text-xs mb-1">{{ auth()->user()->medico?->especialidad ?? 'Médico' }}</p>
-            <p class="sidebar-role text-xs mb-3 opacity-70">{{ $empresa?->nombre }}</p>
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white text-xs font-bold">
+                    {{ substr(auth()->user()->nombre, 0, 1) }}
+                </div>
+                <div class="overflow-hidden">
+                    <p class="sidebar-username text-xs font-medium truncate">{{ auth()->user()->nombre }}</p>
+                    <p class="sidebar-role text-[10px]">Paciente</p>
+                </div>
+            </div>
+            
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
                 <button type="submit"
@@ -132,15 +123,17 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
                     </svg>
                 </button>
-                <h1 class="text-lg font-semibold text-gray-800">@yield('page-title', 'Panel Médico')</h1>
+                <h1 class="text-lg font-semibold text-gray-800">@yield('page-title', 'Portal del Paciente')</h1>
             </div>
-            <span class="text-sm text-gray-500">{{ now()->format('d M Y') }}</span>
+            <div class="flex items-center gap-4">
+                <span class="hidden sm:inline text-sm text-gray-500">{{ now()->format('d M, Y') }}</span>
+            </div>
         </header>
 
         {{-- Flash messages --}}
         @if (session('exito'))
             <div class="mx-6 mt-4 px-4 py-3 bg-green-50 border border-green-200 text-green-800 rounded-lg text-sm flex items-center gap-2"
-                 x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 4000)">
+                 x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)">
                 <span>✅</span> {{ session('exito') }}
                 <button @click="show = false" class="ml-auto text-green-600 hover:text-green-800">&times;</button>
             </div>
@@ -158,22 +151,22 @@
         </main>
     </div>
 
-    {{-- ── Chatbot flotante ────────────────────────────────────── --}}
+    {{-- Chatbot flotante --}}
     @php
         $chatbotRutas = collect([
-            ['clave' => 'dashboard',  'label' => 'Ir al Dashboard',   'ruta' => 'medico.dashboard'],
-            ['clave' => 'citas',      'label' => 'Ver Mis Citas',      'ruta' => 'medico.citas'],
-            ['clave' => 'pacientes',  'label' => 'Ver Mis Pacientes',  'ruta' => 'medico.pacientes'],
+            ['clave' => 'dashboard',  'label' => 'Ir al Inicio',       'ruta' => 'paciente.dashboard'],
+            ['clave' => 'citas',      'label' => 'Ver Mis Citas',       'ruta' => 'paciente.citas'],
+            ['clave' => 'historial',  'label' => 'Ver Mi Historial',    'ruta' => 'paciente.historial'],
         ])->filter(fn ($s) => Route::has($s['ruta']))
           ->mapWithKeys(fn ($s) => [$s['clave'] => ['label' => $s['label'], 'url' => route($s['ruta'])]])
           ->toJson();
     @endphp
 
     <x-chatbot
-        endpoint="{{ route('medico.chatbot') }}"
-        storage-key="medico"
+        endpoint="{{ route('paciente.chatbot') }}"
+        storage-key="paciente"
         :rutas-json="$chatbotRutas"
-        mensaje-inicial="¡Hola! Soy tu asistente médico. Puedo decirte cuántas citas tienes hoy, el estado de tus pacientes o ayudarte a navegar. ¿En qué te puedo ayudar?"
+        mensaje-inicial="¡Hola! Soy tu asistente personal. Puedo decirte cuántas citas tienes o ayudarte a navegar. ¿En qué te puedo ayudar?"
     />
 
     @stack('scripts')

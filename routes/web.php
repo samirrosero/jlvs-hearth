@@ -44,6 +44,9 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\ServicioController;
 use App\Http\Controllers\SignosVitalesController;
 use App\Http\Controllers\UsuarioController;
+use App\Http\Controllers\Paciente\PacienteDashboardController;
+use App\Http\Controllers\Paciente\PacienteCitasController;
+use App\Http\Controllers\Paciente\PacienteHistorialController;
 use Illuminate\Support\Facades\Route;
 
 // ─────────────────────────────────────────────────────────────
@@ -376,6 +379,22 @@ Route::prefix('medico')->name('medico.')->middleware(['auth', 'role:medico'])->g
     Route::get('/pacientes/{paciente}',     [MedicoPacientesController::class, 'show'])->name('pacientes.show');
 
     Route::post('/chatbot', [ChatbotController::class, 'chat'])->name('chatbot');
+});
+// ═════════════════════════════════════════════════════════════
+// PANEL DE PACIENTE — Vistas Blade
+// ═════════════════════════════════════════════════════════════
+Route::prefix('paciente')->name('paciente.')->middleware(['auth', 'role:paciente'])->group(function () {
+    Route::get('/', fn () => redirect()->route('paciente.dashboard'));
+
+    Route::get('/dashboard', [PacienteDashboardController::class, 'index'])->name('dashboard');
+
+    Route::get('/citas', [PacienteCitasController::class, 'index'])->name('citas');
+
+    Route::get('/historial', [PacienteHistorialController::class, 'index'])->name('historial');
+    Route::get('/historial/{historia}', [PacienteHistorialController::class, 'show'])->name('historial.show');
+
+    Route::patch('/citas/{cita}/cancelar', [PacienteCitasController::class, 'cancelar'])
+        ->name('citas.cancelar');
 });
 
 // ═════════════════════════════════════════════════════════════

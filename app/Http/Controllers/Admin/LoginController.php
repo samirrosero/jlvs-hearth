@@ -14,8 +14,8 @@ class LoginController extends Controller
 
     public function showLogin(Request $request)
     {
-        if (Auth::check() && in_array(Auth::user()->rol?->nombre, self::ROLES_PANEL)) {
-            return redirect()->route('admin.dashboard');
+        if (Auth::check()) {
+            return $this->redirigirSegunRol(Auth::user()->rol?->nombre);
         }
 
         // Detectar empresa por parámetro (para acceso específico de IPS)
@@ -49,18 +49,20 @@ class LoginController extends Controller
     public function login(Request $request)
     {
         $request->validate([
-            'identificacion' => ['required', 'string'],
-            'password'       => ['required', 'string'],
-            'tipo_usuario'   => ['required', 'in:afiliado,empleador'],
+            'login'        => ['required', 'string'],
+            'password'     => ['required', 'string'],
+            'tipo_usuario' => ['required', 'in:afiliado,empleador'],
         ]);
 
-        // Autenticar por número de documento (identificacion) en vez de email
+        $loginValue = $request->login;
+        $field = filter_var($loginValue, FILTER_VALIDATE_EMAIL) ? 'email' : 'identificacion';
+
         if (!Auth::attempt(
-            ['identificacion' => $request->identificacion, 'password' => $request->password],
+            [$field => $loginValue, 'password' => $request->password],
             $request->boolean('remember')
         )) {
             return back()
-                ->withErrors(['identificacion' => 'Número de documento o contraseña incorrectos.'])
+                ->withErrors(['login' => 'Credenciales incorrectas. Verifica tu documento o correo y contraseña.'])
                 ->withInput();
         }
 
@@ -82,7 +84,7 @@ class LoginController extends Controller
             if ($rol !== 'paciente') {
                 Auth::logout();
                 return back()
-                    ->withErrors(['identificacion' => 'Este acceso es solo para pacientes. Los empleadores deben usar el tab "Empleadores".'])
+                    ->withErrors(['login' => 'Este acceso es solo para pacientes. Los empleadores deben usar el tab "Empleadores".'])
                     ->withInput();
             }
         } elseif ($tipoUsuario === 'empleador') {
@@ -90,20 +92,24 @@ class LoginController extends Controller
             if (!in_array($rol, self::ROLES_PANEL)) {
                 Auth::logout();
                 return back()
-                    ->withErrors(['identificacion' => 'Este acceso es solo para personal de la IPS. Los pacientes deben usar el tab "Afiliados".'])
+                    ->withErrors(['login' => 'Este acceso es solo para personal de la IPS. Los pacientes deben usar el tab "Afiliados".'])
                     ->withInput();
             }
         }
 
         $request->session()->regenerate();
 
-        // Redirige según el rol
+        return $this->redirigirSegunRol($rol);
+    }
+
+    private function redirigirSegunRol(?string $rol)
+    {
         return match($rol) {
-            'paciente'      => redirect()->route('paciente.dashboard'), // Los pacientes van al portal público
-            'administrador' => redirect()->route('admin.dashboard'),
-            'medico'        => redirect()->route('medico.dashboard'),
-            'gestor_citas'  => redirect()->route('admin.dashboard'), // panel gestor — próximamente
-            default         => redirect()->route('admin.dashboard'),
+            'paciente'     => redirect()->route('paciente.dashboard'),
+            'medico'       => redirect()->route('medico.dashboard'),
+            'administrador',
+            'gestor_citas' => redirect()->route('admin.dashboard'),
+            default        => redirect()->route('admin.dashboard'),
         };
     }
 

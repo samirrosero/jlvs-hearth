@@ -232,6 +232,32 @@
                                placeholder="Apellidos" required>
                     </div>
 
+                    {{-- Fecha de nacimiento --}}
+                    <div class="field">
+                        <label>Fecha de nacimiento</label>
+                        <input type="date" name="fecha_nacimiento" value="{{ old('fecha_nacimiento') }}"
+                               max="{{ now()->format('Y-m-d') }}" required
+                               style="width:100%;padding:10px 13px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13.5px;color:#1e293b;outline:none;background:#fff;box-sizing:border-box;">
+                    </div>
+
+                    {{-- Sexo --}}
+                    <div class="field">
+                        <label>Sexo</label>
+                        <select name="sexo" required>
+                            <option value="" disabled {{ old('sexo') ? '' : 'selected' }}>Selecciona...</option>
+                            <option value="M"    {{ old('sexo')==='M'    ? 'selected' : '' }}>Masculino</option>
+                            <option value="F"    {{ old('sexo')==='F'    ? 'selected' : '' }}>Femenino</option>
+                            <option value="Otro" {{ old('sexo')==='Otro' ? 'selected' : '' }}>Otro</option>
+                        </select>
+                    </div>
+
+                    {{-- Teléfono --}}
+                    <div class="field">
+                        <label>Teléfono</label>
+                        <input type="text" name="telefono" value="{{ old('telefono') }}"
+                               placeholder="Ej: 3001234567" required maxlength="20">
+                    </div>
+
                     {{-- Correo --}}
                     <div class="field">
                         <label>Correo electrónico</label>

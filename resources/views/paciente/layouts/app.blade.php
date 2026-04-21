@@ -4,35 +4,40 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    {{-- Al inicio del <head> --}}
     @php $empresa = auth()->user()?->empresa; @endphp
-    
-    {{-- Título con nombre de la IPS --}}
-    <title>@yield('title') — {{ $empresa?->nombre ?? 'JLVS Hearth' }}</title>
-
-    {{-- Favicon dinámico --}}
+    <title>@yield('title', 'Portal Paciente') — {{ $empresa?->nombre ?? 'JLVS Hearth' }}</title>
     @php $fv = ($empresa?->favicon_url ?? asset('favicon.ico')) . '?v=' . ($empresa?->updated_at?->timestamp ?? '1'); @endphp
     <link rel="icon" href="{{ $fv }}" type="image/x-icon">
-
-    
-    {{-- Colores del sidebar via CSS variables --}}
+    <link rel="shortcut icon" href="{{ $fv }}" type="image/x-icon">
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         :root {
             --color-sidebar:    {{ $empresa?->color_paciente   ?? '#0f172a' }};
             --color-primario:   {{ $empresa?->color_primario   ?? '#0369a1' }};
             --color-secundario: {{ $empresa?->color_secundario ?? '#075985' }};
         }
-        
-        #paciente-sidebar { background-color: var(--color-sidebar) !important; }
-</style>
-
- {{-- Logo en el sidebar --}}
- <img src="{{ $empresa?->logo_url ?? asset('img/logos/logo1.png') }}"
-     alt="{{ $empresa?->nombre ?? 'JLVS Hearth' }}"
-     class="h-10 w-auto object-contain">
+        #paciente-sidebar {
+            background-color: var(--color-sidebar) !important;
+            border-right-color: rgba(255,255,255,.08) !important;
+        }
+        #paciente-sidebar .sidebar-empresa   { color: rgba(255,255,255,.55); }
+        #paciente-sidebar .nav-item          { color: rgba(255,255,255,.65); }
+        #paciente-sidebar .nav-item:hover    { background-color: rgba(255,255,255,.1); color: #fff; }
+        #paciente-sidebar .nav-item.activo   { background-color: rgba(255,255,255,.18); color: #fff; }
+        #paciente-sidebar .nav-item img      { filter: brightness(0) invert(1); opacity: .7; }
+        #paciente-sidebar .nav-item.activo img,
+        #paciente-sidebar .nav-item:hover img { opacity: 1; }
+        #paciente-sidebar .sidebar-divider   { border-color: rgba(255,255,255,.1); }
+        #paciente-sidebar .sidebar-username  { color: rgba(255,255,255,.9); }
+        #paciente-sidebar .sidebar-role      { color: rgba(255,255,255,.5); }
+        #paciente-sidebar .sidebar-logout    { color: rgba(255,255,255,.55); }
+        #paciente-sidebar .sidebar-logout:hover { color: #fff; }
+        #paciente-sidebar .sidebar-logout img { filter: brightness(0) invert(1); opacity: .55; }
+        #paciente-sidebar .sidebar-logout:hover img { opacity: 1; }
+    </style>
     @stack('styles')
 </head>
-<body class="bg-gray-50 antialiased" x-data="{ sidebarOpen: false }">
+<body class="bg-gray-100 antialiased" x-data="{ sidebarOpen: false }">
 
     {{-- ── Sidebar ─────────────────────────────────────────────── --}}
     <aside id="paciente-sidebar"
@@ -44,7 +49,7 @@
             <img src="{{ $empresa?->logo_url ?? asset('img/logos/logo1.png') }}"
                  alt="{{ $empresa?->nombre ?? 'JLVS Hearth' }}"
                  class="h-10 w-auto flex-shrink-0 object-contain">
-            <p class="text-white/50 text-[10px] uppercase tracking-wider font-bold truncate">{{ $empresa?->nombre }}</p>
+            <p class="sidebar-empresa text-xs truncate">{{ $empresa?->nombre }}</p>
         </div>
 
         {{-- Navegación --}}
@@ -72,13 +77,14 @@
             @endphp
 
             @foreach ($nav as $item)
+                @if (Route::has($item['route']))
                 <a href="{{ route($item['route']) }}"
                    class="nav-item flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition
-                          {{ request()->routeIs($item['route']) || (isset($item['match']) && request()->is($item['match'])) ? 'activo' : '' }}">
-                    <img src="{{ $item['icon'] }}" alt="{{ $item['label'] }}"
-                         class="w-5 h-5 flex-shrink-0">
+                          {{ request()->routeIs($item['match'] ?? $item['route']) ? 'activo' : '' }}">
+                    <img src="{{ $item['icon'] }}" alt="{{ $item['label'] }}" class="w-5 h-5 flex-shrink-0">
                     {{ $item['label'] }}
                 </a>
+                @endif
             @endforeach
         </nav>
 
@@ -93,7 +99,6 @@
                     <p class="sidebar-role text-[10px]">Paciente</p>
                 </div>
             </div>
-            
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
                 <button type="submit"
@@ -125,16 +130,14 @@
                 </button>
                 <h1 class="text-lg font-semibold text-gray-800">@yield('page-title', 'Portal del Paciente')</h1>
             </div>
-            <div class="flex items-center gap-4">
-                <span class="hidden sm:inline text-sm text-gray-500">{{ now()->format('d M, Y') }}</span>
-            </div>
+            <span class="text-sm text-gray-500">{{ now()->format('d M Y') }}</span>
         </header>
 
         {{-- Flash messages --}}
-        @if (session('exito'))
+        @if (session('exito') || session('success'))
             <div class="mx-6 mt-4 px-4 py-3 bg-green-50 border border-green-200 text-green-800 rounded-lg text-sm flex items-center gap-2"
                  x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)">
-                <span>✅</span> {{ session('exito') }}
+                <span>✅</span> {{ session('exito') ?? session('success') }}
                 <button @click="show = false" class="ml-auto text-green-600 hover:text-green-800">&times;</button>
             </div>
         @endif

@@ -17,15 +17,21 @@ class VerificarRol
         $usuario = auth()->user();
 
         if (!$usuario) {
-            return response()->json(['message' => 'No autenticado.'], 401);
+            return $request->expectsJson()
+                ? response()->json(['message' => 'No autenticado.'], 401)
+                : redirect()->route('login');
         }
 
         if (!$usuario->activo) {
-            return response()->json(['message' => 'Tu cuenta ha sido desactivada. Contacta al administrador.'], 403);
+            return $request->expectsJson()
+                ? response()->json(['message' => 'Tu cuenta ha sido desactivada. Contacta al administrador.'], 403)
+                : back()->withErrors(['login' => 'Tu cuenta ha sido desactivada. Contacta al administrador.']);
         }
 
         if (!in_array($usuario->rol?->nombre, $roles)) {
-            return response()->json(['message' => 'No tienes permiso para realizar esta acción.'], 403);
+            return $request->expectsJson()
+                ? response()->json(['message' => 'No tienes permiso para realizar esta acción.'], 403)
+                : abort(403, 'No tienes permiso para acceder a esta sección.');
         }
 
         return $next($request);

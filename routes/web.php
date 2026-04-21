@@ -386,7 +386,7 @@ Route::prefix('medico')->name('medico.')->middleware(['auth', 'role:medico'])->g
 Route::prefix('paciente')->name('paciente.')->middleware(['auth', 'role:paciente'])->group(function () {
     Route::get('/', fn () => redirect()->route('paciente.dashboard'));
 
-    Route::get('/dashboard', [PacienteDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard', PacienteDashboardController::class)->name('dashboard');
 
     Route::get('/citas', [PacienteCitasController::class, 'index'])->name('citas');
 
@@ -395,6 +395,8 @@ Route::prefix('paciente')->name('paciente.')->middleware(['auth', 'role:paciente
 
     Route::patch('/citas/{cita}/cancelar', [PacienteCitasController::class, 'cancelar'])
         ->name('citas.cancelar');
+
+    Route::post('/chatbot', [ChatbotController::class, 'chat'])->name('chatbot');
 });
 
 // ═════════════════════════════════════════════════════════════

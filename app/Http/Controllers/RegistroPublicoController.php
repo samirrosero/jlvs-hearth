@@ -70,6 +70,9 @@ class RegistroPublicoController extends Controller
             'numero_documento'  => ['required', 'string', 'max:20'],
             'nombres'           => ['required', 'string', 'max:100'],
             'apellidos'         => ['required', 'string', 'max:100'],
+            'fecha_nacimiento'  => ['required', 'date', 'before:today'],
+            'sexo'              => ['required', 'in:M,F,Otro'],
+            'telefono'          => ['required', 'string', 'max:20'],
             'correo'            => ['required', 'email', 'max:150', 'confirmed'],
             'correo_confirmation' => ['required'],
             'password'          => ['required', 'string', 'min:8', 'confirmed'],
@@ -103,13 +106,15 @@ class RegistroPublicoController extends Controller
             ]);
 
             Paciente::create([
-                'usuario_id'      => $usuario->id,
-                'empresa_id'      => $empresa->id,
-                'nombre_completo' => trim($request->nombres . ' ' . $request->apellidos),
-                'apellidos'       => $request->apellidos,
-                'tipo_documento'  => $request->tipo_documento,
-                'identificacion'  => $request->numero_documento,
-                'correo'          => $request->correo,
+                'usuario_id'       => $usuario->id,
+                'empresa_id'       => $empresa->id,
+                'nombre_completo'  => trim($request->nombres . ' ' . $request->apellidos),
+                'tipo_documento'   => $request->tipo_documento,
+                'identificacion'   => $request->numero_documento,
+                'fecha_nacimiento' => $request->fecha_nacimiento,
+                'sexo'             => $request->sexo,
+                'telefono'         => $request->telefono,
+                'correo'           => $request->correo,
             ]);
         });
 

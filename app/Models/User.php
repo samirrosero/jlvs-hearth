@@ -7,6 +7,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use App\Models\Empresa;
+use App\Models\Medico;
+use App\Models\Paciente;
+use App\Models\Rol;
 
 // -----------------------------------------------------------------------
 // Modelo: User (tabla: users)

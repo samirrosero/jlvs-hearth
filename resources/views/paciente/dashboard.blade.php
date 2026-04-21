@@ -54,7 +54,7 @@
                 <h3 class="font-bold text-gray-800">Próximas Citas</h3>
                 <a href="{{ route('paciente.citas') }}" class="text-blue-600 text-xs font-bold hover:underline">Ver todas</a>
             </div>
-            
+
             <div class="divide-y divide-gray-50">
                 @forelse ($proximasCitas as $cita)
                     <div class="px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition">
@@ -68,7 +68,7 @@
                                 <p class="text-xs text-gray-500">Dr. {{ $cita->medico->usuario->nombre }} · {{ \Carbon\Carbon::parse($cita->hora)->format('h:i A') }}</p>
                             </div>
                         </div>
-                        <span class="px-3 py-1 rounded-full text-[10px] font-bold" 
+                        <span class="px-3 py-1 rounded-full text-[10px] font-bold"
                               style="background: {{ $cita->estado->color_hex ?? '#e2e8f0' }}22; color: {{ $cita->estado->color_hex ?? '#64748b' }}">
                             {{ $cita->estado->nombre }}
                         </span>

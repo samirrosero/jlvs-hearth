@@ -137,7 +137,18 @@
         <img src="{{ asset('img/logos/logo1.png') }}" alt="JLVS Hearth" class="panel-left-logo">
 
         <div class="panel-left-content">
-            <div class="badge">Onboarding · Nueva IPS</div>
+            @php
+                $planSesion = session('plan_seleccionado');
+                $planesNombres = ['basico' => 'Básico', 'profesional' => 'Profesional', 'empresarial' => 'Empresarial'];
+                $planNombre = $planSesion ? ($planesNombres[$planSesion] ?? null) : null;
+            @endphp
+
+            @if($planNombre)
+                <div class="badge">Plan {{ $planNombre }} · Nueva IPS</div>
+            @else
+                <div class="badge">Onboarding · Nueva IPS</div>
+            @endif
+
             <h2>Empieza con<br><span>JLVS Hearth</span><br>hoy mismo</h2>
             <p>Registra tu IPS y en minutos tendrás acceso completo a la plataforma de gestión clínica.</p>
 
@@ -163,11 +174,11 @@
     {{-- ── Panel derecho ── --}}
     <div class="panel-right">
 
-        <a href="{{ route('home') }}" class="back-link">
+        <a href="{{ session('plan_seleccionado') ? route('planes.show') : route('home') }}" class="back-link">
             <svg style="width:14px;height:14px" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/>
             </svg>
-            Volver al inicio
+            {{ session('plan_seleccionado') ? 'Cambiar plan' : 'Volver al inicio' }}
         </a>
 
         <h2 class="text-xl font-bold text-slate-800 mb-0.5">Registra tu IPS</h2>

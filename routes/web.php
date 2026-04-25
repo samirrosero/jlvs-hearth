@@ -30,8 +30,10 @@ use App\Http\Controllers\ClinicalHistoryController;
 use App\Http\Controllers\DisponibilidadController;
 use App\Http\Controllers\ListaEsperaController;
 use App\Http\Controllers\UbicacionController;
+use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\OnboardingController;
+use App\Http\Controllers\PlanesController;
 use App\Http\Controllers\DoctorController;
 use App\Http\Controllers\HorarioMedicoController;
 use App\Http\Controllers\LogAuditoriaController;
@@ -53,6 +55,13 @@ use Illuminate\Support\Facades\Route;
 // Landing page
 // ─────────────────────────────────────────────────────────────
 Route::get('/', fn () => view('welcome'))->name('home');
+
+// Planes y precios (público)
+Route::get('/planes', [PlanesController::class, 'show'])->name('planes.show');
+
+// Checkout — selección de plan y datos de compra (público)
+Route::get('/checkout',  [CheckoutController::class, 'show'])->name('checkout.show');
+Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
 
 // Onboarding — registro de nueva IPS (público)
 Route::get('/adquirir',  [OnboardingController::class, 'show'])->name('onboarding.show');

@@ -73,6 +73,12 @@
                         'icon'  => $empresa?->icono_pacientes_url ?? asset('img/icons/pacientes.png'),
                         'label' => 'Mi Historial',
                     ],
+                    [
+                        'route' => 'paciente.perfil',
+                        'match' => 'paciente.perfil*',
+                        'icon'  => asset('img/icons/pacientes.png'),
+                        'label' => 'Mi Perfil',
+                    ],
                 ];
             @endphp
 

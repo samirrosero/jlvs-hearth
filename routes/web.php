@@ -50,6 +50,7 @@ use App\Http\Controllers\Paciente\PacienteDashboardController;
 use App\Http\Controllers\Paciente\PacienteCitasController;
 use App\Http\Controllers\Paciente\PacienteHistorialController;
 use App\Http\Controllers\Paciente\AgendarCitaPacienteController;
+use App\Http\Controllers\Paciente\PacientePerfilController;
 use App\Http\Controllers\DisponibilidadEspecialidadController;
 use App\Http\Controllers\GestorCitas\ReasignarCitasMedicoController;
 use Illuminate\Support\Facades\Route;
@@ -411,11 +412,16 @@ Route::prefix('paciente')->name('paciente.')->middleware(['auth', 'role:paciente
 
     Route::get('/historial', [PacienteHistorialController::class, 'index'])->name('historial');
     Route::get('/historial/{historia}', [PacienteHistorialController::class, 'show'])->name('historial.show');
+    Route::get('/historial/{historia}/pdf', [PacienteHistorialController::class, 'pdf'])->name('historial.pdf');
+    Route::post('/historial/{historia}/correo', [PacienteHistorialController::class, 'enviarCorreo'])->name('historial.correo');
 
     Route::post('/citas/agendar', AgendarCitaPacienteController::class)->name('citas.agendar');
 
     Route::patch('/citas/{cita}/cancelar', [PacienteCitasController::class, 'cancelar'])
         ->name('citas.cancelar');
+
+    Route::get('/perfil', [PacientePerfilController::class, 'edit'])->name('perfil');
+    Route::patch('/perfil', [PacientePerfilController::class, 'update'])->name('perfil.update');
 
     Route::post('/chatbot', [ChatbotController::class, 'chat'])->name('chatbot');
 });

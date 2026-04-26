@@ -47,18 +47,32 @@
     </div>
 </div>
 
+{{-- Acción principal --}}
+<button @click="openModal = true"
+        class="w-full mb-2 bg-white hover: bg-blue-700 activa:scale-[.99] transition rounded-2xl shadow-sm px-8 py-6 flex items-center justify-between gap-6 text-left">
+    <div class="flex items-center gap-5">
+        <div class="bg-black/20 rounded-2xl p-4 shrink-0">
+            <svg class="w-10 h-10 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+        </div>
+        <div>
+            <p class="text-2xl font-bold text-black leading-tight">Agendar una cita</p>
+            <p class="text-black-200 text-sm mt-0.5">Toca aquí para solicitar tu próxima consulta médica</p>
+        </div>
+    </div>
+    <div class="shrink-0 bg-white text-blue-600 font-bold text-sm px-6 py-3 rounded-xl hidden sm:block">
+        + Nueva cita
+    </div>
+</button>
+
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
     {{-- Próximas Citas --}}
     <div class="lg:col-span-2">
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             <div class="px-6 py-4 border-b border-gray-50 flex items-center justify-between">
                 <h3 class="font-bold text-gray-800">Próximas Citas</h3>
-                <div class="flex items-center gap-4">
-                <button @click="openModal = true" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-blue-700 transition">
-                 + Agendar Cita
-                </button>
-            <a href="{{ route('paciente.citas') }}" class="text-blue-600 text-xs font-bold hover:underline">Ver todas</a>
-           </div>
+                <a href="{{ route('paciente.citas') }}" class="text-blue-600 text-xs font-bold hover:underline">Ver todas</a>
             </div>
 
             <div class="divide-y divide-gray-50">
@@ -120,7 +134,8 @@
          x-transition:leave="ease-in duration-200"
          x-transition:leave-start="opacity-100"
          x-transition:leave-end="opacity-0"
-         class="fixed inset-0 bg-gray-900 bg-opacity-50 transition-opacity"
+         class="fixed inset-0 backdrop-blur-sm transition-opacity"
+         style="background-color: oklch(0.38 0.08 263.78 / 0.38)"
          @click="openModal = false"></div>
 
     <!-- Contenedor del Modal -->
@@ -131,8 +146,8 @@
          x-transition:leave="ease-in duration-200"
          x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
          x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-         class="relative bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 overflow-hidden mx-4 my-8 z-10">
-         
+         class="relative bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 mx-4 my-8 z-10 max-h-[90vh] overflow-y-auto">
+
         <div class="flex justify-between items-center mb-5">
             <h3 class="text-lg font-bold text-gray-900">Agendar Nueva Cita</h3>
             <button @click="openModal = false" class="text-gray-400 hover:text-gray-500">
@@ -162,7 +177,7 @@
             <div class="space-y-4">
                 <div>
                     <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Médico</label>
-                    <select name="medico_id" required 
+                    <select name="medico_id" required
                             class="w-full bg-gray-50 border {{ $errors->has('medico_id') ? 'border-red-500 bg-red-50' : 'border-gray-200' }} text-gray-800 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block p-2.5">
                         <option value="">Seleccione un médico...</option>
                         @foreach($medicos as $medico)
@@ -173,7 +188,7 @@
 
                 <div>
                     <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Servicio</label>
-                    <select name="servicio_id" required 
+                    <select name="servicio_id" required
                             class="w-full bg-gray-50 border {{ $errors->has('servicio_id') ? 'border-red-500 bg-red-50' : 'border-gray-200' }} text-gray-800 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block p-2.5">
                         <option value="">Seleccione un servicio...</option>
                         @foreach($servicios as $servicio)
@@ -184,7 +199,7 @@
 
                 <div>
                     <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Modalidad</label>
-                    <select name="modalidad_id" required 
+                    <select name="modalidad_id" required
                             class="w-full bg-gray-50 border {{ $errors->has('modalidad_id') ? 'border-red-500 bg-red-50' : 'border-gray-200' }} text-gray-800 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block p-2.5">
                         <option value="">Seleccione...</option>
                         @foreach($modalidades as $modalidad)
@@ -196,13 +211,13 @@
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Fecha</label>
-                        <input type="date" name="fecha" required min="{{ date('Y-m-d') }}" 
+                        <input type="date" name="fecha" required min="{{ date('Y-m-d') }}"
                                value="{{ old('fecha') }}"
                                class="w-full bg-gray-50 border {{ $errors->has('fecha') ? 'border-red-500 bg-red-50' : 'border-gray-200' }} text-gray-800 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block p-2.5">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Hora</label>
-                        <input type="time" name="hora" required 
+                        <input type="time" name="hora" required
                                value="{{ old('hora') }}"
                                class="w-full bg-gray-50 border {{ $errors->has('hora') ? 'border-red-500 bg-red-50' : 'border-gray-200' }} text-gray-800 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block p-2.5">
                     </div>

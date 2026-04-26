@@ -2,14 +2,15 @@
      x-show="openModal"
      class="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto">
 
-    <!-- Fondo oscuro -->
+    <!-- Fondo -->
     <div x-show="openModal"
-         class="fixed inset-0 bg-gray-900 bg-opacity-50"
+         class="fixed inset-0 backdrop-blur-sm"
+         style="background-color: oklch(0.21 0.03 264.67 / 0.7)"
          @click="openModal = false"></div>
 
     <!-- Modal -->
     <div x-show="openModal"
-         class="relative bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 overflow-hidden mx-4 my-8 z-10">
+         class="relative bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 mx-4 my-8 z-10 max-h-[90vh] overflow-y-auto">
 
         <!-- Header -->
         <div class="flex justify-between items-center mb-5">

@@ -389,6 +389,7 @@ Route::prefix('paciente')->name('paciente.')->middleware(['auth', 'role:paciente
     Route::get('/dashboard', PacienteDashboardController::class)->name('dashboard');
 
     Route::get('/citas', [PacienteCitasController::class, 'index'])->name('citas');
+    Route::post('/citas', [PacienteCitasController::class, 'store'])->name('citas.store');
 
     Route::get('/historial', [PacienteHistorialController::class, 'index'])->name('historial');
     Route::get('/historial/{historia}', [PacienteHistorialController::class, 'show'])->name('historial.show');

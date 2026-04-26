@@ -15,6 +15,7 @@ Stack: Laravel + Blade + Tailwind + Alpine.js
 use App\Http\Controllers\Paciente\PacienteDashboardController;
 use App\Http\Controllers\Paciente\PacienteCitasController;
 use App\Http\Controllers\Paciente\PacienteHistorialController;
+use App\Http\Controllers\Paciente\AgendarCitaPacienteController;
 
 // Agregar ANTES del bloque del panel admin
 Route::prefix('paciente')->name('paciente.')->middleware(['auth', 'role:paciente'])->group(function () {
@@ -22,6 +23,11 @@ Route::prefix('paciente')->name('paciente.')->middleware(['auth', 'role:paciente
     Route::get('/dashboard',   PacienteDashboardController::class)->name('dashboard');
 
     Route::get('/citas',       [PacienteCitasController::class, 'index'])->name('citas');
+
+    // Agendamiento: el paciente elige especialidad+fecha+hora; el backend asigna el médico
+    Route::post('/citas/agendar', AgendarCitaPacienteController::class)->name('citas.agendar');
+
+    Route::patch('/citas/{cita}/cancelar', [PacienteCitasController::class, 'cancelar'])->name('citas.cancelar');
 
     Route::get('/historial',   [PacienteHistorialController::class, 'index'])->name('historial');
     Route::get('/historial/{historia}', [PacienteHistorialController::class, 'show'])->name('historial.show');
@@ -291,10 +297,9 @@ El paciente ya tiene acceso a estas rutas (auth middleware + role:paciente):
 | GET | `/valoraciones` | Sus valoraciones |
 | POST | `/valoraciones` | Crear una valoración a un médico |
 | GET | `/especialidades` | Especialidades disponibles en su IPS |
-| GET | `/medicos?especialidad=X` | Médicos por especialidad (si puede agendar) |
-| GET | `/medicos/{id}/dias-disponibles?mes=YYYY-MM` | Qué días del mes trabaja el médico |
-| GET | `/citas/disponibilidad?medico_id=X&fecha=Y&servicio_id=Z` | Slots libres de un médico para un día |
-| PATCH | `/citas/{id}` | Cancelar una cita (ver reglas abajo) |
+| GET | `/citas/disponibilidad-por-especialidad?especialidad=X&fecha=Y` | **Slots disponibles por especialidad** (nuevo flujo, ver sección 7.3) |
+| POST | `/paciente/citas/agendar` | **Agendar cita — el backend asigna el médico** (ver sección 7.4) |
+| PATCH | `/paciente/citas/{id}/cancelar` | Cancelar una cita propia (ver reglas abajo) |
 | POST | `/lista-espera` | Inscribirse en lista de espera |
 
 > **Nota:** Estos endpoints retornan JSON. Úsalos con `fetch()` desde Alpine.js si necesitas
@@ -346,33 +351,82 @@ async function cancelarCita(citaId) {
 > El paciente solo debe poder cancelar citas en estado Pendiente (1) o Confirmada (2).
 > Valida esto en la vista antes de mostrar el botón.
 
-### 7.3 Consultar disponibilidad — GET /citas/disponibilidad
+### 7.3 Slots por especialidad — GET /citas/disponibilidad-por-especialidad
 
-Úsalo cuando el paciente quiera agendar una cita para ver los slots libres de un médico.
+Este es el endpoint que usa el flujo del paciente. Devuelve los horarios libres de **todos** los
+médicos de una especialidad para una fecha, sin exponer los nombres de los doctores.
 
 **Parámetros (query string):**
 
-| Parámetro | Tipo | Descripción |
-|-----------|------|-------------|
-| `medico_id` | integer | ID del médico |
-| `fecha` | string (Y-m-d) | Fecha a consultar |
-| `servicio_id` | integer | (opcional) Duración del turno |
+| Parámetro | Tipo | Requerido | Descripción |
+|-----------|------|-----------|-------------|
+| `especialidad` | string | ✅ | Ej: `Medicina General` |
+| `fecha` | string (Y-m-d) | ✅ | Fecha a consultar |
+| `servicio_id` | integer | ❌ | Duración del turno (default: 30 min) |
 
-**Respuesta:**
-
+**Respuesta con slots:**
 ```json
 {
     "disponible": true,
-    "fecha": "2026-04-22",
-    "duracion_minutos": 20,
-    "servicio": { "id": 1, "nombre": "Consulta general" },
-    "slots": ["08:00", "08:20", "08:40", "09:00"]
+    "slots": ["06:00", "06:30", "07:00", "07:30", "08:00", "08:30"],
+    "fecha": "2026-04-29",
+    "especialidad": "Medicina General",
+    "duracion_minutos": 30
 }
 ```
 
-Si `disponible` es `false`, los `slots` estarán vacíos → mostrar opción de lista de espera.
+**Respuesta sin disponibilidad:**
+```json
+{
+    "disponible": false,
+    "slots": [],
+    "mensaje": "No hay disponibilidad para esa especialidad en la fecha seleccionada."
+}
+```
 
-### 7.4 Reglas de agendamiento para el paciente
+> Si un slot aparece, significa que **al menos un médico** de esa especialidad lo tiene libre.
+> El paciente no sabe cuántos médicos hay ni cuál le tocará — eso lo decide el backend al agendar.
+
+Si `disponible` es `false` → mostrar botón de lista de espera.
+
+### 7.4 Agendar cita — POST /paciente/citas/agendar
+
+El paciente confirma la hora elegida. El backend selecciona automáticamente el médico
+con menor carga ese día y crea la cita. **No se expone el nombre del médico en la respuesta.**
+
+**Body:**
+```json
+{
+    "especialidad":  "Medicina General",
+    "fecha":         "2026-04-29",
+    "hora":          "08:00",
+    "modalidad_id":  1,
+    "portafolio_id": 2,
+    "servicio_id":   1
+}
+```
+
+**Respuesta exitosa (HTTP 201):**
+```json
+{
+    "message":          "Cita agendada con éxito.",
+    "cita_id":          145,
+    "fecha":            "2026-04-29",
+    "hora":             "08:00",
+    "especialidad":     "Medicina General",
+    "servicio":         "Consulta general",
+    "duracion_minutos": 30
+}
+```
+
+**Errores posibles:**
+| HTTP | Motivo |
+|------|--------|
+| 422 | No hay médicos de esa especialidad |
+| 422 | Ningún médico trabaja ese día/hora |
+| 422 | Ese slot ya se llenó (otro paciente llegó primero) |
+
+### 7.5 Reglas de agendamiento para el paciente
 
 > **Importante:** El backend valida estas reglas y rechaza la solicitud con HTTP 422 si no se cumplen.
 > Muéstralas en la UI para guiar al paciente.
@@ -482,10 +536,12 @@ Al final del layout (`resources/views/paciente/layouts/app.blade.php`), **antes*
 
 ## 10. Flujo completo de agendamiento de cita
 
-Este es el flujo real de cómo un paciente agenda una cita. Cada paso tiene su endpoint.
+El paciente **nunca elige un médico específico** — elige especialidad, fecha y hora.
+El backend asigna el médico internamente (balance de carga). Esto evita que los mejores
+médicos se saturen solo por ser reconocidos.
 
 ```
-Paso 1 → Paso 2 → Paso 3 → Paso 4 → Paso 5 → Paso 6
+Paso 1 → Paso 2 → Paso 3 → Paso 4 → Paso 5
 ```
 
 ### Paso 1 — Seleccionar especialidad
@@ -494,85 +550,64 @@ Paso 1 → Paso 2 → Paso 3 → Paso 4 → Paso 5 → Paso 6
 GET /especialidades
 ```
 
-Muestra la lista de especialidades disponibles en la IPS del paciente. Renderizar como cards o select.
-
----
-
-### Paso 2 — Ver médicos de esa especialidad
-
-```js
-GET /medicos?especialidad_id=3
-```
-
-Muestra los médicos disponibles. Cada tarjeta de médico debe mostrar nombre, foto (si tiene) y especialidad.
-
-> No filtres médicos por fecha aquí — el paciente puede preferir un médico específico
-> aunque ese día no trabaje. El calendario del paso 3 le indicará cuándo está disponible.
-
----
-
-### Paso 3 — Seleccionar fecha en el calendario
-
-Cuando el paciente elige un médico, carga los días disponibles del mes actual:
-
-```js
-GET /medicos/5/dias-disponibles?mes=2026-04
-```
+Muestra las especialidades disponibles en la IPS. Renderizar como cards o select.
 
 **Respuesta:**
 ```json
-{
-    "medico_id": 5,
-    "mes": "2026-04",
-    "dias_disponibles": ["2026-04-21", "2026-04-22", "2026-04-24", "2026-04-28"]
-}
+["Medicina General", "Ortopedia", "Pediatría", "Ginecología"]
 ```
-
-Usa `dias_disponibles` para **deshabilitar en el calendario** todos los días que no aparezcan.
-Cuando el paciente cambia de mes, vuelves a llamar con `?mes=2026-05`.
 
 ---
 
-### Paso 4 — Ver slots del día elegido
+### Paso 2 — Seleccionar fecha
+
+Mostrar un selector de fecha. La fecha mínima es **mañana** (el backend lo valida).
+
+> No hay paso de "elegir médico" — el sistema lo hace por ti.
+
+---
+
+### Paso 3 — Ver slots disponibles del día
+
+Con la especialidad y fecha elegidas, consulta todos los horarios libres:
 
 ```js
-GET /citas/disponibilidad?medico_id=5&fecha=2026-04-22&servicio_id=1
+GET /citas/disponibilidad-por-especialidad?especialidad=Medicina General&fecha=2026-04-29
 ```
 
 **Respuesta con slots:**
 ```json
 {
     "disponible": true,
-    "fecha": "2026-04-22",
-    "duracion_minutos": 20,
-    "servicio": "Consulta general",
-    "slots": ["08:00", "08:20", "08:40", "09:00", "09:20"]
+    "slots": ["06:00", "06:30", "07:00", "08:00", "09:00", "09:30"],
+    "fecha": "2026-04-29",
+    "especialidad": "Medicina General",
+    "duracion_minutos": 30
 }
 ```
 
-**Respuesta sin slots (día lleno):**
+**Respuesta sin disponibilidad:**
 ```json
 {
     "disponible": false,
     "slots": [],
-    "mensaje": "El médico no tiene horario disponible ese día."
+    "mensaje": "No hay disponibilidad para esa especialidad en la fecha seleccionada."
 }
 ```
 
-Si `disponible` es `false` → mostrar botón **"Unirse a lista de espera"** (paso 4b).
+Renderiza los slots como botones de hora. Si `disponible` es `false` → mostrar botón de lista de espera (paso 3b).
 
 ---
 
-### Paso 4b — Lista de espera (si no hay slots)
+### Paso 3b — Lista de espera (si no hay slots)
 
 ```js
 POST /lista-espera
 {
-    "paciente_id": 12,
-    "medico_id": 5,
-    "servicio_id": 1,
-    "fecha_solicitada": "2026-04-22",
-    "notas": "Urgente, dolor fuerte"
+    "paciente_id":     12,
+    "servicio_id":     1,
+    "fecha_solicitada": "2026-04-29",
+    "notas":           "Urgente, dolor fuerte"
 }
 ```
 
@@ -580,29 +615,45 @@ El gestor de citas verá esta solicitud en su panel y asignará la cita cuando h
 
 ---
 
-### Paso 5 — Confirmar y crear la cita
+### Paso 4 — Confirmar y crear la cita
+
+El paciente elige la hora y confirma. **No envíes `medico_id`** — el backend lo asigna solo.
 
 ```js
-POST /citas
+POST /paciente/citas/agendar
 {
-    "medico_id":    5,
-    "paciente_id":  12,
-    "estado_id":    1,
-    "modalidad_id": 1,
-    "servicio_id":  1,
-    "fecha":        "2026-04-22",
-    "hora":         "08:20"
+    "especialidad":  "Medicina General",
+    "fecha":         "2026-04-29",
+    "hora":          "08:00",
+    "modalidad_id":  1,
+    "portafolio_id": 2,
+    "servicio_id":   1
 }
 ```
 
-> **Regla del backend:** modalidades virtuales (id 2=Telemedicina, 3=Domiciliaria) requieren
-> mínimo 2 días de anticipación. Si la fecha no cumple, el backend devuelve HTTP 422.
+> **Reglas del backend (valida automáticamente con HTTP 422 si no se cumplen):**
+> - Modalidad Presencial (id=1): mínimo **mañana**
+> - Telemedicina (id=2) o Domiciliaria (id=3): mínimo **pasado mañana**
 
 ---
 
-### Paso 6 — Confirmación
+### Paso 5 — Confirmación
 
-Mostrar resumen de la cita creada: médico, fecha, hora, servicio, modalidad.
+Mostrar resumen de la cita con los datos devueltos:
+
+```json
+{
+    "message":          "Cita agendada con éxito.",
+    "cita_id":          145,
+    "fecha":            "2026-04-29",
+    "hora":             "08:00",
+    "especialidad":     "Medicina General",
+    "servicio":         "Consulta general",
+    "duracion_minutos": 30
+}
+```
+
+**No mostrar el nombre del médico** — el paciente lo sabrá cuando llegue a ventanilla.
 La cita aparecerá en `GET /citas` con estado **Pendiente**.
 
 ---
@@ -610,15 +661,14 @@ La cita aparecerá en `GET /citas` con estado **Pendiente**.
 ### Diagrama del flujo
 
 ```
-[Especialidades] → [Médicos] → [Calendario (días disponibles)]
-                                        ↓
-                               [Slots del día elegido]
-                                  ↙           ↘
-                          [Hay slots]     [Sin slots]
-                               ↓                ↓
-                        [Crear cita]    [Lista de espera]
-                               ↓
-                        [Confirmación]
+[Especialidades] → [Fecha] → [Slots combinados de la especialidad]
+                                      ↙                 ↘
+                              [Hay slots]           [Sin slots]
+                                   ↓                     ↓
+                    [POST /paciente/citas/agendar]  [Lista de espera]
+                    (backend asigna médico solo)
+                                   ↓
+                           [Confirmación sin nombre de médico]
 ```
 
 ---
@@ -628,10 +678,9 @@ La cita aparecerá en `GET /citas` con estado **Pendiente**.
 | Paso | Endpoint |
 |------|----------|
 | 1 – Especialidades | `GET /especialidades` |
-| 2 – Médicos | `GET /medicos?especialidad_id=X` |
-| 3 – Días con horario | `GET /medicos/{id}/dias-disponibles?mes=YYYY-MM` |
-| 4 – Slots del día | `GET /citas/disponibilidad?medico_id=X&fecha=Y` |
-| 4b – Lista espera | `POST /lista-espera` |
-| 5 – Crear cita | `POST /citas` |
+| 2 – (solo UI, selector de fecha) | — |
+| 3 – Slots del día por especialidad | `GET /citas/disponibilidad-por-especialidad?especialidad=X&fecha=Y` |
+| 3b – Lista espera | `POST /lista-espera` |
+| 4 – Agendar (el backend asigna médico) | `POST /paciente/citas/agendar` |
 | Ver mis citas | `GET /citas` |
-| Cancelar cita | `PATCH /citas/{id}` con `{ "estado_id": 4 }` |
+| Cancelar cita | `PATCH /paciente/citas/{id}/cancelar` |

@@ -272,60 +272,84 @@
             <h2 class="seccion-titulo">El equipo detrás de JLVS Hearth</h2>
             <p class="seccion-sub">Cuatro estudiantes de ingeniería de UNIAJC con una visión clara: digitalizar la salud colombiana.</p>
 
-            <div class="equipo-grid">
+            <div class="slider-wrapper">
+                <div class="slider-track" id="sliderTrack">
 
-                <article class="miembro-card reveal-left">
-                    <div class="miembro-foto-wrap">
-                        <img src="{{ asset('teams/julian.jpeg') }}" alt="Julián Velasquez"
-                             onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
-                        <div class="miembro-iniciales">JV</div>
-                    </div>
-                    <div class="miembro-info">
-                        <span class="miembro-rol">Frontend Developer</span>
-                        <h3>Julián Velasquez</h3>
-                        <p>Desarrollador frontend con experiencia en análisis de requisitos y diseño de interfaces de usuario.</p>
-                    </div>
-                </article>
+                    <article class="miembro-slide">
+                        <div class="slide-header" style="background:linear-gradient(135deg,#2563eb,#7c3aed)">
+                            <div class="foto-wrapper">
+                                <img src="{{ asset('teams/julian.jpeg') }}" alt="Julián Velasquez"
+                                     onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                                <div class="foto-placeholder" style="display:none;">JV</div>
+                            </div>
+                        </div>
+                        <div class="miembro-info">
+                            <span class="miembro-rol">Frontend Developer</span>
+                            <h3>Julián Velasquez</h3>
+                            <p>Desarrollador frontend con experiencia en análisis de requisitos y diseño de interfaces de usuario.</p>
+                        </div>
+                    </article>
 
-                <article class="miembro-card reveal-right">
-                    <div class="miembro-foto-wrap">
-                        <img src="{{ asset('teams/valeri.png') }}" alt="Valeri Solís"
-                             onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
-                        <div class="miembro-iniciales">VS</div>
-                    </div>
-                    <div class="miembro-info">
-                        <span class="miembro-rol">Frontend Developer &amp; Documentación</span>
-                        <h3>Valeri Solís</h3>
-                        <p>Responsable del frontend y la documentación técnica del proyecto.</p>
-                    </div>
-                </article>
+                    <article class="miembro-slide">
+                        <div class="slide-header" style="background:linear-gradient(135deg,#7c3aed,#db2777)">
+                            <div class="foto-wrapper">
+                                <img src="{{ asset('teams/valeri.png') }}" alt="Valeri Solís"
+                                     onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                                <div class="foto-placeholder" style="display:none;">VS</div>
+                            </div>
+                        </div>
+                        <div class="miembro-info">
+                            <span class="miembro-rol">Frontend Developer &amp; Documentación</span>
+                            <h3>Valeri Solís</h3>
+                            <p>Responsable del frontend y la documentación técnica del proyecto.</p>
+                        </div>
+                    </article>
 
-                <article class="miembro-card reveal-left">
-                    <div class="miembro-foto-wrap">
-                        <img src="{{ asset('teams/luis.png') }}" alt="Luis Piamba"
-                             onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
-                        <div class="miembro-iniciales">LP</div>
-                    </div>
-                    <div class="miembro-info">
-                        <span class="miembro-rol">Documentador Técnico &amp; Analista</span>
-                        <h3>Luis Piamba</h3>
-                        <p>Analiza y especifica los requisitos del sistema mediante representaciones visuales y técnicas que guían al equipo de desarrollo.</p>
-                    </div>
-                </article>
+                    <article class="miembro-slide">
+                        <div class="slide-header" style="background:linear-gradient(135deg,#0891b2,#2563eb)">
+                            <div class="foto-wrapper">
+                                <img src="{{ asset('teams/luis.png') }}" alt="Luis Piamba"
+                                     onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                                <div class="foto-placeholder" style="display:none;">LP</div>
+                            </div>
+                        </div>
+                        <div class="miembro-info">
+                            <span class="miembro-rol">Documentador Técnico &amp; Analista</span>
+                            <h3>Luis Piamba</h3>
+                            <p>Analiza y especifica los requisitos del sistema mediante representaciones visuales y técnicas que guían al equipo de desarrollo.</p>
+                        </div>
+                    </article>
 
-                <article class="miembro-card reveal-right">
-                    <div class="miembro-foto-wrap">
-                        <img src="{{ asset('teams/samir.png') }}" alt="Samir Rosero"
-                             onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
-                        <div class="miembro-iniciales">SR</div>
-                    </div>
-                    <div class="miembro-info">
-                        <span class="miembro-rol">Fullstack Developer &amp; Scrum Master</span>
-                        <h3>Samir Rosero</h3>
-                        <p>Líder técnico del proyecto. A cargo del desarrollo frontend, backend y la coordinación del equipo.</p>
-                    </div>
-                </article>
+                    <article class="miembro-slide">
+                        <div class="slide-header" style="background:linear-gradient(135deg,#1e40af,#0891b2)">
+                            <div class="foto-wrapper">
+                                <img src="{{ asset('teams/samir.png') }}" alt="Samir Rosero"
+                                     onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                                <div class="foto-placeholder" style="display:none;">SR</div>
+                            </div>
+                        </div>
+                        <div class="miembro-info">
+                            <span class="miembro-rol">Fullstack Developer &amp; Scrum Master</span>
+                            <h3>Samir Rosero</h3>
+                            <p>Líder técnico del proyecto. A cargo del desarrollo frontend, backend y la coordinación del equipo.</p>
+                        </div>
+                    </article>
 
+                </div>
+
+                <button class="slider-btn slider-prev" id="btnPrev" aria-label="Anterior">
+                    <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+                </button>
+                <button class="slider-btn slider-next" id="btnNext" aria-label="Siguiente">
+                    <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+                </button>
+            </div>
+
+            <div class="slider-dots" id="sliderDots">
+                <button class="slider-dot activo" data-index="0"></button>
+                <button class="slider-dot" data-index="1"></button>
+                <button class="slider-dot" data-index="2"></button>
+                <button class="slider-dot" data-index="3"></button>
             </div>
         </section>
 

@@ -49,6 +49,9 @@ use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\Paciente\PacienteDashboardController;
 use App\Http\Controllers\Paciente\PacienteCitasController;
 use App\Http\Controllers\Paciente\PacienteHistorialController;
+use App\Http\Controllers\Paciente\AgendarCitaPacienteController;
+use App\Http\Controllers\DisponibilidadEspecialidadController;
+use App\Http\Controllers\GestorCitas\ReasignarCitasMedicoController;
 use Illuminate\Support\Facades\Route;
 
 // ─────────────────────────────────────────────────────────────
@@ -173,7 +176,13 @@ Route::middleware('auth')->group(function () {
     // Disponibilidad — slots libres y días disponibles de un médico
     Route::middleware('role:administrador,gestor_citas,paciente')->group(function () {
         Route::get('/citas/disponibilidad',                    DisponibilidadController::class)->name('citas.disponibilidad');
+        Route::get('/citas/disponibilidad-por-especialidad',   DisponibilidadEspecialidadController::class)->name('citas.disponibilidad-especialidad');
         Route::get('/medicos/{medico}/dias-disponibles',       [DisponibilidadController::class, 'diasDisponibles'])->name('medicos.dias-disponibles');
+    });
+
+    // Reasignación masiva de citas — médico ausente (gestor/admin)
+    Route::middleware('role:administrador,gestor_citas')->group(function () {
+        Route::post('/citas/reasignar-medico', ReasignarCitasMedicoController::class)->name('citas.reasignar-medico');
     });
 
     // Lista de espera — pacientes sin slot disponible
@@ -402,6 +411,8 @@ Route::prefix('paciente')->name('paciente.')->middleware(['auth', 'role:paciente
 
     Route::get('/historial', [PacienteHistorialController::class, 'index'])->name('historial');
     Route::get('/historial/{historia}', [PacienteHistorialController::class, 'show'])->name('historial.show');
+
+    Route::post('/citas/agendar', AgendarCitaPacienteController::class)->name('citas.agendar');
 
     Route::patch('/citas/{cita}/cancelar', [PacienteCitasController::class, 'cancelar'])
         ->name('citas.cancelar');

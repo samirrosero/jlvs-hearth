@@ -1,42 +1,17 @@
-// ── Carrusel ──────────────────────────────────────────────────
+// ── Reveal lateral del equipo al hacer scroll ──────────────────
 (function () {
-    const track = document.getElementById('carruselTrack');
-    const dots = document.querySelectorAll('.carrusel-dot');
-    const wrapper = document.querySelector('.carrusel-wrapper');
-    const total = 4;
-    const INTERVALO = 7000;
-    let actual = 0;
-    let timer = null;
-if (!track || dots.length !== total || !wrapper) return;
-    function irA(i) {
-        actual = (i + total) % total;
-        track.style.transform = 'translateX(-' + (actual * 100) + '%)';
-        dots.forEach(function (d, j) {
-            d.classList.toggle('activo', j === actual);
+    var observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+            if (e.isIntersecting) {
+                e.target.classList.add('visible');
+                observer.unobserve(e.target);
+            }
         });
-    }
+    }, { threshold: 0.2 });
 
-    function iniciarAutoPlay() {
-        detenerAutoPlay();
-        timer = setInterval(function () { irA(actual + 1); }, INTERVALO);
-    }
-
-    function detenerAutoPlay() {
-        if (timer) {
-            clearInterval(timer);
-            timer = null;
-        }
-    }
-
-    document.getElementById('btnPrev').addEventListener('click', function () { irA(actual - 1); iniciarAutoPlay(); });
-    document.getElementById('btnNext').addEventListener('click', function () { irA(actual + 1); iniciarAutoPlay(); });
-    dots.forEach(function (d) {
-        d.addEventListener('click', function () { irA(parseInt(d.dataset.index)); iniciarAutoPlay(); });
+    document.querySelectorAll('.reveal-left, .reveal-right').forEach(function (el) {
+        observer.observe(el);
     });
-
-    //    pausa al pasar el mouse por encima
-    wrapper.addEventListener('mouseenter', detenerAutoPlay);
-    wrapper.addEventListener('mouseleave', iniciarAutoPlay);
 })();
 
 // ── Lightbox ───────────────────────────────────────────────────
@@ -74,9 +49,50 @@ if (!track || dots.length !== total || !wrapper) return;
                 observer.unobserve(e.target);
             }
         });
-    }, { threshold: 0.15 });
+    }, { threshold: 0.12 });
 
     document.querySelectorAll('.fade-up').forEach(function (el) {
         observer.observe(el);
+    });
+
+    // aplica fade-up al video-wrapper
+    var videoWrapper = document.querySelector('.video-wrapper');
+    if (videoWrapper) {
+        videoWrapper.classList.add('fade-up');
+        observer.observe(videoWrapper);
+    }
+})();
+
+// ── Barra de progreso de scroll ────────────────────────────────
+(function () {
+    var bar = document.getElementById('scrollProgress');
+    if (!bar) return;
+    function update() {
+        var max = document.body.scrollHeight - window.innerHeight;
+        bar.style.width = (max > 0 ? (window.scrollY / max) * 100 : 0) + '%';
+    }
+    window.addEventListener('scroll', update, { passive: true });
+    update();
+})();
+
+// ── Parallax suave con el mouse en el hero ─────────────────────
+(function () {
+    var hero = document.querySelector('.hero');
+    if (!hero) return;
+    var ticking = false;
+    document.addEventListener('mousemove', function (e) {
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(function () {
+            var cx = window.innerWidth  / 2;
+            var cy = window.innerHeight / 2;
+            var dx = (e.clientX - cx) / cx;
+            var dy = (e.clientY - cy) / cy;
+            var before = hero.style;
+            // mueve los pseudo-elementos via custom props
+            hero.style.setProperty('--px', (dx * 18) + 'px');
+            hero.style.setProperty('--py', (dy * 18) + 'px');
+            ticking = false;
+        });
     });
 })();

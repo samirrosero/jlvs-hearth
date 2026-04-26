@@ -555,116 +555,163 @@ header {
     background: var(--blanco);
 }
 
-.equipo-grid {
-    max-width: 900px;
+.slider-wrapper {
+    max-width: 520px;
     margin: 0 auto;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.5rem;
+    position: relative;
+    overflow: hidden;
+    border-radius: 28px;
 }
 
-/* ── Tarjeta de miembro ── */
-.miembro-card {
+.slider-track {
+    display: flex;
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Tarjeta ── */
+.miembro-slide {
+    min-width: 100%;
     background: var(--fondo2);
     border: 1px solid var(--borde);
-    border-radius: 20px;
-    padding: 2rem;
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-    transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
-    position: relative;
+    border-radius: 28px;
     overflow: hidden;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.07);
 }
 
-.miembro-card::after {
-    content: '';
-    position: absolute;
-    left: 0; top: 0; bottom: 0;
-    width: 3px;
-    background: linear-gradient(180deg, var(--azul), #7c3aed);
-    opacity: 0;
-    transition: opacity 0.3s;
+.slide-header {
+    width: 100%;
+    height: 200px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: 0;
+    position: relative;
 }
 
-.miembro-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 32px rgba(0,0,0,0.08);
-    border-color: rgba(37,99,235,0.2);
-}
-
-.miembro-card:hover::after { opacity: 1; }
-
-.miembro-foto-wrap {
-    width: 80px; height: 80px;
+.slide-header .foto-wrapper {
+    width: 160px; height: 160px;
     border-radius: 50%;
     overflow: hidden;
-    flex-shrink: 0;
-    border: 2px solid var(--borde);
+    border: 4px solid #fff;
     background: #4b5563;
-    position: relative;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    cursor: zoom-in;
+    position: absolute;
+    bottom: -60px;
+    left: 50%;
+    transform: translateX(-50%);
+    transition: transform 0.3s, box-shadow 0.3s;
 }
 
-.miembro-foto-wrap img {
+.slide-header .foto-wrapper:hover {
+    transform: translateX(-50%) scale(1.05);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.28);
+}
+
+.slide-header .foto-wrapper img {
     width: 100%; height: 100%;
     object-fit: cover;
     object-position: center 15%;
 }
 
-.miembro-iniciales {
+.foto-placeholder {
     width: 100%; height: 100%;
-    display: none;
+    display: flex;
     align-items: center;
     justify-content: center;
     background: linear-gradient(135deg, #dbeafe, #ede9fe);
-    font-size: 1.1rem;
+    font-size: 2.2rem;
     font-weight: 800;
     color: var(--azul);
 }
 
-.miembro-info { flex: 1; min-width: 0; }
+.miembro-info {
+    padding: 4.5rem 2rem 2.5rem;
+    text-align: center;
+}
 
 .miembro-rol {
     display: inline-block;
-    font-size: 0.68rem;
+    font-size: 0.7rem;
     font-weight: 700;
     color: var(--azul);
     text-transform: uppercase;
-    letter-spacing: 0.6px;
-    margin-bottom: 0.3rem;
-}
-
-.miembro-info h3 {
-    font-size: 1rem;
-    font-weight: 800;
-    color: var(--titulo);
+    letter-spacing: 0.7px;
     margin-bottom: 0.4rem;
 }
 
+.miembro-info h3 {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--titulo);
+    margin-bottom: 0.5rem;
+}
+
 .miembro-info p {
-    font-size: 0.82rem;
+    font-size: 0.9rem;
     color: var(--texto);
-    line-height: 1.6;
+    line-height: 1.7;
 }
 
-/* ── Animaciones de reveal lateral ── */
-.reveal-left, .reveal-right {
-    opacity: 0;
-    transition: opacity 0.6s ease, transform 0.6s ease;
+/* ── Botones del slider ── */
+.slider-btn {
+    position: absolute;
+    top: calc(340px / 2);
+    transform: translateY(-50%);
+    background: rgba(255,255,255,0.92);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--borde);
+    border-radius: 50%;
+    width: 44px; height: 44px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
+    z-index: 10;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.1);
 }
 
-.reveal-left  { transform: translateX(-40px); }
-.reveal-right { transform: translateX(40px); }
-
-.reveal-left.visible,
-.reveal-right.visible {
-    opacity: 1;
-    transform: translateX(0);
+.slider-btn:hover {
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(37,99,235,0.18);
+    transform: translateY(-50%) scale(1.08);
 }
 
-.miembro-card:nth-child(2) { transition-delay: 0.1s; }
-.miembro-card:nth-child(3) { transition-delay: 0.15s; }
-.miembro-card:nth-child(4) { transition-delay: 0.25s; }
+.slider-btn svg {
+    width: 16px; height: 16px;
+    stroke: var(--azul);
+    fill: none;
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.slider-prev { left: 14px; }
+.slider-next { right: 14px; }
+
+/* ── Dots ── */
+.slider-dots {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 1.75rem;
+}
+
+.slider-dot {
+    width: 6px; height: 6px;
+    border-radius: 999px;
+    background: #cbd5e1;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    transition: background 0.25s, width 0.25s;
+}
+
+.slider-dot.activo {
+    background: var(--azul);
+    width: 24px;
+}
 
 /* ── CTA (azul oscuro para contraste al final) ───────────── */
 .cta {
@@ -960,7 +1007,7 @@ footer strong { color: #e1e9f6; }
 /* ── Responsive ──────────────────────────────────────────── */
 @media (max-width: 640px) {
     .header-nav a:not(.btn-header) { display: none; }
-    .equipo-grid { grid-template-columns: 1fr; }
+    .equipo-grid { max-width: 100%; }
     .confianza-sep { display: none; }
     .confianza-inner { justify-content: center; }
 }

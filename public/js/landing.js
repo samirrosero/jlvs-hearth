@@ -1,17 +1,49 @@
-// ── Reveal lateral del equipo al hacer scroll ──────────────────
-(function () {
-    var observer = new IntersectionObserver(function (entries) {
-        entries.forEach(function (e) {
-            if (e.isIntersecting) {
-                e.target.classList.add('visible');
-                observer.unobserve(e.target);
-            }
-        });
-    }, { threshold: 0.2 });
 
-    document.querySelectorAll('.reveal-left, .reveal-right').forEach(function (el) {
-        observer.observe(el);
+// ── Slider del equipo ─────────────────────────────────────────
+(function () {
+    var track  = document.getElementById('sliderTrack');
+    var dots   = document.querySelectorAll('.slider-dot');
+    var total  = 4;
+    var actual = 0;
+    var timer  = null;
+    var INTERVALO = 6000;
+
+    if (!track) return;
+
+    function irA(i) {
+        actual = (i + total) % total;
+        track.style.transform = 'translateX(-' + (actual * 100) + '%)';
+        dots.forEach(function (d, j) {
+            d.classList.toggle('activo', j === actual);
+        });
+    }
+
+    function iniciar() {
+        detener();
+        timer = setInterval(function () { irA(actual + 1); }, INTERVALO);
+    }
+
+    function detener() {
+        if (timer) { clearInterval(timer); timer = null; }
+    }
+
+    var btnPrev = document.getElementById('btnPrev');
+    var btnNext = document.getElementById('btnNext');
+    var wrapper = document.querySelector('.slider-wrapper');
+
+    if (btnPrev) btnPrev.addEventListener('click', function () { irA(actual - 1); iniciar(); });
+    if (btnNext) btnNext.addEventListener('click', function () { irA(actual + 1); iniciar(); });
+
+    dots.forEach(function (d) {
+        d.addEventListener('click', function () { irA(parseInt(d.dataset.index)); iniciar(); });
     });
+
+    if (wrapper) {
+        wrapper.addEventListener('mouseenter', detener);
+        wrapper.addEventListener('mouseleave', iniciar);
+    }
+
+    iniciar();
 })();
 
 // ── Lightbox ───────────────────────────────────────────────────

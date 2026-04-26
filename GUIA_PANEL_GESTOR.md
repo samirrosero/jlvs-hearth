@@ -539,6 +539,7 @@ function headers() {
 | POST | `/lista-espera` | Registrar paciente en lista de espera |
 | PATCH | `/lista-espera/{id}` | Actualizar estado de lista de espera |
 | DELETE | `/lista-espera/{id}` | Eliminar registro de lista de espera |
+| POST | `/citas/reasignar-medico` | **Reasignación masiva por médico ausente** (ver sección 7.6) |
 
 > **Nota:** Todos estos endpoints retornan JSON y ya están protegidos con el middleware
 > `role:gestor_citas`. Solo necesitas llamarlos con el header `Accept: application/json`
@@ -697,6 +698,82 @@ PATCH /citas/{id}  →  { "estado_id": 4 }   // Cancelada   ← libera el slot a
 | 3 | Atendida | 🟢 #28A745 |
 | 4 | Cancelada | 🔴 #DC3545 |
 | 5 | No asistió | ⚫ #6C757D |
+
+---
+
+### 7.6 Reasignación masiva — médico ausente — `POST /citas/reasignar-medico`
+
+Cuando un médico no llega (enfermedad, emergencia), el gestor puede redistribuir todas sus
+citas pendientes del día a otros médicos de la misma especialidad con un solo clic.
+
+**Body:**
+```json
+{
+    "medico_id_ausente": 5,
+    "fecha": "2026-04-29"
+}
+```
+
+**Respuesta exitosa:**
+```json
+{
+    "message": "Reasignación completada: 6 de 7 citas reasignadas.",
+    "reasignadas": 6,
+    "sin_suplente": 1,
+    "total": 7,
+    "detalle": [
+        { "cita_id": 101, "hora": "08:00", "medico_suplente": "Dra. Pérez",  "estado": "reasignada" },
+        { "cita_id": 102, "hora": "08:30", "medico_suplente": "Dr. Gómez",   "estado": "reasignada" },
+        { "cita_id": 107, "hora": "14:00", "estado": "sin_suplente_disponible" }
+    ]
+}
+```
+
+**Lógica interna:**
+- Solo reasigna citas en estado `Pendiente` (id=1)
+- El suplente debe tener la **misma especialidad** y horario activo ese día de la semana
+- Prioriza al suplente con **menor carga** (menos citas ese día)
+- Si una cita queda sin suplente disponible → queda en `sin_suplente_disponible`, el gestor la maneja manualmente
+
+**Errores posibles:**
+| HTTP | Situación |
+|------|-----------|
+| 200 | Al menos una cita procesada (incluso si hay `sin_suplente > 0`) |
+| 200 | `reasignadas: 0` si no había citas pendientes ese día |
+| 422 | No existen médicos suplentes de esa especialidad ese día |
+
+**Implementación sugerida en la vista del gestor:**
+```html
+<!-- Botón en la vista de citas del día -->
+<button @click="reasignarMedico(medicoId, fecha)"
+        class="bg-red-600 text-white px-4 py-2 rounded">
+    Médico ausente — Reasignar citas
+</button>
+
+<script>
+async function reasignarMedico(medicoId, fecha) {
+    if (!confirm('¿Confirmas que el médico está ausente y deseas reasignar sus citas?')) return;
+
+    const res = await fetch('/citas/reasignar-medico', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+        },
+        body: JSON.stringify({ medico_id_ausente: medicoId, fecha }),
+    });
+
+    const data = await res.json();
+    alert(data.message);
+
+    if (data.sin_suplente > 0) {
+        // Mostrar tabla con las citas que quedaron sin asignar
+        console.warn('Citas sin suplente:', data.detalle.filter(d => d.estado === 'sin_suplente_disponible'));
+    }
+}
+</script>
+```
 
 ---
 

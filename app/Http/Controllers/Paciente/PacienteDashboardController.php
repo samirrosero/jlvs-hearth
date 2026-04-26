@@ -5,6 +5,9 @@ namespace App\Http\Controllers\Paciente;
 use App\Http\Controllers\Controller;
 use App\Models\Cita;
 use App\Models\HistoriaClinica;
+use App\Models\Medico;
+use App\Models\Servicio;
+use App\Models\ModalidadCita;
 
 class PacienteDashboardController extends Controller
 {
@@ -27,8 +30,14 @@ class PacienteDashboardController extends Controller
         // Total de historias clínicas
         $totalHistorias = HistoriaClinica::where('paciente_id', $paciente->id)->count();
 
+        // Datos para el modal de agendamiento
+        $medicos = Medico::with('usuario')->get();
+        $servicios = Servicio::all();
+        $modalidades = ModalidadCita::all();
+
         return view('paciente.dashboard', compact(
-            'paciente', 'proximasCitas', 'totalCitas', 'totalHistorias'
+            'paciente', 'proximasCitas', 'totalCitas', 'totalHistorias',
+            'medicos', 'servicios', 'modalidades'
         ));
     }
 }

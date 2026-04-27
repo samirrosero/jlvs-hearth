@@ -5,6 +5,8 @@ namespace Database\Seeders;
 use App\Models\Empresa;
 use App\Models\HorarioMedico;
 use App\Models\Medico;
+use App\Models\Portafolio;
+use App\Models\PrecioServicio;
 use App\Models\Rol;
 use App\Models\Servicio;
 use App\Models\User;
@@ -145,11 +147,55 @@ class EmpresaDemoSeeder extends Seeder
             ['nombre' => 'Vacunación',                  'duracion_minutos' => 15, 'descripcion' => 'Aplicación de vacunas del PAI y otras.'],
         ];
 
+        $serviciosCreados = [];
         foreach ($servicios as $servicio) {
-            Servicio::firstOrCreate(
+            $serviciosCreados[$servicio['nombre']] = Servicio::firstOrCreate(
                 ['nombre' => $servicio['nombre'], 'empresa_id' => $empresa->id],
                 array_merge($servicio, ['empresa_id' => $empresa->id, 'activo' => true])
             );
+        }
+
+        // ── Portafolios (tipos de cobertura) ─────────────────────────
+        $portafoliosData = [
+            ['nombre_convenio' => 'Particular',           'descripcion' => 'Pago directo de bolsillo'],
+            ['nombre_convenio' => 'Medicina Prepagada',   'descripcion' => 'Colsanitas, Sura Prepagada, Coomeva, etc.'],
+            ['nombre_convenio' => 'Póliza de Seguro',     'descripcion' => 'AXA Colpatria, Bolívar Seguros, etc.'],
+            ['nombre_convenio' => 'Convenio Empresarial', 'descripcion' => 'Contrato directo con empresa empleadora'],
+        ];
+
+        $portafoliosCreados = [];
+        foreach ($portafoliosData as $p) {
+            $portafoliosCreados[$p['nombre_convenio']] = Portafolio::firstOrCreate(
+                ['empresa_id' => $empresa->id, 'nombre_convenio' => $p['nombre_convenio']],
+                ['descripcion' => $p['descripcion']]
+            );
+        }
+
+        // ── Precios de referencia por portafolio ─────────────────────
+        // Tarifas orientativas (basadas en Manual Tarifario ISS 2001 + IPS privada)
+        $precios = [
+            'Consulta Medicina General' => ['Particular' => 55000,  'Medicina Prepagada' => 35000, 'Póliza de Seguro' => 40000, 'Convenio Empresarial' => 45000],
+            'Consulta Pediatría'         => ['Particular' => 65000,  'Medicina Prepagada' => 40000, 'Póliza de Seguro' => 45000, 'Convenio Empresarial' => 50000],
+            'Control Prenatal'           => ['Particular' => 75000,  'Medicina Prepagada' => 45000, 'Póliza de Seguro' => 50000, 'Convenio Empresarial' => 55000],
+            'Toma de Muestras'           => ['Particular' => 30000,  'Medicina Prepagada' => 18000, 'Póliza de Seguro' => 22000, 'Convenio Empresarial' => 25000],
+            'Electrocardiograma'         => ['Particular' => 90000,  'Medicina Prepagada' => 55000, 'Póliza de Seguro' => 65000, 'Convenio Empresarial' => 70000],
+            'Ecografía Abdominal'        => ['Particular' => 120000, 'Medicina Prepagada' => 75000, 'Póliza de Seguro' => 85000, 'Convenio Empresarial' => 95000],
+            'Vacunación'                 => ['Particular' => 25000,  'Medicina Prepagada' => 15000, 'Póliza de Seguro' => 18000, 'Convenio Empresarial' => 20000],
+        ];
+
+        foreach ($precios as $nombreServicio => $tarifas) {
+            $servicio = $serviciosCreados[$nombreServicio] ?? null;
+            if (! $servicio) continue;
+
+            foreach ($tarifas as $nombrePortafolio => $precio) {
+                $portafolio = $portafoliosCreados[$nombrePortafolio] ?? null;
+                if (! $portafolio) continue;
+
+                PrecioServicio::firstOrCreate(
+                    ['servicio_id' => $servicio->id, 'portafolio_id' => $portafolio->id],
+                    ['empresa_id' => $empresa->id, 'precio' => $precio]
+                );
+            }
         }
 
         $this->command->info('✓ Empresa demo creada: Clínica Demo JLVS');

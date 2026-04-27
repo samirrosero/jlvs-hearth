@@ -46,6 +46,11 @@ class BrandingController extends Controller
             'icono_card_medicos'   => ['nullable', 'image', 'mimes:png,svg,webp', 'max:512'],
             'icono_card_citas'     => ['nullable', 'image', 'mimes:png,svg,webp', 'max:512'],
             'icono_card_total'     => ['nullable', 'image', 'mimes:png,svg,webp', 'max:512'],
+            // Iconos portal paciente
+            'icono_pac_inicio'    => ['nullable', 'image', 'mimes:png,svg,webp', 'max:512'],
+            'icono_pac_citas'     => ['nullable', 'image', 'mimes:png,svg,webp', 'max:512'],
+            'icono_pac_historial' => ['nullable', 'image', 'mimes:png,svg,webp', 'max:512'],
+            'icono_pac_perfil'    => ['nullable', 'image', 'mimes:png,svg,webp', 'max:512'],
         ]);
 
         $datos = $request->only([
@@ -113,6 +118,22 @@ class BrandingController extends Controller
             'icono_card_citas', 'icono_card_total'
         ];
         foreach ($iconosCards as $icono) {
+            if ($request->hasFile($icono)) {
+                $pathField = $icono . '_path';
+                if ($empresa->$pathField) {
+                    Storage::disk('public')->delete($empresa->$pathField);
+                }
+                $datos[$pathField] = $request->file($icono)
+                    ->store("empresas/{$empresa->id}/iconos", 'public');
+            }
+        }
+
+        // ── Iconos del portal del paciente ────────────────────────────────────
+        $iconosPaciente = [
+            'icono_pac_inicio', 'icono_pac_citas',
+            'icono_pac_historial', 'icono_pac_perfil',
+        ];
+        foreach ($iconosPaciente as $icono) {
             if ($request->hasFile($icono)) {
                 $pathField = $icono . '_path';
                 if ($empresa->$pathField) {

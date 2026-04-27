@@ -258,6 +258,42 @@
                                placeholder="Ej: 3001234567" required maxlength="20">
                     </div>
 
+                    {{-- Tipo de cobertura --}}
+                    <div class="field span-2" x-data="{ portafolio: '{{ old('portafolio_id') }}', mostrarAseguradora: false }"
+                         x-init="mostrarAseguradora = ['{{ old('portafolio_id') }}'].includes(portafolio) && portafolio !== ''">
+                        <label>Tipo de cobertura <span style="color:#ef4444">*</span></label>
+                        @if($portafolios->isEmpty())
+                            <p style="font-size:12px;color:#94a3b8;margin-top:4px">
+                                No hay portafolios configurados para esta IPS todavía.
+                            </p>
+                        @else
+                            <select name="portafolio_id" required
+                                    x-model="portafolio"
+                                    @change="mostrarAseguradora = portafolio !== ''">
+                                <option value="">— Selecciona tu cobertura —</option>
+                                @foreach($portafolios as $p)
+                                    <option value="{{ $p->id }}" {{ old('portafolio_id') == $p->id ? 'selected' : '' }}>
+                                        {{ $p->nombre_convenio }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        @endif
+
+                        {{-- Aseguradora + Número de póliza (solo si eligió cobertura) --}}
+                        <div x-show="mostrarAseguradora" x-cloak class="grid-2 mt-3" style="gap:10px">
+                            <div class="field">
+                                <label>Nombre de la aseguradora <span style="color:#94a3b8;font-weight:400">(opcional)</span></label>
+                                <input type="text" name="nombre_aseguradora" value="{{ old('nombre_aseguradora') }}"
+                                       placeholder="Ej: Colsanitas, AXA Colpatria" maxlength="100">
+                            </div>
+                            <div class="field">
+                                <label>Número de póliza / afiliación <span style="color:#94a3b8;font-weight:400">(opcional)</span></label>
+                                <input type="text" name="numero_poliza" value="{{ old('numero_poliza') }}"
+                                       placeholder="Si no lo sabes, déjalo vacío" maxlength="60">
+                            </div>
+                        </div>
+                    </div>
+
                     {{-- Correo --}}
                     <div class="field">
                         <label>Correo electrónico</label>

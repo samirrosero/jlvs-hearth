@@ -48,23 +48,23 @@
 </div>
 
 {{-- Acción principal --}}
-<button @click="openModal = true"
-        class="w-full mb-2 bg-white hover: bg-blue-700 activa:scale-[.99] transition rounded-2xl shadow-sm px-8 py-6 flex items-center justify-between gap-6 text-left">
+<a href="{{ route('paciente.agendar') }}"
+   class="w-full mb-2 bg-blue-600 hover:bg-blue-700 active:scale-[.99] transition rounded-2xl shadow-sm px-8 py-6 flex items-center justify-between gap-6">
     <div class="flex items-center gap-5">
-        <div class="bg-black/20 rounded-2xl p-4 shrink-0">
-            <svg class="w-10 h-10 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="bg-white/20 rounded-2xl p-4 shrink-0">
+            <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
             </svg>
         </div>
         <div>
-            <p class="text-2xl font-bold text-black leading-tight">Agendar una cita</p>
-            <p class="text-black-200 text-sm mt-0.5">Toca aquí para solicitar tu próxima consulta médica</p>
+            <p class="text-2xl font-bold text-white leading-tight">Agendar una cita</p>
+            <p class="text-blue-200 text-sm mt-0.5">Toca aquí para solicitar tu próxima consulta médica</p>
         </div>
     </div>
     <div class="shrink-0 bg-white text-blue-600 font-bold text-sm px-6 py-3 rounded-xl hidden sm:block">
         + Nueva cita
     </div>
-</button>
+</a>
 
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
     {{-- Próximas Citas --}}

@@ -5,6 +5,56 @@
 
 @section('content')
 
+<div x-data="{ modalCancelar: false, formCancelar: null }"
+     @cancelar-cita.window="modalCancelar = true; formCancelar = $event.detail.form">
+
+    {{-- Modal confirmación cancelar --}}
+    <div x-show="modalCancelar" class="fixed inset-0 z-50 flex items-center justify-center" style="display:none">
+        <div class="fixed inset-0 bg-black/40 backdrop-blur-sm" @click="modalCancelar = false"
+             x-transition:enter="transition-opacity duration-200"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition-opacity duration-200"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"></div>
+
+        <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4 p-6 z-10"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 scale-100"
+             x-transition:leave-end="opacity-0 scale-95">
+
+            <div class="flex items-center gap-4 mb-4">
+                <div class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+                    <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-base font-bold text-gray-900">Cancelar cita</h3>
+                    <p class="text-sm text-gray-500 mt-0.5">Esta acción no se puede deshacer.</p>
+                </div>
+            </div>
+
+            <p class="text-sm text-gray-600 mb-6">
+                ¿Estás seguro de que deseas cancelar esta cita? El cupo quedará libre para otro paciente.
+            </p>
+
+            <div class="flex justify-end gap-3">
+                <button type="button" @click="modalCancelar = false"
+                        class="px-4 py-2 text-sm font-bold text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition">
+                    No, mantener
+                </button>
+                <button type="button" @click="formCancelar.submit()"
+                        class="px-4 py-2 text-sm font-bold text-white bg-red-600 rounded-xl hover:bg-red-700 transition">
+                    Sí, cancelar cita
+                </button>
+            </div>
+        </div>
+    </div>
+
 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
     <div class="px-6 py-4 border-b border-gray-50 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <h3 class="font-bold text-gray-800 text-lg">Historial de Citas</h3>
@@ -29,6 +79,7 @@
                     <th class="px-6 py-4">Servicio</th>
                     <th class="px-6 py-4">Modalidad</th>
                     <th class="px-6 py-4">Estado</th>
+                    <th class="px-6 py-4"></th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-50">
@@ -51,15 +102,28 @@
                             </span>
                         </td>
                         <td class="px-6 py-4">
-                            <span class="px-3 py-1 rounded-full text-[10px] font-bold" 
+                            <span class="px-3 py-1 rounded-full text-[10px] font-bold"
                                   style="background: {{ $cita->estado->color_hex ?? '#e2e8f0' }}22; color: {{ $cita->estado->color_hex ?? '#64748b' }}">
                                 {{ $cita->estado->nombre }}
                             </span>
                         </td>
+                        <td class="px-6 py-4">
+                            @if (in_array($cita->estado->nombre, ['Pendiente', 'Confirmada']) && \Carbon\Carbon::parse($cita->fecha)->isFuture())
+                                <form method="POST" action="{{ route('paciente.citas.cancelar', $cita) }}" id="form-cancelar-{{ $cita->id }}">
+                                    @csrf
+                                    @method('PATCH')
+                                    <button type="button"
+                                            @click="$dispatch('cancelar-cita', { form: document.getElementById('form-cancelar-{{ $cita->id }}') })"
+                                            class="text-xs font-bold text-red-500 hover:text-red-700 transition">
+                                        Cancelar
+                                    </button>
+                                </form>
+                            @endif
+                        </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" class="px-6 py-12 text-center">
+                        <td colspan="6" class="px-6 py-12 text-center">
                             <p class="text-gray-400 italic">No se encontraron citas registradas.</p>
                         </td>
                     </tr>
@@ -73,6 +137,8 @@
             {{ $citas->links() }}
         </div>
     @endif
+</div>
+
 </div>
 
 @endsection

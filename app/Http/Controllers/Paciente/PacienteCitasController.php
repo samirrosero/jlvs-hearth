@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Paciente;
 use App\Http\Controllers\Controller;
 use App\Models\Cita;
 use App\Models\EstadoCita;
+use Carbon\Carbon;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -70,5 +72,29 @@ class PacienteCitasController extends Controller
 
         return redirect()->route('paciente.citas')
             ->with('success', 'Cita agendada exitosamente.');
+    }
+
+    public function cancelar(Cita $cita): RedirectResponse
+    {
+        abort_if($cita->paciente_id !== auth()->user()->paciente->id, 403);
+
+        $cancelables = EstadoCita::whereIn('nombre', ['Pendiente', 'Confirmada'])->pluck('id');
+
+        if (! $cancelables->contains($cita->estado_id)) {
+            return back()->with('error', 'Esta cita no puede cancelarse porque ya fue atendida o ya está cancelada.');
+        }
+
+        if (Carbon::parse($cita->fecha)->isPast()) {
+            return back()->with('error', 'No puedes cancelar una cita de una fecha pasada.');
+        }
+
+        $estadoCancelada = EstadoCita::where('nombre', 'Cancelada')->first();
+
+        $cita->update([
+            'estado_id' => $estadoCancelada->id,
+            'activo'    => false,
+        ]);
+
+        return back()->with('success', 'Cita cancelada correctamente.');
     }
 }

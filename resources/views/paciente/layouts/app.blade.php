@@ -12,9 +12,9 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         :root {
-            --color-sidebar:    {{ $empresa?->color_paciente   ?? '#0f172a' }};
-            --color-primario:   {{ $empresa?->color_primario   ?? '#0369a1' }};
-            --color-secundario: {{ $empresa?->color_secundario ?? '#075985' }};
+            --color-sidebar:    {{ $empresa?->color_paciente   ?: '#0f172a' }};
+            --color-primario:   {{ $empresa?->color_primario   ?: '#0369a1' }};
+            --color-secundario: {{ $empresa?->color_secundario ?: '#075985' }};
         }
         #paciente-sidebar {
             background-color: var(--color-sidebar) !important;
@@ -58,25 +58,31 @@
                 $nav = [
                     [
                         'route' => 'paciente.dashboard',
-                        'icon'  => $empresa?->icono_dashboard_url ?? asset('img/icons/dashboard.png'),
+                        'icon'  => $empresa?->icono_pac_inicio_url ?: asset('img/icons/dashboard.png'),
                         'label' => 'Inicio',
                     ],
                     [
                         'route' => 'paciente.citas',
                         'match' => 'paciente.citas*',
-                        'icon'  => $empresa?->icono_card_citas_url ?? asset('img/icons/citas-mes.png'),
+                        'icon'  => $empresa?->icono_pac_citas_url ?: asset('img/icons/citas-mes.png'),
                         'label' => 'Mis Citas',
+                    ],
+                    [
+                        'route' => 'paciente.agendar',
+                        'match' => 'paciente.agendar*',
+                        'icon'  => $empresa?->icono_pac_citas_url ?: asset('img/icons/citas-mes.png'),
+                        'label' => 'Agendar Cita',
                     ],
                     [
                         'route' => 'paciente.historial',
                         'match' => 'paciente.historial*',
-                        'icon'  => $empresa?->icono_pacientes_url ?? asset('img/icons/pacientes.png'),
+                        'icon'  => $empresa?->icono_pac_historial_url ?: asset('img/icons/pacientes.png'),
                         'label' => 'Mi Historial',
                     ],
                     [
                         'route' => 'paciente.perfil',
                         'match' => 'paciente.perfil*',
-                        'icon'  => asset('img/icons/pacientes.png'),
+                        'icon'  => $empresa?->icono_pac_perfil_url ?: asset('img/icons/pacientes.png'),
                         'label' => 'Mi Perfil',
                     ],
                 ];

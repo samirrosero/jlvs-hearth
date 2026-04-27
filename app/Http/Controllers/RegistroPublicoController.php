@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Empresa;
 use App\Models\Paciente;
+use App\Models\Portafolio;
 use App\Models\Rol;
 use App\Models\SolicitudEmpleador;
 use App\Models\User;
@@ -36,7 +37,11 @@ class RegistroPublicoController extends Controller
             }
         }
 
-        return view('auth.registro', compact('empresa'));
+        $portafolios = $empresa
+            ? Portafolio::where('empresa_id', $empresa->id)->orderBy('nombre_convenio')->get()
+            : collect();
+
+        return view('auth.registro', compact('empresa', 'portafolios'));
     }
 
     // ── Detectar empresa por parámetro URL ─────────────────────────────────
@@ -77,6 +82,12 @@ class RegistroPublicoController extends Controller
             'correo_confirmation' => ['required'],
             'password'          => ['required', 'string', 'min:8', 'confirmed'],
             'password_confirmation' => ['required'],
+            'portafolio_id'     => ['required', 'exists:portafolios,id'],
+            'nombre_aseguradora'=> ['nullable', 'string', 'max:100'],
+            'numero_poliza'     => ['nullable', 'string', 'max:60'],
+        ], [
+            'portafolio_id.required' => 'Selecciona tu tipo de cobertura.',
+            'portafolio_id.exists'   => 'La cobertura seleccionada no es válida.',
         ]);
 
         // Verificar que la identificación no exista ya
@@ -106,15 +117,18 @@ class RegistroPublicoController extends Controller
             ]);
 
             Paciente::create([
-                'usuario_id'       => $usuario->id,
-                'empresa_id'       => $empresa->id,
-                'nombre_completo'  => trim($request->nombres . ' ' . $request->apellidos),
-                'tipo_documento'   => $request->tipo_documento,
-                'identificacion'   => $request->numero_documento,
-                'fecha_nacimiento' => $request->fecha_nacimiento,
-                'sexo'             => $request->sexo,
-                'telefono'         => $request->telefono,
-                'correo'           => $request->correo,
+                'usuario_id'        => $usuario->id,
+                'empresa_id'        => $empresa->id,
+                'portafolio_id'     => $request->portafolio_id,
+                'nombre_completo'   => trim($request->nombres . ' ' . $request->apellidos),
+                'tipo_documento'    => $request->tipo_documento,
+                'identificacion'    => $request->numero_documento,
+                'fecha_nacimiento'  => $request->fecha_nacimiento,
+                'sexo'              => $request->sexo,
+                'telefono'          => $request->telefono,
+                'correo'            => $request->correo,
+                'nombre_aseguradora'=> $request->nombre_aseguradora,
+                'numero_poliza'     => $request->numero_poliza,
             ]);
         });
 

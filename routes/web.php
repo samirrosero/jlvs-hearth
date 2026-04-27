@@ -50,6 +50,7 @@ use App\Http\Controllers\Paciente\PacienteDashboardController;
 use App\Http\Controllers\Paciente\PacienteCitasController;
 use App\Http\Controllers\Paciente\PacienteHistorialController;
 use App\Http\Controllers\Paciente\AgendarCitaPacienteController;
+use App\Http\Controllers\Paciente\AgendarCitaVistaController;
 use App\Http\Controllers\Paciente\PacientePerfilController;
 use App\Http\Controllers\DisponibilidadEspecialidadController;
 use App\Http\Controllers\GestorCitas\ReasignarCitasMedicoController;
@@ -419,6 +420,10 @@ Route::prefix('paciente')->name('paciente.')->middleware(['auth', 'role:paciente
 
     Route::patch('/citas/{cita}/cancelar', [PacienteCitasController::class, 'cancelar'])
         ->name('citas.cancelar');
+
+    Route::get('/agendar', [AgendarCitaVistaController::class, 'index'])->name('agendar');
+    Route::get('/agendar/disponible', [AgendarCitaVistaController::class, 'disponible'])->name('agendar.disponible');
+    Route::post('/agendar/reservar', [AgendarCitaVistaController::class, 'reservar'])->name('agendar.reservar');
 
     Route::get('/perfil', [PacientePerfilController::class, 'edit'])->name('perfil');
     Route::patch('/perfil', [PacientePerfilController::class, 'update'])->name('perfil.update');

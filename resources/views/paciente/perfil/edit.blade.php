@@ -81,8 +81,74 @@
             </div>
         </div>
 
+        {{-- Cobertura --}}
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mt-6">
+            <div class="px-6 py-5 border-b border-gray-50 flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-emerald-600 flex items-center justify-center text-white shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="font-bold text-gray-800">Cobertura médica</h3>
+                    <p class="text-xs text-gray-400">Tipo de convenio o aseguradora con la que asistes.</p>
+                </div>
+            </div>
+
+            <div class="p-6 space-y-5">
+                {{-- Portafolio --}}
+                <div>
+                    <label for="portafolio_id" class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+                        Tipo de cobertura
+                    </label>
+                    <select id="portafolio_id" name="portafolio_id"
+                            class="w-full px-4 py-2.5 rounded-xl border text-sm transition
+                                   {{ $errors->has('portafolio_id') ? 'border-red-400 bg-red-50' : 'border-gray-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100' }}
+                                   outline-none bg-gray-50">
+                        <option value="">— Sin cobertura registrada —</option>
+                        @foreach($portafolios as $p)
+                            <option value="{{ $p->id }}"
+                                {{ old('portafolio_id', $paciente->portafolio_id) == $p->id ? 'selected' : '' }}>
+                                {{ $p->nombre_convenio }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('portafolio_id')
+                        <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                {{-- Aseguradora --}}
+                <div>
+                    <label for="nombre_aseguradora" class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+                        Nombre de la aseguradora <span class="text-gray-400 font-normal normal-case">(opcional)</span>
+                    </label>
+                    <input type="text" id="nombre_aseguradora" name="nombre_aseguradora"
+                           value="{{ old('nombre_aseguradora', $paciente->nombre_aseguradora) }}"
+                           placeholder="Ej: Colsanitas, AXA Colpatria"
+                           class="w-full px-4 py-2.5 rounded-xl border text-sm transition
+                                  {{ $errors->has('nombre_aseguradora') ? 'border-red-400 bg-red-50' : 'border-gray-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100' }}
+                                  outline-none">
+                </div>
+
+                {{-- Número de póliza --}}
+                <div>
+                    <label for="numero_poliza" class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+                        Número de póliza / afiliación <span class="text-gray-400 font-normal normal-case">(opcional)</span>
+                    </label>
+                    <input type="text" id="numero_poliza" name="numero_poliza"
+                           value="{{ old('numero_poliza', $paciente->numero_poliza) }}"
+                           placeholder="Si no lo sabes, puedes dejarlo vacío"
+                           class="w-full px-4 py-2.5 rounded-xl border text-sm transition
+                                  {{ $errors->has('numero_poliza') ? 'border-red-400 bg-red-50' : 'border-gray-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100' }}
+                                  outline-none">
+                </div>
+            </div>
+        </div>
+
         {{-- Cambio de contraseña --}}
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mt-6" x-data="{ cambiar: false }">
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mt-6"
+             x-data="{ cambiar: {{ $errors->hasAny(['password_actual', 'password']) ? 'true' : 'false' }} }">
             <div class="px-6 py-5 border-b border-gray-50 flex items-center justify-between">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-xl bg-amber-500 flex items-center justify-center text-white shrink-0">
@@ -144,24 +210,6 @@
 
             </div>
 
-            {{-- Expandir automáticamente si hay errores de contraseña --}}
-            @if ($errors->hasAny(['password_actual', 'password']))
-                <script>
-                    document.addEventListener('alpine:init', () => {
-                        Alpine.store !== undefined;
-                    });
-                </script>
-                @push('scripts')
-                <script>
-                    document.addEventListener('alpine:initialized', () => {
-                        const el = document.querySelector('[x-data="{ cambiar: false }"]');
-                        if (el && el._x_dataStack) {
-                            el._x_dataStack[0].cambiar = true;
-                        }
-                    });
-                </script>
-                @endpush
-            @endif
         </div>
 
         <div class="flex justify-end mt-4">

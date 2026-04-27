@@ -5,13 +5,14 @@ namespace App\Mail;
 use App\Models\HistoriaClinica;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class HistoriaClinicaMail extends Mailable
+class HistoriaClinicaMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 

@@ -43,6 +43,11 @@ class Empresa extends Model
         'icono_card_medicos_path',
         'icono_card_citas_path',
         'icono_card_total_path',
+        // Iconos del portal del paciente
+        'icono_pac_inicio_path',
+        'icono_pac_citas_path',
+        'icono_pac_historial_path',
+        'icono_pac_perfil_path',
     ];
 
     protected $appends = [
@@ -53,6 +58,9 @@ class Empresa extends Model
         // Iconos tarjetas dashboard
         'icono_card_pacientes_url', 'icono_card_medicos_url',
         'icono_card_citas_url', 'icono_card_total_url',
+        // Iconos portal paciente
+        'icono_pac_inicio_url', 'icono_pac_citas_url',
+        'icono_pac_historial_url', 'icono_pac_perfil_url',
     ];
 
     protected function casts(): array
@@ -144,6 +152,24 @@ class Empresa extends Model
     public function getIconoCardTotalUrlAttribute(): ?string
     {
         return $this->icono_card_total_path ? Storage::disk('public')->url($this->icono_card_total_path) : null;
+    }
+
+    // ── Iconos del portal del paciente ────────────────────────────────────
+    public function getIconoPacInicioUrlAttribute(): ?string
+    {
+        return $this->icono_pac_inicio_path ? Storage::disk('public')->url($this->icono_pac_inicio_path) : null;
+    }
+    public function getIconoPacCitasUrlAttribute(): ?string
+    {
+        return $this->icono_pac_citas_path ? Storage::disk('public')->url($this->icono_pac_citas_path) : null;
+    }
+    public function getIconoPacHistorialUrlAttribute(): ?string
+    {
+        return $this->icono_pac_historial_path ? Storage::disk('public')->url($this->icono_pac_historial_path) : null;
+    }
+    public function getIconoPacPerfilUrlAttribute(): ?string
+    {
+        return $this->icono_pac_perfil_path ? Storage::disk('public')->url($this->icono_pac_perfil_path) : null;
     }
 
     // Una empresa tiene muchos usuarios

@@ -14,6 +14,7 @@ class Paciente extends Model
     protected $fillable = [
         'usuario_id',
         'empresa_id',
+        'portafolio_id',
         'nombre_completo',
         'fecha_nacimiento',
         'sexo',
@@ -21,6 +22,8 @@ class Paciente extends Model
         'correo',
         'direccion',
         'identificacion',
+        'nombre_aseguradora',
+        'numero_poliza',
     ];
 
     protected function casts(): array
@@ -28,6 +31,11 @@ class Paciente extends Model
         return [
             'fecha_nacimiento' => 'date',
         ];
+    }
+
+    public function portafolio(): BelongsTo
+    {
+        return $this->belongsTo(Portafolio::class, 'portafolio_id');
     }
 
     // Un paciente puede tener una cuenta de usuario (opcional)

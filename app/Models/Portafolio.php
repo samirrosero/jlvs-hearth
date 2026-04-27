@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\PrecioServicio;
+use App\Models\Paciente;
 
 class Portafolio extends Model
 {
@@ -26,5 +28,15 @@ class Portafolio extends Model
     public function citas(): HasMany
     {
         return $this->hasMany(Cita::class, 'portafolio_id');
+    }
+
+    public function pacientes(): HasMany
+    {
+        return $this->hasMany(Paciente::class, 'portafolio_id');
+    }
+
+    public function precios(): HasMany
+    {
+        return $this->hasMany(PrecioServicio::class, 'portafolio_id');
     }
 }

@@ -368,6 +368,45 @@
             }
         </style>
 
+        {{-- ══ FILA 4: Iconos del Portal del Paciente ═════════════════════════ --}}
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-100">
+                <h2 class="text-sm font-semibold text-gray-800">Iconos del portal del paciente</h2>
+                <p class="text-xs text-gray-400 mt-0.5">Iconos exclusivos del menú lateral que ve el paciente. Independientes del panel administrativo. PNG, SVG o WEBP · máx. 512 KB.</p>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    @php
+                        $iconosPacPortal = [
+                            'icono_pac_inicio'    => ['label' => 'Inicio',       'sub' => 'Dashboard del paciente',  'preview' => $empresa->icono_pac_inicio_url],
+                            'icono_pac_citas'     => ['label' => 'Mis Citas',    'sub' => 'Mis Citas y Agendar',     'preview' => $empresa->icono_pac_citas_url],
+                            'icono_pac_historial' => ['label' => 'Mi Historial', 'sub' => 'Historial clínico',       'preview' => $empresa->icono_pac_historial_url],
+                            'icono_pac_perfil'    => ['label' => 'Mi Perfil',    'sub' => 'Datos del paciente',      'preview' => $empresa->icono_pac_perfil_url],
+                        ];
+                    @endphp
+                    @foreach($iconosPacPortal as $key => $info)
+                    <div>
+                        <p class="text-xs font-medium text-gray-700 mb-0.5">{{ $info['label'] }}</p>
+                        <p class="text-[10px] text-gray-400 mb-2">{{ $info['sub'] }}</p>
+                        <div class="upload-zone-sm" onclick="document.getElementById('{{ $key }}-input').click()">
+                            @if($info['preview'])
+                                <img id="{{ $key }}-preview" src="{{ $info['preview'] }}" alt="{{ $info['label'] }}" class="h-10 w-10 mx-auto object-contain">
+                            @else
+                                <img id="{{ $key }}-preview" src="" alt="" class="h-10 w-10 mx-auto object-contain hidden">
+                                <svg class="w-6 h-6 mx-auto text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14"/>
+                                </svg>
+                            @endif
+                        </div>
+                        <input type="file" name="{{ $key }}" id="{{ $key }}-input"
+                               accept="image/png,image/svg+xml,image/webp" class="hidden"
+                               onchange="previewIcon(this,'{{ $key }}-preview')">
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+
         {{-- ══ GUARDAR ══════════════════════════════════════════════════════════ --}}
         <div class="flex items-center justify-between">
             <p class="text-xs text-gray-400">Los cambios se aplican de inmediato en todas las vistas de esta IPS.</p>

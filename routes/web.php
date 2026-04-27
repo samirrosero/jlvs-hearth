@@ -55,6 +55,9 @@ use App\Http\Controllers\Paciente\PacientePerfilController;
 use App\Http\Controllers\DisponibilidadEspecialidadController;
 use App\Http\Controllers\GestorCitas\ReasignarCitasMedicoController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Gestor\GestorDashboardController;
+use App\Http\Controllers\Gestor\GestorCitasController;
+use App\Http\Controllers\Gestor\GestorPacientesController;
 
 // ─────────────────────────────────────────────────────────────
 // Landing page
@@ -429,6 +432,22 @@ Route::prefix('paciente')->name('paciente.')->middleware(['auth', 'role:paciente
     Route::patch('/perfil', [PacientePerfilController::class, 'update'])->name('perfil.update');
 
     Route::post('/chatbot', [ChatbotController::class, 'chat'])->name('chatbot');
+});
+
+Route::prefix('gestor')->name('gestor.')->middleware(['auth', 'role:gestor_citas'])->group(function () {
+    Route::get('/',          fn () => redirect()->route('gestor.dashboard'));
+    Route::get('/dashboard', GestorDashboardController::class)->name('dashboard');
+
+    Route::get('/citas',          [GestorCitasController::class, 'index'])->name('citas');
+    Route::get('/citas/crear',    [GestorCitasController::class, 'create'])->name('citas.create');
+    Route::post('/citas',         [GestorCitasController::class, 'store'])->name('citas.store');
+    Route::get('/citas/{cita}',   [GestorCitasController::class, 'show'])->name('citas.show');
+    Route::get('/citas/{cita}/editar', [GestorCitasController::class, 'edit'])->name('citas.edit');
+    Route::put('/citas/{cita}',   [GestorCitasController::class, 'update'])->name('citas.update');
+
+    Route::get('/pacientes',             [GestorPacientesController::class, 'index'])->name('pacientes');
+    Route::get('/pacientes/registrar',   [GestorPacientesController::class, 'create'])->name('pacientes.create');
+    Route::post('/pacientes',            [GestorPacientesController::class, 'store'])->name('pacientes.store');
 });
 
 // ═════════════════════════════════════════════════════════════

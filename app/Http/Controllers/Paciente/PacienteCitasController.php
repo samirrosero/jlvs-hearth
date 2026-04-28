@@ -17,7 +17,7 @@ class PacienteCitasController extends Controller
         $pacienteId = auth()->user()->paciente->id;
 
         $citas = Cita::where('paciente_id', $pacienteId)
-            ->with('medico.usuario', 'estado', 'servicio', 'modalidad')
+            ->with('medico.usuario', 'estado', 'servicio.precios', 'modalidad')
             ->when(request('estado_id'), fn ($q) => $q->where('estado_id', request('estado_id')))
             ->orderByDesc('fecha')
             ->paginate(10)

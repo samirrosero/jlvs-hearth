@@ -28,7 +28,12 @@ class DatabaseSeeder extends Seeder
             EmpresaDemoSeeder::class,
         ]);
 
-        // --- 3. Datos históricos de fondo (últimos 6 meses) ---
+        // --- 3. Paciente demo con historia clínica completa ---
+        $this->call([
+            PacienteDemoSeeder::class,
+        ]);
+
+        // --- 4. Datos históricos de fondo (últimos 6 meses) ---
         // Genera pacientes y citas ficticias para que el dashboard se vea lleno en la demo.
         // Los usuarios del equipo se crean en vivo durante el sustento.
         $this->call([

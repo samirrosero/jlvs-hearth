@@ -78,6 +78,7 @@
                     <th class="px-6 py-4">Médico</th>
                     <th class="px-6 py-4">Servicio</th>
                     <th class="px-6 py-4">Modalidad</th>
+                    <th class="px-6 py-4">Costo</th>
                     <th class="px-6 py-4">Estado</th>
                     <th class="px-6 py-4"></th>
                 </tr>
@@ -102,6 +103,20 @@
                             </span>
                         </td>
                         <td class="px-6 py-4">
+                            @php
+                                $precio = $cita->servicio?->precios
+                                    ->firstWhere('portafolio_id', $cita->portafolio_id)
+                                    ?->precio;
+                            @endphp
+                            @if ($precio !== null)
+                                <span class="font-semibold text-gray-800">
+                                    ${{ number_format($precio, 0, ',', '.') }}
+                                </span>
+                            @else
+                                <span class="text-gray-400 text-xs">—</span>
+                            @endif
+                        </td>
+                        <td class="px-6 py-4">
                             <span class="px-3 py-1 rounded-full text-[10px] font-bold"
                                   style="background: {{ $cita->estado->color_hex ?? '#e2e8f0' }}22; color: {{ $cita->estado->color_hex ?? '#64748b' }}">
                                 {{ $cita->estado->nombre }}
@@ -123,7 +138,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6" class="px-6 py-12 text-center">
+                        <td colspan="7" class="px-6 py-12 text-center">
                             <p class="text-gray-400 italic">No se encontraron citas registradas.</p>
                         </td>
                     </tr>

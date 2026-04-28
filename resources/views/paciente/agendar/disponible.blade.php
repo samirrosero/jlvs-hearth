@@ -5,7 +5,6 @@
 
 @section('content')
 
-{{-- El x-data controla la selección y apertura del Modal --}}
 <div class="max-w-5xl mx-auto space-y-4" x-data="{ openModal: false, horaSeleccionada: null, horaDisplay: '' }">
 
     {{-- Resumen superior --}}
@@ -31,18 +30,21 @@
                 </div>
 
                 <div class="space-y-0.5">
-                    <h3 class="text-blue-800 font-extrabold text-sm uppercase leading-tight pr-6">
+                    {{-- Especialidad: Negro y menos negrilla --}}
+                    <h3 class="text-black font-bold text-sm uppercase leading-tight pr-6">
                         {{ $especialidad }}
                     </h3>
                     <p class="text-gray-500 font-medium text-xs">
                         {{ $fecha->locale('es')->isoFormat('dddd, D MMMM') }}
                     </p>
-                    <p class="text-gray-800 font-black text-2xl py-0.5">
+                    {{-- Hora: Resaltada --}}
+                    <p class="text-gray-900 font-black text-3xl py-0.5">
                         {{ $slot['hora_display'] }}
                     </p>
 
                     <div class="border-t border-gray-100 pt-1.5">
-                        <p class="text-[11px] font-bold text-blue-600 uppercase">
+                        {{-- Modalidad: Negro y peso normal --}}
+                        <p class="text-[11px] font-medium text-black uppercase">
                             {{ $modalidades->firstWhere('id', $modalidad_id)?->nombre ?? 'MODALIDAD' }}
                         </p>
                     </div>
@@ -64,41 +66,72 @@
         <div class="fixed inset-0 bg-black/50 transition-opacity" @click="openModal = false"></div>
 
         <div class="flex min-h-full items-center justify-center p-4">
+            {{-- Fondo del modal con el color OKLCH de fondo si fuera necesario, pero lo mantenemos blanco para que resalten los textos --}}
             <div class="relative transform overflow-hidden rounded-2xl bg-white px-6 py-8 text-center shadow-xl transition-all w-full max-w-xs border border-gray-100">
                 
-                {{-- Cabecera Limpia --}}
-                <div class="mb-4">
-                    <h2 class="text-blue-600 font-black text-xl tracking-tight">Confirmar Cita</h2>
+                <div class="mb-4 text-center">
+                    <h2 class="font-black text-xl tracking-tight" style="color: oklch(0.25 0.05 267.26)">Confirmar Cita</h2>
                     <div class="w-12 h-1 bg-yellow-400 mx-auto mt-1"></div>
                 </div>
 
-                <p class="text-gray-500 text-sm mb-6 leading-tight">¿Estás seguro que deseas agendar esta cita médica?</p>
+                <p class="text-gray-500 text-sm mb-6 leading-tight italic">¿Estás seguro que deseas agendar esta cita médica?</p>
 
-                {{-- Detalles dinámicos --}}
-                <div class="text-gray-700 space-y-1 mb-8 text-sm">
-                    <p class="font-bold uppercase text-gray-900 border-b border-gray-50 pb-1 mb-2">{{ Auth::user()->name ?? Auth::user()->nombre ?? 'PACIENTE SIN NOMBRE'}}</p>
-                    <p class="text-blue-700 font-bold uppercase">{{ $especialidad }}</p>
-                    <p class="text-gray-500 font-medium italic">Modalidad: {{ $modalidades->firstWhere('id', $modalidad_id)?->nombre ?? '—' }}</p>
-                    <p>{{ $fecha->locale('es')->isoFormat('dddd, D MMMM YYYY') }}</p>
-                    <p class="font-bold text-xl text-gray-900" x-text="horaDisplay"></p>
+                {{-- Datos del Paciente y Cita --}}
+                <div class="text-gray-700 space-y-1 mb-6 text-sm">
+                    <p class="font-bold uppercase text-gray-900 border-b border-gray-50 pb-1 mb-2">
+                        {{ Auth::user()->name ?? Auth::user()->nombre ?? 'PACIENTE' }}
+                    </p>
+                    <p class="text-black font-medium uppercase">{{ $especialidad }}</p>
+                    <p class="text-black font-normal italic">
+                        Modalidad: {{ $modalidades->firstWhere('id', $modalidad_id)?->nombre ?? '—' }}
+                    </p>
+                    <p class="text-gray-600">{{ $fecha->locale('es')->isoFormat('dddd, D MMMM YYYY') }}</p>
+                    {{-- Hora Resaltada en Modal --}}
+                    <p class="font-black text-4xl text-gray-900 mt-2" x-text="horaDisplay"></p>
                 </div>
+
+                {{-- VALOR A PAGAR: Centrado y con color de fondo más suave --}}
+            <div class="rounded-2xl px-4 py-4 mb-8 flex flex-col items-center justify-center text-center shadow-sm" 
+                 style="background-color: oklch(0.4656 0.06 270);"> {{-- Color ajustado para no ser tan oscuro --}}
+                
+                <p class="text-[10px] font-medium text-gray-300 uppercase tracking-widest mb-1">Valor a cancelar en ventanilla</p>
+                
+                <div class="w-full">
+                    @if(isset($precio) && $precio !== null)
+                        <p class="text-white font-black text-3xl">${{ number_format($precio, 0, ',', '.') }}</p>
+                        @if(isset($portafolio))
+                            <p class="text-[10px] mt-0.5" style="color: rgba(255,255,255,0.65)">{{ $portafolio->nombre_convenio }}</p>
+                        @endif
+                    @elseif(isset($portafolio))
+                        <p class="text-white font-bold text-lg">Consultar en ventanilla</p>
+                        <p class="text-[10px] mt-0.5" style="color: rgba(255,255,255,0.65)">Tarifa {{ $portafolio->nombre_convenio }} no configurada aún</p>
+                    @else
+                        <p class="text-white font-bold text-lg leading-tight">Consultar en ventanilla</p>
+                        <p class="text-[10px] mt-1" style="color: rgba(255,255,255,0.65)">
+                            Actualiza tu cobertura en <a href="{{ route('paciente.perfil') }}" class="underline hover:text-white">Mi Perfil</a>
+                        </p>
+                    @endif
+                </div>
+            </div>
 
                 {{-- Botones --}}
                 <div class="flex flex-col gap-3">
                     <form method="POST" action="{{ route('paciente.agendar.reservar') }}">
                         @csrf
-                        <input type="hidden" name="paciente_nombre" value="{{ Auth::user()->name }}">
+                        <input type="hidden" name="paciente_nombre" value="{{ Auth::user()->name ?? Auth::user()->nombre }}">
                         <input type="hidden" name="especialidad" value="{{ $especialidad }}">
                         <input type="hidden" name="fecha" value="{{ $fecha->toDateString() }}">
                         <input type="hidden" name="modalidad_id" value="{{ $modalidad_id }}">
                         <input type="hidden" name="hora" :value="horaSeleccionada">
 
-                        <button type="submit" class="w-full bg-blue-700 text-white py-3 rounded-full font-bold uppercase text-sm shadow-md hover:bg-blue-800 transition">
-                            Agendar Cita
-                        </button>
-                    </form>
+                        {{-- BOTÓN AGENDAR: Con efecto Hover para aclarar el color --}}
+                    <button type="submit" 
+                            class="btn-confirmar w-full text-white py-4 rounded-full font-extrabold uppercase text-xs shadow-xl transition-all duration-300 active:scale-95">
+                        Agendar Cita
+                    </button>
+                </form>
 
-                    <button @click="openModal = false" class="w-full bg-gray-200 text-gray-500 py-3 rounded-full font-bold uppercase text-sm shadow-sm hover:bg-gray-300 transition">
+                <button @click="openModal = false" class="w-full bg-gray-100 text-gray-500 py-3 rounded-full font-bold uppercase text-xs hover:bg-gray-200 transition">
                         Cancelar
                     </button>
                 </div>
@@ -108,6 +141,21 @@
 </div>
 
 <style>
+    [x-cloak] { display: none !important; }
+</style>
+
+<style>
+    /* Estilo base del botón usando tu color OKLCH */
+    .btn-confirmar {
+        background-color: oklch(0.2 0.08 271.72);
+    }
+    
+    /* Efecto al pasar el cursor (Hover): Se aclara la luminosidad del OKLCH */
+    .btn-confirmar:hover {
+        background-color: oklch(0.3665 0.0464 289.69);
+        cursor: pointer;
+    }
+
     [x-cloak] { display: none !important; }
 </style>
 

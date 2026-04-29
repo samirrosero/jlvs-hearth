@@ -175,6 +175,23 @@
         :rutas-json="$chatbotRutas"
         mensaje-inicial="¡Hola! Soy tu asistente médico. Puedo decirte cuántas citas tienes hoy, el estado de tus pacientes o ayudarte a navegar. ¿En qué te puedo ayudar?"
     />
+{{-- Chatbot flotante --}}
+@php
+    $chatbotRutas = collect([
+        ['clave' => 'dashboard',  'label' => 'Ir al Dashboard',  'ruta' => 'gestor.dashboard'],
+        ['clave' => 'citas',      'label' => 'Ver Citas',         'ruta' => 'gestor.citas'],
+        ['clave' => 'pacientes',  'label' => 'Ver Pacientes',     'ruta' => 'gestor.pacientes'],
+    ])->filter(fn ($s) => Route::has($s['ruta']))
+      ->mapWithKeys(fn ($s) => [$s['clave'] => ['label' => $s['label'], 'url' => route($s['ruta'])]])
+      ->toJson();
+@endphp
+
+<x-chatbot
+    endpoint="{{ route('gestor.chatbot') }}"
+    storage-key="gestor"
+    :rutas-json="$chatbotRutas"
+    mensaje-inicial="¡Hola! Soy tu asistente. Puedo decirte cuántas citas hay hoy, buscar pacientes o ayudarte a navegar. ¿En qué te puedo ayudar?"
+/>
 
     @stack('scripts')
 </body>

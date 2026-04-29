@@ -108,8 +108,8 @@ class LoginController extends Controller
             'paciente'     => redirect()->route('paciente.dashboard'),
             'medico'       => redirect()->route('medico.dashboard'),
             'administrador',
-            'gestor_citas' => redirect()->route('admin.dashboard'),
-            default        => redirect()->route('admin.dashboard'),
+            'gestor_citas' => redirect()->route('gestor.dashboard'),
+            default        => redirect()->route('gestor.dashboard'),
         };
     }
 

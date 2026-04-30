@@ -57,6 +57,7 @@ use App\Http\Controllers\GestorCitas\ReasignarCitasMedicoController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Gestor\GestorDashboardController;
 use App\Http\Controllers\Gestor\GestorCitasController;
+use App\Http\Controllers\Admin\ChatbotController;
 use App\Http\Controllers\Gestor\GestorPacientesController;
 
 // ─────────────────────────────────────────────────────────────
@@ -496,3 +497,5 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('/chatbot', [ChatbotController::class, 'chat'])->name('chatbot');
     });
 });
+//ruta grupo gestor 
+Route::post('/chatbot', [ChatbotController::class, 'chat'])->name('chatbot');

@@ -102,27 +102,63 @@
         </div>
     </div>
 
-    {{-- Información Personal --}}
-    <div>
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-            <h3 class="font-bold text-gray-800 mb-4">Mi Información</h3>
-            <div class="space-y-4">
-                <div>
-                    <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Identificación</p>
-                    <p class="text-sm text-gray-700 font-medium">{{ $paciente->identificacion }}</p>
-                </div>
-                <div>
-                    <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Teléfono</p>
-                    <p class="text-sm text-gray-700 font-medium">{{ $paciente->telefono ?? 'No registrado' }}</p>
-                </div>
-                <div>
-                    <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Correo</p>
-                    <p class="text-sm text-gray-700 font-medium">{{ $paciente->correo ?? auth()->user()->email }}</p>
-                </div>
+{{-- Contenedor de la columna derecha --}}
+<div class="space-y-6"> 
+
+    {{-- Bloque 1: Información Personal --}}
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <h3 class="font-bold text-gray-800 mb-4">Mi Información</h3>
+        <div class="space-y-4">
+            <div>
+                <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Identificación</p>
+                <p class="text-sm text-gray-700 font-medium">{{ $paciente->identificacion }}</p>
+            </div>
+            <div>
+                <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Teléfono</p>
+                <p class="text-sm text-gray-700 font-medium">{{ $paciente->telefono ?? 'No registrado' }}</p>
+            </div>
+            <div>
+                <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Correo</p>
+                <p class="text-sm text-gray-700 font-medium">{{ $paciente->correo ?? auth()->user()->email }}</p>
             </div>
         </div>
     </div>
-</div>
+
+    {{-- Bloque 2: Certificado --}}
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="font-bold text-gray-800">Certificado</h3>
+            <span class="bg-green-100 text-green-600 text-[10px] font-bold px-2 py-1 rounded-md">ACTIVO</span>
+        </div>
+        
+        <div class="space-y-4">
+            <div>
+                <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">Documento de Afiliación</p>
+                <p class="text-sm text-gray-700 font-medium">Descarga tu soporte de la IPS en formato PDF.</p>
+            </div>
+
+            <div class="flex items-center justify-between bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                <div class="flex items-center gap-3">
+                    <div class="bg-[#0a1033] p-2 rounded-lg">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-sm font-bold text-slate-800">Certificado.pdf</p>
+                        <p class="text-[10px] text-slate-400">145 KB</p>
+                    </div>
+                </div>
+                
+                <a href="{{ route('paciente.certificado.descargar') }}" 
+                   class="text-[#0a1033] font-black text-[11px] hover:underline underline-offset-4">
+                    DESCARGAR
+                </a>
+            </div>
+        </div>
+    </div>
+
+</div> 
 
 {{-- Modal para Agendar Cita --}}
 <div x-show="openModal" class="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto" style="display: none;">

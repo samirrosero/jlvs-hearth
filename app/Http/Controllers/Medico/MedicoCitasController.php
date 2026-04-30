@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Medico;
 use App\Http\Controllers\Controller;
 use App\Models\Cita;
 use App\Models\EstadoCita;
+use Illuminate\Http\Request;
 
 class MedicoCitasController extends Controller
 {
@@ -40,5 +41,18 @@ class MedicoCitasController extends Controller
         ]);
 
         return view('medico.citas.atender', compact('cita'));
+    }
+
+    public function actualizarLink(Request $request, Cita $cita)
+    {
+        abort_if($cita->medico_id !== auth()->user()->medico->id, 403);
+
+        $request->validate([
+            'link_videollamada' => ['nullable', 'url', 'max:500'],
+        ]);
+
+        $cita->update(['link_videollamada' => $request->link_videollamada]);
+
+        return response()->json(['link_videollamada' => $cita->link_videollamada]);
     }
 }

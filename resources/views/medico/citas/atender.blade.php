@@ -104,6 +104,79 @@
                 </div>
             </div>
 
+            {{-- Videollamada — solo Telemedicina --}}
+            @if (($cita->modalidad->nombre ?? '') === 'Telemedicina')
+            <div x-data="{
+                    link: '{{ $cita->link_videollamada ?? '' }}',
+                    editando: {{ $cita->link_videollamada ? 'false' : 'true' }},
+                    guardando: false,
+                    mensaje: '',
+                    async guardar() {
+                        this.guardando = true;
+                        this.mensaje = '';
+                        try {
+                            const res = await fetch('{{ route('medico.citas.link-video', $cita) }}', {
+                                method: 'PATCH',
+                                headers: jsonHeaders(),
+                                body: JSON.stringify({ link_videollamada: this.link }),
+                            });
+                            const data = await res.json();
+                            if (res.ok) {
+                                this.link = data.link_videollamada ?? '';
+                                this.editando = false;
+                                this.mensaje = 'Link guardado.';
+                                setTimeout(() => this.mensaje = '', 3000);
+                            }
+                        } finally { this.guardando = false; }
+                    }
+                 }"
+                 class="border-t border-gray-100 pt-3 space-y-2">
+
+                {{-- Campo editable --}}
+                <template x-if="editando">
+                    <div class="space-y-2">
+                        <label class="text-xs text-gray-500 font-medium">Link de videollamada</label>
+                        <input type="url" x-model="link"
+                               placeholder="https://meet.google.com/xxx-xxxx-xxx"
+                               class="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <div class="flex gap-2">
+                            <button @click="guardar()" :disabled="guardando || !link"
+                                    class="flex-1 bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white text-xs font-semibold py-2 rounded-lg transition">
+                                <span x-text="guardando ? 'Guardando...' : 'Guardar link'"></span>
+                            </button>
+                            <template x-if="link">
+                                <button @click="editando = false"
+                                        class="px-3 py-2 text-xs text-gray-500 hover:text-gray-700 border border-gray-200 rounded-lg transition">
+                                    Cancelar
+                                </button>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+
+                {{-- Botón de acción cuando ya hay link --}}
+                <template x-if="!editando && link">
+                    <div class="space-y-2">
+                        <a :href="link" target="_blank" rel="noopener"
+                           class="w-full inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2.5 rounded-lg transition">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.26a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                            Iniciar videollamada
+                        </a>
+                        <button @click="editando = true"
+                                class="w-full text-xs text-gray-400 hover:text-gray-600 transition text-center">
+                            Cambiar link
+                        </button>
+                    </div>
+                </template>
+
+                {{-- Confirmación de guardado --}}
+                <p x-show="mensaje" x-text="mensaje" class="text-xs text-emerald-600 text-center"></p>
+            </div>
+            @endif
+
             {{-- Control inicio/fin de atención --}}
             <div class="border-t border-gray-100 pt-4 mt-auto">
                 <template x-if="!estado.ejecucion">

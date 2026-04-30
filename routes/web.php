@@ -397,6 +397,7 @@ Route::prefix('medico')->name('medico.')->middleware(['auth', 'role:medico'])->g
 
     Route::get('/citas',              [MedicoCitasController::class, 'index'])->name('citas');
     Route::get('/citas/{cita}',       [MedicoCitasController::class, 'atender'])->name('citas.atender');
+    Route::patch('/citas/{cita}/link-video', [MedicoCitasController::class, 'actualizarLink'])->name('citas.link-video');
 
     Route::get('/pacientes',                [MedicoPacientesController::class, 'index'])->name('pacientes');
     Route::get('/pacientes/{paciente}',     [MedicoPacientesController::class, 'show'])->name('pacientes.show');
@@ -423,6 +424,9 @@ Route::prefix('paciente')->name('paciente.')->middleware(['auth', 'role:paciente
 
     Route::patch('/citas/{cita}/cancelar', [PacienteCitasController::class, 'cancelar'])
         ->name('citas.cancelar');
+
+    Route::get('/citas/{cita}/videollamada', [PacienteCitasController::class, 'videollamada'])
+        ->name('citas.videollamada');
 
     Route::get('/agendar', [AgendarCitaVistaController::class, 'index'])->name('agendar');
     Route::get('/agendar/disponible', [AgendarCitaVistaController::class, 'disponible'])->name('agendar.disponible');

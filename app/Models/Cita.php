@@ -20,6 +20,7 @@ class Cita extends Model
         'servicio_id',
         'fecha',
         'hora',
+        'link_videollamada',
         'activo',
     ];
 

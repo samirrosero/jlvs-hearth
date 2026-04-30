@@ -74,6 +74,16 @@ class PacienteCitasController extends Controller
             ->with('success', 'Cita agendada exitosamente.');
     }
 
+    public function videollamada(Cita $cita)
+    {
+        abort_if($cita->paciente_id !== auth()->user()->paciente->id, 403);
+        abort_if(strtolower($cita->modalidad->nombre ?? '') !== 'telemedicina', 404);
+
+        $cita->load('medico.usuario', 'estado', 'modalidad', 'servicio');
+
+        return view('paciente.citas.videollamada', compact('cita'));
+    }
+
     public function cancelar(Cita $cita): RedirectResponse
     {
         abort_if($cita->paciente_id !== auth()->user()->paciente->id, 403);

@@ -8,6 +8,7 @@ use App\Models\HistoriaClinica;
 use App\Models\Medico;
 use App\Models\Servicio;
 use App\Models\ModalidadCita;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class PacienteDashboardController extends Controller
 {
@@ -40,4 +41,21 @@ class PacienteDashboardController extends Controller
             'medicos', 'servicios', 'modalidades'
         ));
     }
+    // Por ahora solo retornamos un texto para probar que la ruta funciona
+public function descargarCertificado()
+{
+    // Cargamos el paciente con su relación de empresa
+    $paciente = \App\Models\Paciente::with('empresa')
+                ->where('usuario_id', auth()->id())
+                ->first();
+
+    if (!$paciente) {
+        return back()->with('error', 'No se encontró información.');
+    }
+
+    $pdf = Pdf::loadView('paciente.certificado_pdf', compact('paciente'));
+    
+    return $pdf->stream('Certificado_' . $paciente->identificacion . '.pdf');
+}
+
 }

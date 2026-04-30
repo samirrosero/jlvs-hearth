@@ -57,7 +57,6 @@ use App\Http\Controllers\GestorCitas\ReasignarCitasMedicoController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Gestor\GestorDashboardController;
 use App\Http\Controllers\Gestor\GestorCitasController;
-use App\Http\Controllers\Admin\ChatbotController;
 use App\Http\Controllers\Gestor\GestorPacientesController;
 
 // ─────────────────────────────────────────────────────────────
@@ -413,6 +412,9 @@ Route::prefix('paciente')->name('paciente.')->middleware(['auth', 'role:paciente
 
     Route::get('/dashboard', PacienteDashboardController::class)->name('dashboard');
 
+      Route::get('/certificado-afiliacion', [App\Http\Controllers\Paciente\PacienteDashboardController::class, 'descargarCertificado'])
+        ->name('certificado.descargar');
+
     Route::get('/citas', [PacienteCitasController::class, 'index'])->name('citas');
     Route::post('/citas', [PacienteCitasController::class, 'store'])->name('citas.store');
 
@@ -420,6 +422,10 @@ Route::prefix('paciente')->name('paciente.')->middleware(['auth', 'role:paciente
     Route::get('/historial/{historia}', [PacienteHistorialController::class, 'show'])->name('historial.show');
     Route::get('/historial/{historia}/pdf', [PacienteHistorialController::class, 'pdf'])->name('historial.pdf');
     Route::post('/historial/{historia}/correo', [PacienteHistorialController::class, 'enviarCorreo'])->name('historial.correo');
+
+    // Dentro del grupo de rutas del paciente
+Route::get('/paciente/certificado-afiliacion', [App\Http\Controllers\Paciente\PacienteDashboardController::class, 'descargarCertificado'])
+    ->name('paciente.certificado.descargar');
 
     Route::post('/citas/agendar', AgendarCitaPacienteController::class)->name('citas.agendar');
 

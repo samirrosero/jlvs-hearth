@@ -107,7 +107,7 @@ class LoginController extends Controller
         return match($rol) {
             'paciente'     => redirect()->route('paciente.dashboard'),
             'medico'       => redirect()->route('medico.dashboard'),
-            'administrador',
+            'administrador' => redirect()->route('admin.dashboard'),
             'gestor_citas' => redirect()->route('gestor.dashboard'),
             default        => redirect()->route('gestor.dashboard'),
         };

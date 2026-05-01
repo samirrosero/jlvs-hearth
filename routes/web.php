@@ -59,6 +59,20 @@ use App\Http\Controllers\Gestor\GestorDashboardController;
 use App\Http\Controllers\Gestor\GestorCitasController;
 use App\Http\Controllers\Gestor\GestorPacientesController;
 
+use App\Http\Controllers\GestorController;
+
+// ... el resto de tus rutas ...
+
+Route::prefix('gestor')->group(function () {
+    // Dashboard
+    Route::get('/dashboard', [GestorController::class, 'index'])->name('gestor.dashboard');
+
+    // Rutas para SaludIT
+    Route::post('/citas/agendar', [GestorController::class, 'store'])->name('gestor.citas.agendar');
+    Route::put('/citas/reprogramar/{id}', [GestorController::class, 'update'])->name('gestor.citas.update');
+    Route::delete('/citas/cancelar/{id}', [GestorController::class, 'destroy'])->name('gestor.citas.cancelar');
+});
+
 // ─────────────────────────────────────────────────────────────
 // Landing page
 // ─────────────────────────────────────────────────────────────

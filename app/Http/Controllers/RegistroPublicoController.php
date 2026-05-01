@@ -82,12 +82,11 @@ class RegistroPublicoController extends Controller
             'correo_confirmation' => ['required'],
             'password'          => ['required', 'string', 'min:8', 'confirmed'],
             'password_confirmation' => ['required'],
-            'portafolio_id'     => ['required', 'exists:portafolios,id'],
+            'portafolio_id'     => ['nullable', 'exists:portafolios,id'],
             'nombre_aseguradora'=> ['nullable', 'string', 'max:100'],
             'numero_poliza'     => ['nullable', 'string', 'max:60'],
         ], [
-            'portafolio_id.required' => 'Selecciona tu tipo de cobertura.',
-            'portafolio_id.exists'   => 'La cobertura seleccionada no es válida.',
+            'portafolio_id.exists' => 'La cobertura seleccionada no es válida.',
         ]);
 
         // Verificar que la identificación no exista ya

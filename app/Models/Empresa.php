@@ -48,6 +48,12 @@ class Empresa extends Model
         'icono_pac_citas_path',
         'icono_pac_historial_path',
         'icono_pac_perfil_path',
+        // Iconos del panel del médico
+        'icono_medico_dashboard_path',
+        'icono_medico_citas_path',
+        'icono_medico_pacientes_path',
+        // Icono de Horarios (admin)
+        'icono_horarios_path',
     ];
 
     protected $appends = [
@@ -61,6 +67,10 @@ class Empresa extends Model
         // Iconos portal paciente
         'icono_pac_inicio_url', 'icono_pac_citas_url',
         'icono_pac_historial_url', 'icono_pac_perfil_url',
+        // Iconos panel médico
+        'icono_medico_dashboard_url', 'icono_medico_citas_url', 'icono_medico_pacientes_url',
+        // Icono horarios (admin)
+        'icono_horarios_url',
     ];
 
     protected function casts(): array
@@ -170,6 +180,26 @@ class Empresa extends Model
     public function getIconoPacPerfilUrlAttribute(): ?string
     {
         return $this->icono_pac_perfil_path ? Storage::disk('public')->url($this->icono_pac_perfil_path) : null;
+    }
+
+    // ── Iconos del panel del médico ───────────────────────────────────────
+    public function getIconoMedicoDashboardUrlAttribute(): ?string
+    {
+        return $this->icono_medico_dashboard_path ? Storage::disk('public')->url($this->icono_medico_dashboard_path) : null;
+    }
+    public function getIconoMedicoCitasUrlAttribute(): ?string
+    {
+        return $this->icono_medico_citas_path ? Storage::disk('public')->url($this->icono_medico_citas_path) : null;
+    }
+    public function getIconoMedicoPacientesUrlAttribute(): ?string
+    {
+        return $this->icono_medico_pacientes_path ? Storage::disk('public')->url($this->icono_medico_pacientes_path) : null;
+    }
+
+    // ── Icono de Horarios (admin) ─────────────────────────────────────────
+    public function getIconoHorariosUrlAttribute(): ?string
+    {
+        return $this->icono_horarios_path ? Storage::disk('public')->url($this->icono_horarios_path) : null;
     }
 
     // Una empresa tiene muchos usuarios

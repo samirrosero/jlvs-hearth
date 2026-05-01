@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Cita;
 use App\Models\HistoriaClinica;
 use App\Models\Medico;
+use App\Models\OrdenMedica;
 use App\Models\Servicio;
 use App\Models\ModalidadCita;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -31,6 +32,13 @@ class PacienteDashboardController extends Controller
         // Total de historias clínicas
         $totalHistorias = HistoriaClinica::where('paciente_id', $paciente->id)->count();
 
+        // Órdenes médicas pendientes de autorización
+        $ordenesPendientes = OrdenMedica::where('paciente_id', $paciente->id)
+            ->where('estado', 'pendiente')
+            ->with('historiaClinica.ejecucionCita.cita.medico.usuario')
+            ->orderByDesc('created_at')
+            ->get();
+
         // Datos para el modal de agendamiento
         $medicos = Medico::with('usuario')->get();
         $servicios = Servicio::all();
@@ -38,7 +46,7 @@ class PacienteDashboardController extends Controller
 
         return view('paciente.dashboard', compact(
             'paciente', 'proximasCitas', 'totalCitas', 'totalHistorias',
-            'medicos', 'servicios', 'modalidades'
+            'ordenesPendientes', 'medicos', 'servicios', 'modalidades'
         ));
     }
     // Por ahora solo retornamos un texto para probar que la ruta funciona

@@ -34,7 +34,7 @@
             background-color: rgba(255,255,255,.18);
             color: #fff;
         }
-        #app-sidebar .nav-item img { filter: brightness(0) invert(1); opacity: .7; }
+        #app-sidebar .nav-item img { filter: grayscale(1) contrast(100) invert(1); opacity: .7; }
         #app-sidebar .nav-item.activo img,
         #app-sidebar .nav-item:hover img { opacity: 1; }
         #app-sidebar .sidebar-divider   { border-color: rgba(255,255,255,.1); }
@@ -44,8 +44,8 @@
             color: rgba(255,255,255,.55);
         }
         #app-sidebar .sidebar-logout:hover { color: #fff; }
-        #app-sidebar .sidebar-logout img { filter: brightness(0) invert(1); opacity: .55; }
-        #app-sidebar .sidebar-logout:hover img { opacity: 1; }
+        #app-sidebar .sidebar-logout svg { opacity: .6; }
+        #app-sidebar .sidebar-logout:hover svg { opacity: 1; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     @stack('styles')
@@ -96,7 +96,7 @@
                     ],
                     [
                         'route' => 'admin.horarios',
-                        'icon'  => $empresa?->icono_medicos_url ?? asset('img/icons/medicos.png'),
+                        'icon'  => $empresa?->icono_horarios_url ?: asset('img/icons/citas-mes.png'),
                         'label' => 'Horarios',
                     ],
                     [
@@ -126,7 +126,10 @@
                 @csrf
                 <button type="submit"
                     class="sidebar-logout w-full text-left text-sm flex items-center gap-2 transition">
-                    <img src="{{ asset('img/icons/logout.png') }}" alt="Cerrar sesión" class="w-4 h-4 flex-shrink-0">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                    </svg>
                     Cerrar sesión
                 </button>
             </form>

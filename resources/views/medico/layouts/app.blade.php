@@ -33,7 +33,7 @@
             background-color: rgba(255,255,255,.18);
             color: #fff;
         }
-        #medico-sidebar .nav-item img { filter: brightness(0) invert(1); opacity: .7; }
+        #medico-sidebar .nav-item img { filter: grayscale(1) contrast(100) invert(1); opacity: .7; }
         #medico-sidebar .nav-item.activo img,
         #medico-sidebar .nav-item:hover img { opacity: 1; }
         #medico-sidebar .sidebar-divider   { border-color: rgba(255,255,255,.1); }
@@ -41,8 +41,8 @@
         #medico-sidebar .sidebar-role      { color: rgba(255,255,255,.5); }
         #medico-sidebar .sidebar-logout    { color: rgba(255,255,255,.55); }
         #medico-sidebar .sidebar-logout:hover { color: #fff; }
-        #medico-sidebar .sidebar-logout img { filter: brightness(0) invert(1); opacity: .55; }
-        #medico-sidebar .sidebar-logout:hover img { opacity: 1; }
+        #medico-sidebar .sidebar-logout svg { opacity: .6; }
+        #medico-sidebar .sidebar-logout:hover svg { opacity: 1; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     @stack('styles')
@@ -50,7 +50,7 @@
 <body class="bg-gray-100 antialiased" x-data="{ sidebarOpen: false }">
 
     {{-- ── Sidebar ─────────────────────────────────────────────── --}}
-    <aside id="paciente-sidebar"
+    <aside id="medico-sidebar"
         class="fixed inset-y-0 left-0 z-50 w-64 flex flex-col transition-transform duration-300 md:translate-x-0"
         :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'"
     >
@@ -68,20 +68,44 @@
                 $nav = [
                     [
                         'route' => 'medico.dashboard',
-                        'icon'  => $empresa?->icono_dashboard_url ?? asset('img/icons/dashboard.png'),
+                        'icon'  => $empresa?->icono_medico_dashboard_url ?: asset('img/icons/dashboard.png'),
                         'label' => 'Dashboard',
+                    ],
+                    [
+                        'route' => 'medico.agenda',
+                        'match' => 'medico.agenda*',
+                        'svg'   => '<svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>',
+                        'label' => 'Mi Agenda',
                     ],
                     [
                         'route' => 'medico.citas',
                         'match' => 'medico.citas*',
-                        'icon'  => $empresa?->icono_card_citas_url ?? asset('img/icons/citas-mes.png'),
+                        'icon'  => $empresa?->icono_medico_citas_url ?: asset('img/icons/citas-mes.png'),
                         'label' => 'Mis Citas',
                     ],
                     [
                         'route' => 'medico.pacientes',
                         'match' => 'medico.pacientes*',
-                        'icon'  => $empresa?->icono_pacientes_url ?? asset('img/icons/pacientes.png'),
+                        'icon'  => $empresa?->icono_medico_pacientes_url ?: asset('img/icons/pacientes.png'),
                         'label' => 'Mis Pacientes',
+                    ],
+                    [
+                        'route' => 'medico.horario',
+                        'match' => 'medico.horario*',
+                        'svg'   => '<svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>',
+                        'label' => 'Mi Horario',
+                    ],
+                    [
+                        'route' => 'medico.ordenes',
+                        'match' => 'medico.ordenes*',
+                        'svg'   => '<svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>',
+                        'label' => 'Órdenes Emitidas',
+                    ],
+                    [
+                        'route' => 'medico.perfil',
+                        'match' => 'medico.perfil*',
+                        'svg'   => '<svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>',
+                        'label' => 'Mi Perfil',
                     ],
                 ];
             @endphp
@@ -91,7 +115,11 @@
                 <a href="{{ route($item['route']) }}"
                    class="nav-item flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition
                           {{ request()->routeIs($item['match'] ?? $item['route']) ? 'activo' : '' }}">
-                    <img src="{{ $item['icon'] }}" alt="{{ $item['label'] }}" class="w-5 h-5 flex-shrink-0">
+                    @if (!empty($item['svg']))
+                        {!! $item['svg'] !!}
+                    @else
+                        <img src="{{ $item['icon'] }}" alt="{{ $item['label'] }}" class="w-5 h-5 flex-shrink-0">
+                    @endif
                     {{ $item['label'] }}
                 </a>
                 @endif
@@ -107,7 +135,10 @@
                 @csrf
                 <button type="submit"
                     class="sidebar-logout w-full text-left text-sm flex items-center gap-2 transition">
-                    <img src="{{ asset('img/icons/logout.png') }}" alt="Cerrar sesión" class="w-4 h-4 flex-shrink-0">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                    </svg>
                     Cerrar sesión
                 </button>
             </form>

@@ -7,6 +7,8 @@
         $cs  = $empresa->color_secundario ?? '#1e3a8a';
     @endphp
     <style>
+        @page { margin: 2cm; }
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: DejaVu Sans, sans-serif; font-size: 10px; color: #1a1a1a; line-height: 1.45; }
 

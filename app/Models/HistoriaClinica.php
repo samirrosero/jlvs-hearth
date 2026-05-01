@@ -55,4 +55,10 @@ class HistoriaClinica extends Model
     {
         return $this->hasMany(DocumentoAdjunto::class, 'historia_clinica_id');
     }
+
+    // Una historia puede tener varias órdenes médicas
+    public function ordenesMedicas(): HasMany
+    {
+        return $this->hasMany(OrdenMedica::class, 'historia_clinica_id');
+    }
 }

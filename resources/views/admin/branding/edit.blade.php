@@ -407,6 +407,71 @@
             </div>
         </div>
 
+        {{-- ══ FILA 5: Iconos del Panel del Médico ════════════════════════════ --}}
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-100">
+                <h2 class="text-sm font-semibold text-gray-800">Iconos del panel del médico</h2>
+                <p class="text-xs text-gray-400 mt-0.5">Iconos exclusivos del menú lateral que ve el médico. Independientes del panel administrativo. PNG, SVG o WEBP · máx. 512 KB.</p>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                    @php
+                        $iconosMedico = [
+                            'icono_medico_dashboard'  => ['label' => 'Dashboard',      'sub' => 'Inicio del médico',         'preview' => $empresa->icono_medico_dashboard_url],
+                            'icono_medico_citas'      => ['label' => 'Mis Citas',       'sub' => 'Agenda del médico',          'preview' => $empresa->icono_medico_citas_url],
+                            'icono_medico_pacientes'  => ['label' => 'Mis Pacientes',   'sub' => 'Lista de pacientes',         'preview' => $empresa->icono_medico_pacientes_url],
+                        ];
+                    @endphp
+                    @foreach($iconosMedico as $key => $info)
+                    <div>
+                        <p class="text-xs font-medium text-gray-700 mb-0.5">{{ $info['label'] }}</p>
+                        <p class="text-[10px] text-gray-400 mb-2">{{ $info['sub'] }}</p>
+                        <div class="upload-zone-sm" onclick="document.getElementById('{{ $key }}-input').click()">
+                            @if($info['preview'])
+                                <img id="{{ $key }}-preview" src="{{ $info['preview'] }}" alt="{{ $info['label'] }}" class="h-10 w-10 mx-auto object-contain">
+                            @else
+                                <img id="{{ $key }}-preview" src="" alt="" class="h-10 w-10 mx-auto object-contain hidden">
+                                <svg class="w-6 h-6 mx-auto text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14"/>
+                                </svg>
+                            @endif
+                        </div>
+                        <input type="file" name="{{ $key }}" id="{{ $key }}-input"
+                               accept="image/png,image/svg+xml,image/webp" class="hidden"
+                               onchange="previewIcon(this,'{{ $key }}-preview')">
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+
+        {{-- ══ FILA 6: Icono de Horarios (admin) ══════════════════════════════ --}}
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-100">
+                <h2 class="text-sm font-semibold text-gray-800">Icono de Horarios</h2>
+                <p class="text-xs text-gray-400 mt-0.5">Icono para la sección Horarios del panel administrativo. PNG, SVG o WEBP · máx. 512 KB.</p>
+            </div>
+            <div class="p-6">
+                <div class="w-32">
+                    <p class="text-xs font-medium text-gray-700 mb-0.5">Horarios</p>
+                    <p class="text-[10px] text-gray-400 mb-2">Gestión de horarios</p>
+                    <div class="upload-zone-sm" onclick="document.getElementById('icono_horarios-input').click()">
+                        @if($empresa->icono_horarios_url)
+                            <img id="icono_horarios-preview" src="{{ $empresa->icono_horarios_url }}" alt="Horarios" class="h-10 w-10 mx-auto object-contain">
+                        @else
+                            <img id="icono_horarios-preview" src="" alt="" class="h-10 w-10 mx-auto object-contain hidden">
+                            <svg class="w-6 h-6 mx-auto text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14"/>
+                            </svg>
+                        @endif
+                    </div>
+                    <input type="file" name="icono_horarios" id="icono_horarios-input"
+                           accept="image/png,image/svg+xml,image/webp" class="hidden"
+                           onchange="previewIcon(this,'icono_horarios-preview')">
+                </div>
+            </div>
+        </div>
+
         {{-- ══ GUARDAR ══════════════════════════════════════════════════════════ --}}
         <div class="flex items-center justify-between">
             <p class="text-xs text-gray-400">Los cambios se aplican de inmediato en todas las vistas de esta IPS.</p>

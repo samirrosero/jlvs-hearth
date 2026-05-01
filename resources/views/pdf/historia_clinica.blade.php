@@ -7,6 +7,8 @@
         $cs  = $empresa->color_secundario ?? '#1e3a8a';
     @endphp
     <style>
+        @page { margin: 2cm; }
+
         * {
             margin: 0;
             padding: 0;

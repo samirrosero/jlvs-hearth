@@ -24,7 +24,7 @@
         #paciente-sidebar .nav-item          { color: rgba(255,255,255,.65); }
         #paciente-sidebar .nav-item:hover    { background-color: rgba(255,255,255,.1); color: #fff; }
         #paciente-sidebar .nav-item.activo   { background-color: rgba(255,255,255,.18); color: #fff; }
-        #paciente-sidebar .nav-item img      { filter: brightness(0) invert(1); opacity: .7; }
+        #paciente-sidebar .nav-item img      { filter: grayscale(1) contrast(100) invert(1); opacity: .7; }
         #paciente-sidebar .nav-item.activo img,
         #paciente-sidebar .nav-item:hover img { opacity: 1; }
         #paciente-sidebar .sidebar-divider   { border-color: rgba(255,255,255,.1); }
@@ -32,8 +32,8 @@
         #paciente-sidebar .sidebar-role      { color: rgba(255,255,255,.5); }
         #paciente-sidebar .sidebar-logout    { color: rgba(255,255,255,.55); }
         #paciente-sidebar .sidebar-logout:hover { color: #fff; }
-        #paciente-sidebar .sidebar-logout img { filter: brightness(0) invert(1); opacity: .55; }
-        #paciente-sidebar .sidebar-logout:hover img { opacity: 1; }
+        #paciente-sidebar .sidebar-logout svg { opacity: .6; }
+        #paciente-sidebar .sidebar-logout:hover svg { opacity: 1; }
     </style>
     @stack('styles')
 </head>
@@ -80,6 +80,18 @@
                         'label' => 'Mi Historial',
                     ],
                     [
+                        'route' => 'paciente.ordenes',
+                        'match' => 'paciente.ordenes*',
+                        'icon'  => asset('img/icons/citas-mes.png'),
+                        'label' => 'Mis Órdenes',
+                    ],
+                    [
+                        'route' => 'paciente.certificados',
+                        'match' => 'paciente.certificados*',
+                        'svg'   => '<svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>',
+                        'label' => 'Certificados',
+                    ],
+                    [
                         'route' => 'paciente.perfil',
                         'match' => 'paciente.perfil*',
                         'icon'  => $empresa?->icono_pac_perfil_url ?: asset('img/icons/pacientes.png'),
@@ -93,7 +105,11 @@
                 <a href="{{ route($item['route']) }}"
                    class="nav-item flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition
                           {{ request()->routeIs($item['match'] ?? $item['route']) ? 'activo' : '' }}">
-                    <img src="{{ $item['icon'] }}" alt="{{ $item['label'] }}" class="w-5 h-5 flex-shrink-0">
+                    @if (!empty($item['svg']))
+                        {!! $item['svg'] !!}
+                    @else
+                        <img src="{{ $item['icon'] }}" alt="{{ $item['label'] }}" class="w-5 h-5 flex-shrink-0">
+                    @endif
                     {{ $item['label'] }}
                 </a>
                 @endif
@@ -115,7 +131,10 @@
                 @csrf
                 <button type="submit"
                     class="sidebar-logout w-full text-left text-sm flex items-center gap-2 transition">
-                    <img src="{{ asset('img/icons/logout.png') }}" alt="Cerrar sesión" class="w-4 h-4 flex-shrink-0">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                    </svg>
                     Cerrar sesión
                 </button>
             </form>

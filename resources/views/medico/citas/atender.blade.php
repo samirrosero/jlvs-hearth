@@ -10,12 +10,16 @@
     $historia     = $ejecucion?->historiaClinica;
     $signos       = $ejecucion?->signosVitales;
     $receta       = $historia?->recetasMedicas?->first();
+    $ordenes      = $historia?->ordenesMedicas ?? collect();
+    $esVirtual    = ($cita->modalidad->nombre ?? '') === 'Telemedicina';
     $consultaData = [
         'cita_id'   => $cita->id,
         'ejecucion' => $ejecucion,
         'historia'  => $historia,
         'signos'    => $signos,
         'receta'    => $receta,
+        'ordenes'   => $ordenes->values()->toArray(),
+        'paciente_id' => $cita->paciente_id,
     ];
 @endphp
 
@@ -105,7 +109,7 @@
             </div>
 
             {{-- Videollamada — solo Telemedicina --}}
-            @if (($cita->modalidad->nombre ?? '') === 'Telemedicina')
+            @if ($esVirtual)
             <div x-data="{
                     link: '{{ $cita->link_videollamada ?? '' }}',
                     editando: {{ $cita->link_videollamada ? 'false' : 'true' }},
@@ -132,7 +136,6 @@
                  }"
                  class="border-t border-gray-100 pt-3 space-y-2">
 
-                {{-- Campo editable --}}
                 <template x-if="editando">
                     <div class="space-y-2">
                         <label class="text-xs text-gray-500 font-medium">Link de videollamada</label>
@@ -154,7 +157,6 @@
                     </div>
                 </template>
 
-                {{-- Botón de acción cuando ya hay link --}}
                 <template x-if="!editando && link">
                     <div class="space-y-2">
                         <a :href="link" target="_blank" rel="noopener"
@@ -172,7 +174,6 @@
                     </div>
                 </template>
 
-                {{-- Confirmación de guardado --}}
                 <p x-show="mensaje" x-text="mensaje" class="text-xs text-emerald-600 text-center"></p>
             </div>
             @endif
@@ -208,16 +209,26 @@
         </div>
     </div>
 
-    {{-- ── Tabs: Signos / Historia / Receta ──────────────────────── --}}
+    {{-- ── Tabs ──────────────────────────────────────────────────── --}}
     <div x-data="{ tab: 'signos' }" class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
 
         {{-- Tab nav --}}
-        <div class="flex border-b border-gray-100">
-            @foreach ([['signos', 'Signos Vitales'], ['historia', 'Historia Clínica'], ['receta', 'Receta Médica']] as [$key, $label])
+        <div class="flex border-b border-gray-100 overflow-x-auto">
+            @foreach ([
+                ['signos',  'Signos Vitales'],
+                ['historia','Historia Clínica'],
+                ['receta',  'Receta Médica'],
+                ['ordenes', 'Órdenes Médicas'],
+            ] as [$key, $label])
             <button @click="tab = '{{ $key }}'"
                     :class="tab === '{{ $key }}' ? 'border-b-2 border-gray-900 text-gray-900 font-semibold' : 'text-gray-500 hover:text-gray-700'"
-                    class="px-5 py-3.5 text-sm transition">
+                    class="px-5 py-3.5 text-sm transition whitespace-nowrap">
                 {{ $label }}
+                @if ($key === 'ordenes' && $ordenes->where('estado','pendiente')->count() > 0)
+                    <span class="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full bg-amber-400 text-white text-[10px] font-bold">
+                        {{ $ordenes->where('estado','pendiente')->count() }}
+                    </span>
+                @endif
             </button>
             @endforeach
         </div>
@@ -231,6 +242,37 @@
                 </template>
             </div>
 
+            @if ($esVirtual)
+            {{-- Cita virtual: solo observaciones --}}
+            <div class="mb-5 flex items-start gap-3 rounded-lg bg-blue-50 border border-blue-200 px-4 py-3">
+                <svg class="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.26a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                </svg>
+                <div>
+                    <p class="text-sm font-semibold text-blue-800">Cita por telemedicina</p>
+                    <p class="text-xs text-blue-600 mt-0.5">Los signos vitales no pueden registrarse en consultas virtuales. Use el campo de observaciones para indicar el estado del paciente.</p>
+                </div>
+            </div>
+
+            <form @submit.prevent="guardarSignos()" class="space-y-4">
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs text-gray-500 font-medium">Observaciones del médico</label>
+                    <textarea name="observaciones" x-model="formSignos.observaciones" rows="4"
+                              placeholder="Ej: Paciente refiere mejoría. Cita virtual — no fue posible tomar signos vitales."
+                              class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 resize-none"></textarea>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button type="submit" :disabled="cargando || !estado.ejecucion"
+                            class="bg-gray-900 hover:bg-gray-700 text-white text-sm px-5 py-2 rounded-lg transition disabled:opacity-40">
+                        <span x-text="estado.signos ? 'Actualizar observaciones' : 'Guardar observaciones'"></span>
+                    </button>
+                    <span x-show="!estado.ejecucion" class="text-xs text-amber-600">Inicia la atención primero</span>
+                    <span x-show="mensajes.signos" x-text="mensajes.signos" class="text-xs text-emerald-600"></span>
+                </div>
+            </form>
+            @else
+            {{-- Cita presencial: todos los campos --}}
             <form @submit.prevent="guardarSignos()" class="grid grid-cols-2 md:grid-cols-3 gap-4">
                 @foreach ([
                     ['peso_kg',                 'Peso (kg)',             'number', '0.1'],
@@ -265,6 +307,7 @@
                     <span x-show="mensajes.signos" x-text="mensajes.signos" class="text-xs text-emerald-600"></span>
                 </div>
             </form>
+            @endif
         </div>
 
         {{-- ── Tab: Historia Clínica ────────────────────────────── --}}
@@ -315,7 +358,6 @@
                     <div class="flex flex-col gap-1">
                         <label class="text-xs text-gray-500 font-medium">Descripción seleccionada</label>
                         <div class="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-600 bg-gray-50 min-h-[38px]">
-                            <template x-if="$root.querySelector && false"></template>
                             <span x-show="formHistoria.codigo_cie10">
                                 <span class="font-mono text-blue-600" x-text="formHistoria.codigo_cie10"></span>
                                 — <span x-text="formHistoria.descripcion_cie10"></span>
@@ -389,6 +431,82 @@
                 </div>
             </form>
         </div>
+
+        {{-- ── Tab: Órdenes Médicas ────────────────────────────── --}}
+        <div x-show="tab === 'ordenes'" class="p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="font-semibold text-gray-700">Órdenes Médicas</h3>
+                <span class="text-xs text-gray-400" x-text="estado.ordenes.length + ' orden(es) registrada(s)'"></span>
+            </div>
+
+            {{-- Formulario nueva orden --}}
+            <form @submit.prevent="guardarOrden()" class="space-y-4 mb-6 pb-6 border-b border-gray-100">
+                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Nueva orden</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="flex flex-col gap-1">
+                        <label class="text-xs text-gray-500 font-medium">Tipo de orden <span class="text-red-400">*</span></label>
+                        <select x-model="formOrden.tipo" required
+                                class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 bg-white">
+                            <option value="">Seleccionar...</option>
+                            <option>Laboratorio</option>
+                            <option>Imagen diagnóstica</option>
+                            <option>Procedimiento</option>
+                            <option>Interconsulta</option>
+                            <option>Otro</option>
+                        </select>
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <label class="text-xs text-gray-500 font-medium">Descripción <span class="text-red-400">*</span></label>
+                        <input type="text" x-model="formOrden.descripcion" required
+                               placeholder="Ej: Hemograma completo, radiografía de tórax..."
+                               class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900">
+                    </div>
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs text-gray-500 font-medium">Instrucciones / indicaciones</label>
+                    <textarea x-model="formOrden.instrucciones" rows="2"
+                              placeholder="Ej: Ayuno de 8 horas previo al examen."
+                              class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 resize-none"></textarea>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button type="submit" :disabled="cargando || !estado.historia"
+                            class="bg-gray-900 hover:bg-gray-700 text-white text-sm px-5 py-2 rounded-lg transition disabled:opacity-40">
+                        Agregar orden
+                    </button>
+                    <span x-show="!estado.historia" class="text-xs text-amber-600">Guarda la historia clínica primero</span>
+                    <span x-show="mensajes.orden" x-text="mensajes.orden" class="text-xs text-emerald-600"></span>
+                </div>
+            </form>
+
+            {{-- Listado de órdenes --}}
+            <template x-if="estado.ordenes.length === 0">
+                <p class="text-sm text-gray-400 text-center py-4">No se han registrado órdenes médicas para esta consulta.</p>
+            </template>
+
+            <div class="space-y-3">
+                <template x-for="orden in estado.ordenes" :key="orden.id">
+                    <div class="flex items-start justify-between gap-4 rounded-lg border px-4 py-3"
+                         :class="orden.estado === 'autorizada' ? 'border-emerald-200 bg-emerald-50' : 'border-amber-200 bg-amber-50'">
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-white border"
+                                      :class="orden.estado === 'autorizada' ? 'text-emerald-700 border-emerald-300' : 'text-amber-700 border-amber-300'"
+                                      x-text="orden.tipo"></span>
+                                <span class="text-xs font-medium"
+                                      :class="orden.estado === 'autorizada' ? 'text-emerald-700' : 'text-amber-700'"
+                                      x-text="orden.estado === 'autorizada' ? '✓ Autorizada' : '⏳ Pendiente de autorización'">
+                                </span>
+                            </div>
+                            <p class="text-sm font-medium text-gray-800 mt-1" x-text="orden.descripcion"></p>
+                            <p x-show="orden.instrucciones" class="text-xs text-gray-500 mt-0.5" x-text="orden.instrucciones"></p>
+                            <p x-show="orden.autorizado_en" class="text-xs text-emerald-600 mt-1">
+                                Autorizada <span x-text="orden.autorizado_via ? 'vía ' + orden.autorizado_via : ''"></span>
+                            </p>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
     </div>
 
 </div>
@@ -410,8 +528,9 @@ function consulta(inicial) {
             historia:  inicial.historia,
             signos:    inicial.signos,
             receta:    inicial.receta,
+            ordenes:   inicial.ordenes ?? [],
         },
-        mensajes: { signos: '', historia: '', receta: '' },
+        mensajes: { signos: '', historia: '', receta: '', orden: '' },
 
         formSignos: {
             peso_kg:                inicial.signos?.peso_kg                ?? '',
@@ -437,8 +556,14 @@ function consulta(inicial) {
         },
 
         formReceta: {
-            medicamentos: inicial.receta?.medicamentos  ?? '',
-            indicaciones: inicial.receta?.indicaciones  ?? '',
+            medicamentos: inicial.receta?.medicamentos ?? '',
+            indicaciones: inicial.receta?.indicaciones ?? '',
+        },
+
+        formOrden: {
+            tipo:          '',
+            descripcion:   '',
+            instrucciones: '',
         },
 
         formatHora(dt) {
@@ -477,13 +602,13 @@ function consulta(inicial) {
             if (!this.estado.ejecucion) return;
             this.cargando = true;
             this.mensajes.signos = '';
-            const payload = { ...this.formSignos, ejecucion_cita_id: this.estado.ejecucion.id, paciente_id: {{ $cita->paciente_id }} };
+            const payload = { ...this.formSignos, ejecucion_cita_id: this.estado.ejecucion.id, paciente_id: inicial.paciente_id };
             try {
                 const url    = this.estado.signos ? `/signos-vitales/${this.estado.signos.id}` : '/signos-vitales';
                 const method = this.estado.signos ? 'PUT' : 'POST';
                 const res    = await fetch(url, { method, headers: jsonHeaders(), body: JSON.stringify(payload) });
                 const data   = await res.json();
-                if (res.ok) { this.estado.signos = data; this.mensajes.signos = 'Signos guardados correctamente.'; }
+                if (res.ok) { this.estado.signos = data; this.mensajes.signos = 'Guardado correctamente.'; }
             } finally { this.cargando = false; }
         },
 
@@ -491,7 +616,7 @@ function consulta(inicial) {
             if (!this.estado.ejecucion) return;
             this.cargando = true;
             this.mensajes.historia = '';
-            const payload = { ...this.formHistoria, ejecucion_cita_id: this.estado.ejecucion.id, paciente_id: {{ $cita->paciente_id }} };
+            const payload = { ...this.formHistoria, ejecucion_cita_id: this.estado.ejecucion.id, paciente_id: inicial.paciente_id };
             try {
                 const url    = this.estado.historia ? `/historias-clinicas/${this.estado.historia.id}` : '/historias-clinicas';
                 const method = this.estado.historia ? 'PUT' : 'POST';
@@ -512,6 +637,27 @@ function consulta(inicial) {
                 const res    = await fetch(url, { method, headers: jsonHeaders(), body: JSON.stringify(payload) });
                 const data   = await res.json();
                 if (res.ok) { this.estado.receta = data; this.mensajes.receta = 'Receta emitida correctamente.'; }
+            } finally { this.cargando = false; }
+        },
+
+        async guardarOrden() {
+            if (!this.estado.historia) return;
+            this.cargando = true;
+            this.mensajes.orden = '';
+            const payload = {
+                ...this.formOrden,
+                historia_clinica_id: this.estado.historia.id,
+                paciente_id: inicial.paciente_id,
+            };
+            try {
+                const res  = await fetch('/ordenes-medicas', { method: 'POST', headers: jsonHeaders(), body: JSON.stringify(payload) });
+                const data = await res.json();
+                if (res.ok) {
+                    this.estado.ordenes.push(data);
+                    this.formOrden = { tipo: '', descripcion: '', instrucciones: '' };
+                    this.mensajes.orden = 'Orden registrada correctamente.';
+                    setTimeout(() => this.mensajes.orden = '', 3000);
+                }
             } finally { this.cargando = false; }
         },
     };

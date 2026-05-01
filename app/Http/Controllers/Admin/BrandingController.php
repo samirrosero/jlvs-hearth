@@ -51,6 +51,12 @@ class BrandingController extends Controller
             'icono_pac_citas'     => ['nullable', 'image', 'mimes:png,svg,webp', 'max:512'],
             'icono_pac_historial' => ['nullable', 'image', 'mimes:png,svg,webp', 'max:512'],
             'icono_pac_perfil'    => ['nullable', 'image', 'mimes:png,svg,webp', 'max:512'],
+            // Iconos panel del médico
+            'icono_medico_dashboard'  => ['nullable', 'image', 'mimes:png,svg,webp', 'max:512'],
+            'icono_medico_citas'      => ['nullable', 'image', 'mimes:png,svg,webp', 'max:512'],
+            'icono_medico_pacientes'  => ['nullable', 'image', 'mimes:png,svg,webp', 'max:512'],
+            // Icono horarios (admin)
+            'icono_horarios'          => ['nullable', 'image', 'mimes:png,svg,webp', 'max:512'],
         ]);
 
         $datos = $request->only([
@@ -142,6 +148,30 @@ class BrandingController extends Controller
                 $datos[$pathField] = $request->file($icono)
                     ->store("empresas/{$empresa->id}/iconos", 'public');
             }
+        }
+
+        // ── Iconos del panel del médico ──────────────────────────────────────
+        $iconosMedico = [
+            'icono_medico_dashboard', 'icono_medico_citas', 'icono_medico_pacientes',
+        ];
+        foreach ($iconosMedico as $icono) {
+            if ($request->hasFile($icono)) {
+                $pathField = $icono . '_path';
+                if ($empresa->$pathField) {
+                    Storage::disk('public')->delete($empresa->$pathField);
+                }
+                $datos[$pathField] = $request->file($icono)
+                    ->store("empresas/{$empresa->id}/iconos", 'public');
+            }
+        }
+
+        // ── Icono de Horarios (admin) ─────────────────────────────────────────
+        if ($request->hasFile('icono_horarios')) {
+            if ($empresa->icono_horarios_path) {
+                Storage::disk('public')->delete($empresa->icono_horarios_path);
+            }
+            $datos['icono_horarios_path'] = $request->file('icono_horarios')
+                ->store("empresas/{$empresa->id}/iconos", 'public');
         }
 
         $empresa->update($datos);

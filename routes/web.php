@@ -105,6 +105,8 @@ Route::post('/reset-password',        [AdminPasswordResetController::class, 'res
 // Registro público (Blade) — afiliados y empleadores
 // ─────────────────────────────────────────────────────────────
 Route::get('/registro',             [RegistroPublicoController::class, 'show'])->name('registro.show');
+Route::get('/politicas-de-datos',   fn () => view('legal.politicas'))->name('politicas');
+Route::get('/terminos-y-condiciones', fn () => view('legal.terminos'))->name('terminos');
 Route::post('/registro/afiliado',   [RegistroPublicoController::class, 'registrarAfiliado'])->name('registro.afiliado');
 Route::post('/registro/empleador',  [RegistroPublicoController::class, 'registrarEmpleador'])->name('registro.empleador');
 
@@ -224,6 +226,18 @@ Route::middleware('auth')->group(function () {
         Route::put('/historias-clinicas/{historia}', [ClinicalHistoryController::class, 'update']);
         Route::patch('/historias-clinicas/{historia}', [ClinicalHistoryController::class, 'update']);
         Route::delete('/historias-clinicas/{historia}', [ClinicalHistoryController::class, 'destroy']);
+    });
+
+    // ─────────────────────────────────────────────────────────
+    // Órdenes médicas
+    // (lectura: admin, medico, paciente; escritura: admin, medico; autorizar: todos)
+    // ─────────────────────────────────────────────────────────
+    Route::middleware('role:administrador,medico,paciente,gestor_citas')->group(function () {
+        Route::get('/ordenes-medicas', [\App\Http\Controllers\OrdenMedicaController::class, 'index']);
+        Route::patch('/ordenes-medicas/{ordenMedica}', [\App\Http\Controllers\OrdenMedicaController::class, 'update']);
+    });
+    Route::middleware('role:administrador,medico')->group(function () {
+        Route::post('/ordenes-medicas', [\App\Http\Controllers\OrdenMedicaController::class, 'store']);
     });
 
     // ─────────────────────────────────────────────────────────
@@ -402,6 +416,15 @@ Route::prefix('medico')->name('medico.')->middleware(['auth', 'role:medico'])->g
     Route::get('/pacientes',                [MedicoPacientesController::class, 'index'])->name('pacientes');
     Route::get('/pacientes/{paciente}',     [MedicoPacientesController::class, 'show'])->name('pacientes.show');
 
+    Route::get('/agenda',  [\App\Http\Controllers\Medico\MedicoAgendaController::class, 'index'])->name('agenda');
+
+    Route::get('/perfil',  [\App\Http\Controllers\Medico\MedicoPerfilController::class, 'edit'])->name('perfil');
+    Route::patch('/perfil', [\App\Http\Controllers\Medico\MedicoPerfilController::class, 'update'])->name('perfil.update');
+
+    Route::get('/horario', [\App\Http\Controllers\Medico\MedicoHorarioController::class, 'index'])->name('horario');
+
+    Route::get('/ordenes', [\App\Http\Controllers\Medico\MedicoOrdenesController::class, 'index'])->name('ordenes');
+
     Route::post('/chatbot', [ChatbotController::class, 'chat'])->name('chatbot');
 });
 // ═════════════════════════════════════════════════════════════
@@ -438,6 +461,16 @@ Route::get('/paciente/certificado-afiliacion', [App\Http\Controllers\Paciente\Pa
     Route::get('/agendar', [AgendarCitaVistaController::class, 'index'])->name('agendar');
     Route::get('/agendar/disponible', [AgendarCitaVistaController::class, 'disponible'])->name('agendar.disponible');
     Route::post('/agendar/reservar', [AgendarCitaVistaController::class, 'reservar'])->name('agendar.reservar');
+
+    Route::get('/ordenes', [\App\Http\Controllers\Paciente\PacienteOrdenesController::class, 'index'])->name('ordenes');
+    Route::patch('/ordenes/{ordenMedica}/autorizar', [\App\Http\Controllers\Paciente\PacienteOrdenesController::class, 'autorizar'])->name('ordenes.autorizar');
+
+    Route::get('/certificados', function () {
+        $paciente = \App\Models\Paciente::with('empresa')
+            ->where('usuario_id', auth()->id())
+            ->firstOrFail();
+        return view('paciente.certificados.index', compact('paciente'));
+    })->name('certificados');
 
     Route::get('/perfil', [PacientePerfilController::class, 'edit'])->name('perfil');
     Route::patch('/perfil', [PacientePerfilController::class, 'update'])->name('perfil.update');

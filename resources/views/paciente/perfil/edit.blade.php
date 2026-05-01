@@ -99,7 +99,7 @@
                 {{-- Portafolio --}}
                 <div>
                     <label for="portafolio_id" class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
-                        Tipo de cobertura
+                        Tipo de seguro / cobertura médica
                     </label>
                     <select id="portafolio_id" name="portafolio_id"
                             class="w-full px-4 py-2.5 rounded-xl border text-sm transition

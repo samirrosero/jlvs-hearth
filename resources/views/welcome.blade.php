@@ -276,9 +276,9 @@
                 <div class="slider-track" id="sliderTrack">
 
                     <article class="miembro-slide">
-                        <div class="slide-header" style="background:linear-gradient(135deg,#2563eb,#7c3aed)">
+                        <div class="slide-header" style="background:linear-gradient(160deg,#1e293b,#334155)">
                             <div class="foto-wrapper">
-                                <img src="{{ asset('teams/julian.jpeg') }}" alt="Julián Velasquez"
+                                <img src="{{ asset('teams/julian.png') }}" alt="Julián Velasquez"
                                      onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
                                 <div class="foto-placeholder" style="display:none;">JV</div>
                             </div>
@@ -291,7 +291,7 @@
                     </article>
 
                     <article class="miembro-slide">
-                        <div class="slide-header" style="background:linear-gradient(135deg,#7c3aed,#db2777)">
+                        <div class="slide-header" style="background:linear-gradient(160deg,#1e293b,#334155)">
                             <div class="foto-wrapper">
                                 <img src="{{ asset('teams/valeri.png') }}" alt="Valeri Solís"
                                      onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
@@ -306,7 +306,7 @@
                     </article>
 
                     <article class="miembro-slide">
-                        <div class="slide-header" style="background:linear-gradient(135deg,#0891b2,#2563eb)">
+                        <div class="slide-header" style="background:linear-gradient(160deg,#1e293b,#334155)">
                             <div class="foto-wrapper">
                                 <img src="{{ asset('teams/luis.png') }}" alt="Luis Piamba"
                                      onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
@@ -321,7 +321,7 @@
                     </article>
 
                     <article class="miembro-slide">
-                        <div class="slide-header" style="background:linear-gradient(135deg,#1e40af,#0891b2)">
+                        <div class="slide-header" style="background:linear-gradient(160deg,#1e293b,#334155)">
                             <div class="foto-wrapper">
                                 <img src="{{ asset('teams/samir.png') }}" alt="Samir Rosero"
                                      onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">

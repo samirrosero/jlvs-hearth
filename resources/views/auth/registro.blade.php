@@ -261,10 +261,15 @@
                     {{-- Tipo de cobertura --}}
                     <div class="field span-2" x-data="{ portafolio: '{{ old('portafolio_id') }}', mostrarAseguradora: false }"
                          x-init="mostrarAseguradora = ['{{ old('portafolio_id') }}'].includes(portafolio) && portafolio !== ''">
-                        <label>Tipo de cobertura <span style="color:#ef4444">*</span></label>
+                        <label>
+                            Tipo de seguro / cobertura médica
+                            @if($portafolios->isNotEmpty())
+                                <span style="color:#ef4444">*</span>
+                            @endif
+                        </label>
                         @if($portafolios->isEmpty())
-                            <p style="font-size:12px;color:#94a3b8;margin-top:4px">
-                                No hay portafolios configurados para esta IPS todavía.
+                            <p style="font-size:12px;color:#94a3b8;margin-top:4px;padding:10px 12px;background:#f8fafc;border:1px dashed #e2e8f0;border-radius:8px;">
+                                La IPS aún no ha configurado tipos de cobertura. Podrás actualizarlo desde tu perfil una vez registrado.
                             </p>
                         @else
                             <select name="portafolio_id" required
@@ -335,7 +340,21 @@
                     </div>
 
                     <div class="span-2">
-                        <button type="submit" class="btn-primary">Registrarme como Afiliado</button>
+                        <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;margin-bottom:12px;">
+                            <input type="checkbox" x-model="aceptaAfiliado"
+                                   style="width:16px;height:16px;flex-shrink:0;margin-top:2px;accent-color:var(--primario,#0369a1);cursor:pointer;">
+                            <span style="font-size:13px;color:#475569;line-height:1.4;">
+                                He leído y acepto la
+                                <a href="{{ route('politicas') }}" target="_blank" style="color:var(--primario,#0369a1);text-decoration:underline;font-weight:600;">Política de Tratamiento de Datos Personales</a>
+                                y los
+                                <a href="{{ route('terminos') }}" target="_blank" style="color:var(--primario,#0369a1);text-decoration:underline;font-weight:600;">Términos y Condiciones de Uso</a>.
+                            </span>
+                        </label>
+                        <button type="submit" class="btn-primary"
+                                :disabled="!aceptaAfiliado"
+                                :style="!aceptaAfiliado ? 'opacity:0.45;cursor:not-allowed;' : ''">
+                            Registrarme como Afiliado
+                        </button>
                     </div>
                 </div>
             </form>
@@ -518,7 +537,21 @@
                     </div>
 
                     <div class="span-2">
-                        <button type="submit" class="btn-primary">Enviar solicitud</button>
+                        <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;margin-bottom:12px;">
+                            <input type="checkbox" x-model="aceptaEmpleador"
+                                   style="width:16px;height:16px;flex-shrink:0;margin-top:2px;accent-color:var(--primario,#0369a1);cursor:pointer;">
+                            <span style="font-size:13px;color:#475569;line-height:1.4;">
+                                He leído y acepto la
+                                <a href="{{ route('politicas') }}" target="_blank" style="color:var(--primario,#0369a1);text-decoration:underline;font-weight:600;">Política de Tratamiento de Datos Personales</a>
+                                y los
+                                <a href="{{ route('terminos') }}" target="_blank" style="color:var(--primario,#0369a1);text-decoration:underline;font-weight:600;">Términos y Condiciones de Uso</a>.
+                            </span>
+                        </label>
+                        <button type="submit" class="btn-primary"
+                                :disabled="!aceptaEmpleador"
+                                :style="!aceptaEmpleador ? 'opacity:0.45;cursor:not-allowed;' : ''">
+                            Enviar solicitud
+                        </button>
                     </div>
                 </div>
             </form>
@@ -537,7 +570,7 @@
 </div>
 <script>
 function registroPage() {
-    return { tab: 'afiliado', verPass1: false, verPass2: false, verPass3: false, verPass4: false };
+    return { tab: 'afiliado', verPass1: false, verPass2: false, verPass3: false, verPass4: false, aceptaAfiliado: false, aceptaEmpleador: false };
 }
 function previewDoc(input) {
     if (!input.files?.[0]) return;

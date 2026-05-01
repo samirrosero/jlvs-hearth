@@ -101,25 +101,34 @@ class UbicacionController extends Controller
                 '$limit'  => '500',
             ]);
 
-            if (!$response->successful()) {
-                return response()->json([]);
+            if ($response->successful()) {
+                $data = collect($response->json())
+                    ->filter(fn ($m) => !empty($m['nom_mpio']))
+                    ->map(fn ($m) => mb_convert_case(strtolower($m['nom_mpio']), MB_CASE_TITLE, 'UTF-8'))
+                    ->unique()
+                    ->sort()
+                    ->values()
+                    ->toArray();
+
+                if ($data) {
+                    Cache::put($cacheKey, $data, self::TTL);
+                    return response()->json($data);
+                }
             }
-
-            $data = collect($response->json())
-                ->filter(fn ($m) => !empty($m['nom_mpio']))
-                ->map(fn ($m) => mb_convert_case(strtolower($m['nom_mpio']), MB_CASE_TITLE, 'UTF-8'))
-                ->unique()
-                ->sort()
-                ->values()
-                ->toArray();
-
-            if ($data) {
-                Cache::put($cacheKey, $data, self::TTL);
-            }
-
-            return response()->json($data);
         } catch (\Exception $e) {
-            return response()->json([]);
+            // API no disponible, usar fallback local
         }
+
+        return response()->json($this->municipiosFallback($codigo));
+    }
+
+    private function municipiosFallback(string $codigo): array
+    {
+        $path = storage_path('app/divipola_municipios.json');
+        if (!file_exists($path)) {
+            return [];
+        }
+        $all = json_decode(file_get_contents($path), true);
+        return $all[$codigo] ?? [];
     }
 }

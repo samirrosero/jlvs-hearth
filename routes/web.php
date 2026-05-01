@@ -548,6 +548,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         // Chatbot — asistente virtual con Ollama
         Route::post('/chatbot', [ChatbotController::class, 'chat'])->name('chatbot');
+
+        // Auditoría — CU-009
+        Route::get('/auditoria', fn () => view('admin.auditoria.index'))->name('auditoria');
     });
 });
 //ruta grupo gestor

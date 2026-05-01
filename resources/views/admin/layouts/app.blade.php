@@ -104,6 +104,11 @@
                         'icon'  => $empresa?->icono_identidad_url ?? asset('img/icons/dashboard.png'),
                         'label' => 'Identidad Visual',
                     ],
+                    [
+                        'route' => 'admin.auditoria',
+                        'icon'  => asset('img/icons/reportes.png'),
+                        'label' => 'Auditoría',
+                    ],
                 ];
             @endphp
 

@@ -16,26 +16,30 @@ class UbicacionController extends Controller
     public function departamentos(): JsonResponse
     {
         $data = Cache::remember('divipola_departamentos', self::TTL, function () {
-            $response = Http::timeout(15)->get(self::API_URL, [
-                '$select' => 'cod_dpto,dpto',
-                '$group'  => 'cod_dpto,dpto',
-                '$order'  => 'dpto ASC',
-                '$limit'  => '100',
-            ]);
+            try {
+                $response = Http::timeout(15)->get(self::API_URL, [
+                    '$select' => 'cod_dpto,dpto',
+                    '$group'  => 'cod_dpto,dpto',
+                    '$order'  => 'dpto ASC',
+                    '$limit'  => '100',
+                ]);
 
-            if (!$response->successful()) {
+                if (!$response->successful()) {
+                    return [];
+                }
+
+                return collect($response->json())
+                    ->filter(fn ($d) => !empty($d['dpto']))
+                    ->map(fn ($d) => [
+                        'codigo' => $d['cod_dpto'] ?? '',
+                        'nombre' => mb_convert_case(strtolower($d['dpto']), MB_CASE_TITLE, 'UTF-8'),
+                    ])
+                    ->sortBy('nombre')
+                    ->values()
+                    ->toArray();
+            } catch (\Exception $e) {
                 return [];
             }
-
-            return collect($response->json())
-                ->filter(fn ($d) => !empty($d['dpto']))
-                ->map(fn ($d) => [
-                    'codigo' => $d['cod_dpto'] ?? '',
-                    'nombre' => mb_convert_case(strtolower($d['dpto']), MB_CASE_TITLE, 'UTF-8'),
-                ])
-                ->sortBy('nombre')
-                ->values()
-                ->toArray();
         });
 
         return response()->json($data);
@@ -46,24 +50,28 @@ class UbicacionController extends Controller
         $codigo = preg_replace('/[^0-9]/', '', $codigo);
 
         $data = Cache::remember("divipola_municipios_{$codigo}", self::TTL, function () use ($codigo) {
-            $response = Http::timeout(15)->get(self::API_URL, [
-                '$where'  => "cod_dpto='{$codigo}'",
-                '$select' => 'nom_mpio',
-                '$order'  => 'nom_mpio ASC',
-                '$limit'  => '500',
-            ]);
+            try {
+                $response = Http::timeout(15)->get(self::API_URL, [
+                    '$where'  => "cod_dpto='{$codigo}'",
+                    '$select' => 'nom_mpio',
+                    '$order'  => 'nom_mpio ASC',
+                    '$limit'  => '500',
+                ]);
 
-            if (!$response->successful()) {
+                if (!$response->successful()) {
+                    return [];
+                }
+
+                return collect($response->json())
+                    ->filter(fn ($m) => !empty($m['nom_mpio']))
+                    ->map(fn ($m) => mb_convert_case(strtolower($m['nom_mpio']), MB_CASE_TITLE, 'UTF-8'))
+                    ->unique()
+                    ->sort()
+                    ->values()
+                    ->toArray();
+            } catch (\Exception $e) {
                 return [];
             }
-
-            return collect($response->json())
-                ->filter(fn ($m) => !empty($m['nom_mpio']))
-                ->map(fn ($m) => mb_convert_case(strtolower($m['nom_mpio']), MB_CASE_TITLE, 'UTF-8'))
-                ->unique()
-                ->sort()
-                ->values()
-                ->toArray();
         });
 
         return response()->json($data);

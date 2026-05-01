@@ -367,7 +367,7 @@
             </div>
             <form method="POST" action="{{ route('registro.empleador', request()->only(['empresa', 'nit'])) }}" enctype="multipart/form-data">
                 @csrf
-                <div class="grid-2">
+                <div class="grid-2" x-data="{ rolSeleccionado: '' }">
 
                     {{-- Tipo + Número documento --}}
                     <div class="field span-2">
@@ -383,7 +383,7 @@
                     </div>
 
                     {{-- Rol --}}
-                    <div class="field span-2" x-data="{ rolSeleccionado: '' }">
+                    <div class="field span-2">
                         <label>Tipo de rol</label>
                         <select name="rol_solicitado" required x-model="rolSeleccionado">
                             <option value="">Selecciona un rol...</option>

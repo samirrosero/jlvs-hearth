@@ -276,5 +276,8 @@ function loginPage() {
     return { tab: 'afiliado', verPass: false };
 }
 </script>
+
+{{-- UserWay: widget de accesibilidad --}}
+<script src="https://cdn.userway.org/widget.js" data-account="P4wy9GEOmv"></script>
 </body>
 </html>

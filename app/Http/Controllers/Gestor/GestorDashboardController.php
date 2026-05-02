@@ -25,6 +25,11 @@ class GestorDashboardController extends Controller
             ->whereHas('estado', fn($q) => $q->where('nombre', 'like', '%pendiente%'))
             ->count();
 
+        $citasConfirmadasHoy = Cita::where('empresa_id', $empresaId)
+            ->where('fecha', $hoy)
+            ->whereHas('estado', fn($q) => $q->where('nombre', 'like', '%confirmada%'))
+            ->count();
+
         $totalPacientes = Paciente::where('empresa_id', $empresaId)->count();
         $totalMedicos   = Medico::where('empresa_id', $empresaId)->count();
 
@@ -58,6 +63,31 @@ class GestorDashboardController extends Controller
             ];
         });
 
+        $citasAyer = Cita::where('empresa_id', $empresaId)
+            ->where('fecha', now()->subDay()->toDateString())
+            ->count();
+
+        $citasHoyDiff = $citasHoy - $citasAyer;
+
+        $citasSemanaTotal = $diasSemana->sum(fn($dia) => $dia['citas']->count());
+        $citasSemanaAnterior = Cita::where('empresa_id', $empresaId)
+            ->whereBetween('fecha', [
+                $inicioSemana->copy()->subWeek()->toDateString(),
+                $finSemana->copy()->subWeek()->toDateString(),
+            ])
+            ->count();
+
+        $citasSemanaDiff = $citasSemanaTotal - $citasSemanaAnterior;
+        $maxCitasDia = max(1, $diasSemana->max(fn($dia) => $dia['citas']->count()));
+
+        $citasSemanaDias = $diasSemana->map(function ($dia) use ($maxCitasDia) {
+            return [
+                'label'   => $dia['nombre'],
+                'count'   => $dia['citas']->count(),
+                'percent' => $dia['citas']->count() ? round($dia['citas']->count() / $maxCitasDia * 100) : 0,
+            ];
+        });
+
         $semanaPrev  = $inicioSemana->copy()->subWeek()->toDateString();
         $semanaNext  = $inicioSemana->copy()->addWeek()->toDateString();
         $semanaLabel = $inicioSemana->locale('es')->isoFormat('D MMM')
@@ -65,7 +95,8 @@ class GestorDashboardController extends Controller
                      . $finSemana->locale('es')->isoFormat('D MMM YYYY');
 
         return view('gestor.dashboard', compact(
-            'citasHoy', 'citasPendientes', 'totalPacientes', 'totalMedicos',
+            'citasHoy', 'citasPendientes', 'citasConfirmadasHoy', 'totalPacientes', 'totalMedicos',
+            'citasAyer', 'citasHoyDiff', 'citasSemanaTotal', 'citasSemanaAnterior', 'citasSemanaDias', 'citasSemanaDiff',
             'diasSemana', 'semanaPrev', 'semanaNext', 'semanaLabel', 'hoy'
         ));
     }

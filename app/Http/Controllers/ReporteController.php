@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exports\CitasExport;
+use App\Exports\MedicosExport;
 use App\Exports\PacientesExport;
 use App\Models\Cita;
 use App\Models\Empresa;
@@ -66,6 +67,18 @@ class ReporteController extends Controller
         return Excel::download(
             new PacientesExport($empresaId, $filtros),
             'reporte-pacientes-' . now()->format('Y-m-d') . '.xlsx'
+        );
+    }
+
+    // ── Médicos ────────────────────────────────────────────────────────
+
+    public function medicosExcel(): BinaryFileResponse
+    {
+        $empresaId = auth()->user()->empresa_id;
+
+        return Excel::download(
+            new MedicosExport($empresaId),
+            'reporte-medicos-' . now()->format('Y-m-d') . '.xlsx'
         );
     }
 

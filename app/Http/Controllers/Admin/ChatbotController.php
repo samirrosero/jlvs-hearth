@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Cita;
+use App\Models\HorarioMedico;
 use App\Models\HistoriaClinica;
+use App\Models\Medico;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
@@ -16,12 +18,13 @@ class ChatbotController extends Controller
             'mensaje' => ['required', 'string', 'max:500'],
         ]);
 
-        $rol    = auth()->user()->rol?->nombre ?? 'administrador';
-        $datos  = $this->recopilarDatos($rol);
-        $prompt = $this->buildPrompt($rol, $datos);
+        $rol     = auth()->user()->rol?->nombre ?? 'administrador';
+        $mensaje = $request->input('mensaje');
+        $datos   = $this->recopilarDatos($rol, $mensaje);
+        $prompt  = $this->buildPrompt($rol, $datos);
 
         $respuesta = Http::timeout(60)->post('http://localhost:11434/api/chat', [
-            'model'  => 'gemma3:4b',
+            'model'  => 'deepseek-v3.1:671b-cloud',
             'stream' => false,
             'messages' => [
                 ['role' => 'system', 'content' => $prompt],
@@ -44,22 +47,25 @@ class ChatbotController extends Controller
     // Recopilación de datos por rol
     // ─────────────────────────────────────────────────────────────
 
-    private function recopilarDatos(string $rol): array
+    private function recopilarDatos(string $rol, string $mensaje = ''): array
     {
         $hoy = now()->toDateString();
 
         return match ($rol) {
             'medico'       => $this->datosRolMedico($hoy),
-            'gestor_citas' => $this->datosRolGestor($hoy),
+            'gestor_citas' => $this->datosRolGestor($hoy, $mensaje),
             'paciente'     => $this->datosRolPaciente($hoy),
-            default        => $this->datosRolAdmin($hoy),
+            default        => $this->datosRolAdmin($hoy, $mensaje),
         };
     }
 
-    private function datosRolAdmin(string $hoy): array
+    private function datosRolAdmin(string $hoy, string $mensaje = ''): array
     {
         $empresaId = auth()->user()->empresa_id;
-        $datos = ['fecha_hoy' => now()->translatedFormat('l j \d\e F \d\e Y')];
+        $datos = [
+            'fecha_hoy'    => now()->translatedFormat('l j \d\e F \d\e Y'),
+            'medico_info'  => null,
+        ];
 
         foreach (config('chatbot.datos') as $item) {
             $query = $item['model']::where('empresa_id', $empresaId);
@@ -73,6 +79,38 @@ class ChatbotController extends Controller
         $datos['citas_pendientes'] = Cita::where('empresa_id', $empresaId)
             ->whereHas('estado', fn ($q) => $q->where('nombre', 'like', '%pendiente%'))
             ->count();
+
+        // Si el mensaje menciona un nombre de médico, buscar sus datos reales
+        if (preg_match('/(?:doctor(?:a)?|dr\.?|dra\.?|médico|medico)\s+([a-záéíóúñ]+(?:\s+[a-záéíóúñ]+)?)/iu', $mensaje, $m)
+            || preg_match('/horarios?\s+(?:de(?:l?)?\s+)?([a-záéíóúñ]+(?:\s+[a-záéíóúñ]+)?)/iu', $mensaje, $m)) {
+            $nombre  = trim($m[1]);
+            $medico  = Medico::where('empresa_id', $empresaId)
+                ->whereHas('usuario', fn ($q) => $q->where('nombre', 'like', "%{$nombre}%"))
+                ->with(['usuario', 'horarios' => fn ($q) => $q->where('activo', true)->orderBy('dia_semana')->orderBy('hora_inicio')])
+                ->first();
+
+            if ($medico) {
+                $dias = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+                $horarioTexto = $medico->horarios->isEmpty()
+                    ? '  Sin horarios registrados'
+                    : $medico->horarios->map(fn ($h) =>
+                        sprintf('  - %s: %s – %s', $dias[$h->dia_semana], substr($h->hora_inicio, 0, 5), substr($h->hora_fin, 0, 5))
+                    )->join("\n");
+
+                $citasHoy = Cita::where('medico_id', $medico->id)->where('fecha', $hoy)->count();
+
+                $datos['medico_info'] = [
+                    'encontrado'   => true,
+                    'nombre'       => $medico->usuario->nombre,
+                    'especialidad' => $medico->especialidad ?? '—',
+                    'registro'     => $medico->registro_medico ?? '—',
+                    'citas_hoy'    => $citasHoy,
+                    'horarios'     => $horarioTexto,
+                ];
+            } else {
+                $datos['medico_info'] = ['encontrado' => false, 'busqueda' => $nombre];
+            }
+        }
 
         return $datos;
     }
@@ -104,11 +142,11 @@ class ChatbotController extends Controller
         ];
     }
 
-    private function datosRolGestor(string $hoy): array
+    private function datosRolGestor(string $hoy, string $mensaje = ''): array
     {
         $empresaId = auth()->user()->empresa_id;
 
-        return [
+        $datos = [
             'fecha_hoy'        => now()->translatedFormat('l j \d\e F \d\e Y'),
             'citas_hoy'        => Cita::where('empresa_id', $empresaId)->where('fecha', $hoy)->count(),
             'citas_pendientes' => Cita::where('empresa_id', $empresaId)
@@ -119,7 +157,52 @@ class ChatbotController extends Controller
             'en_espera'        => \App\Models\ListaEspera::where('empresa_id', $empresaId)
                                        ->where('estado', 'esperando')
                                        ->count(),
+            'paciente_info'    => null,
         ];
+
+        // Si el mensaje contiene una cédula (5-12 dígitos), buscar el paciente real
+        if (preg_match('/\b(\d{5,12})\b/', $mensaje, $m)) {
+            $cedula   = $m[1];
+            $paciente = \App\Models\Paciente::where('empresa_id', $empresaId)
+                ->where('identificacion', $cedula)
+                ->first();
+
+            if ($paciente) {
+                $ultimasCitas = Cita::where('paciente_id', $paciente->id)
+                    ->with('estado', 'servicio', 'medico.usuario')
+                    ->orderByDesc('fecha')->orderByDesc('hora')
+                    ->limit(5)
+                    ->get()
+                    ->map(fn ($c) => sprintf(
+                        '  - %s %s | %s | %s | Dr/a. %s',
+                        $c->fecha,
+                        substr($c->hora ?? '', 0, 5),
+                        $c->servicio?->nombre ?? 'Sin servicio',
+                        $c->estado?->nombre ?? '—',
+                        $c->medico?->usuario->nombre ?? $c->medico?->usuario->name ?? '—'
+                    ))
+                    ->join("\n");
+
+                $enEspera = \App\Models\ListaEspera::where('paciente_id', $paciente->id)
+                    ->where('estado', 'esperando')->exists();
+
+                $datos['paciente_info'] = [
+                    'encontrado'      => true,
+                    'cedula'          => $paciente->identificacion,
+                    'nombre'          => $paciente->nombre_completo,
+                    'telefono'        => $paciente->telefono ?? '—',
+                    'correo'          => $paciente->correo   ?? '—',
+                    'fecha_nacimiento'=> $paciente->fecha_nacimiento ?? '—',
+                    'sexo'            => $paciente->sexo     ?? '—',
+                    'ultimas_citas'   => $ultimasCitas ?: '  Sin citas registradas',
+                    'en_espera'       => $enEspera ? 'Sí, tiene registros en lista de espera' : 'No',
+                ];
+            } else {
+                $datos['paciente_info'] = ['encontrado' => false, 'cedula' => $cedula];
+            }
+        }
+
+        return $datos;
     }
 
     private function datosRolPaciente(string $hoy): array
@@ -166,6 +249,23 @@ class ChatbotController extends Controller
             ->map(fn ($item) => "- {$item['label']}: {$d[$item['clave']]}")
             ->join("\n");
 
+        // Sección de médico consultado (si aplica)
+        $seccionMedico = '';
+        if ($d['medico_info']) {
+            $m = $d['medico_info'];
+            if (! $m['encontrado']) {
+                $seccionMedico = "\n=== BÚSQUEDA DE MÉDICO ===\nNo se encontró ningún médico con el nombre \"{$m['busqueda']}\" en esta IPS.\n";
+            } else {
+                $seccionMedico = "\n=== MÉDICO ENCONTRADO (DATOS REALES DE LA BD) ===\n"
+                    . "Nombre:       {$m['nombre']}\n"
+                    . "Especialidad: {$m['especialidad']}\n"
+                    . "Registro:     {$m['registro']}\n"
+                    . "Citas hoy:    {$m['citas_hoy']}\n"
+                    . "Horarios laborales activos:\n{$m['horarios']}\n"
+                    . "INSTRUCCIÓN OBLIGATORIA: Responde DIRECTAMENTE con estos datos. NO navegues, NO uses [NAVEGAR:].\n";
+            }
+        }
+
         return <<<PROMPT
 Eres el asistente virtual de JLVS Hearth, software médico para IPS colombianas.
 Ayudas al administrador a entender el estado del sistema y a navegar por él.
@@ -174,7 +274,7 @@ Ayudas al administrador a entender el estado del sistema y a navegar por él.
 {$listaDatos}
 - Citas programadas para hoy ({$d['fecha_hoy']}): {$d['citas_hoy']}
 - Citas pendientes: {$d['citas_pendientes']}
-
+{$seccionMedico}
 === SECCIONES DE LA PLATAFORMA ===
 {$listaSecciones}
 
@@ -191,7 +291,7 @@ Tienes tres tipos de marcadores. Úsalos al final de la oración relevante:
    - "¿cuántos pacientes hay?" → solo responde el número, SIN marcador
    - "¿cuántos médicos tengo?" → solo responde el número, SIN marcador
    - "¿cuántas citas hay hoy?" → solo responde el número, SIN marcador
-   - cualquier pregunta sobre datos, estadísticas o información → SIN marcador
+   - cualquier pregunta sobre horarios, datos, estadísticas o información → SIN marcador
    - saludos o preguntas generales → SIN marcador
    Solo un [NAVEGAR:] por respuesta. Si no hay intención explícita de navegar, NO lo uses.
    Secciones válidas: {$clavesValidas}
@@ -205,13 +305,15 @@ Tienes tres tipos de marcadores. Úsalos al final de la oración relevante:
    - "reporte de citas en Excel" → [DESCARGAR:citas-excel]
    - "reporte de pacientes en PDF" → [DESCARGAR:pacientes-pdf]
    - "reporte de pacientes en Excel" → [DESCARGAR:pacientes-excel]
-   - Si el usuario no especifica formato, pregúntale si prefiere PDF o Excel.
-   Tipos válidos: citas-pdf, citas-excel, pacientes-pdf, pacientes-excel
+   - "reporte de médicos" / "excel de doctores" / "lista de médicos" → [DESCARGAR:medicos-excel]
+   - Si el usuario no especifica formato para citas o pacientes, pregúntale si prefiere PDF o Excel.
+   Tipos válidos: citas-pdf, citas-excel, pacientes-pdf, pacientes-excel, medicos-excel
 
 === INSTRUCCIONES GENERALES ===
 1. Responde siempre en español, de forma concisa (máximo 2 párrafos cortos).
-2. Nunca inventes marcadores que no estén en las listas anteriores.
-3. Si te preguntan algo fuera del sistema, responde amablemente que solo puedes ayudar con JLVS Hearth.
+2. Nunca inventes datos de médicos. Si existe la sección "MÉDICO ENCONTRADO", usa solo esos datos.
+3. Nunca inventes marcadores que no estén en las listas anteriores.
+4. Si te preguntan algo fuera del sistema, responde amablemente que solo puedes ayudar con JLVS Hearth.
 PROMPT;
     }
 
@@ -252,6 +354,26 @@ PROMPT;
 
     private function promptGestor(array $d): string
     {
+        // Sección de paciente consultado (si aplica)
+        $seccionPaciente = '';
+        if ($d['paciente_info']) {
+            $p = $d['paciente_info'];
+            if (! $p['encontrado']) {
+                $seccionPaciente = "\n=== BÚSQUEDA DE PACIENTE ===\nNo existe ningún paciente con cédula {$p['cedula']} registrado en esta IPS.\n";
+            } else {
+                $seccionPaciente = "\n=== PACIENTE ENCONTRADO (DATOS REALES DE LA BD) ===\n"
+                    . "Cédula:            {$p['cedula']}\n"
+                    . "Nombre completo:   {$p['nombre']}\n"
+                    . "Teléfono:          {$p['telefono']}\n"
+                    . "Correo:            {$p['correo']}\n"
+                    . "Fecha nacimiento:  {$p['fecha_nacimiento']}\n"
+                    . "Sexo:              {$p['sexo']}\n"
+                    . "En lista de espera:{$p['en_espera']}\n"
+                    . "Últimas citas (más recientes primero):\n{$p['ultimas_citas']}\n"
+                    . "INSTRUCCIÓN OBLIGATORIA: Responde DIRECTAMENTE con estos datos. NO navegues, NO uses [NAVEGAR:]. Puedes añadir [IR:pacientes] al final como sugerencia opcional.\n";
+            }
+        }
+
         return <<<PROMPT
 Eres el asistente virtual de JLVS Hearth para el gestor de citas.
 Solo puedes responder sobre citas, pacientes, lista de espera y médicos de la IPS. NUNCA reveles configuración administrativa, branding, solicitudes de empleadores ni datos de otros usuarios del sistema.
@@ -262,7 +384,7 @@ Solo puedes responder sobre citas, pacientes, lista de espera y médicos de la I
 - Pacientes en lista de espera (sin cupo): {$d['en_espera']}
 - Total pacientes registrados en el sistema (histórico): {$d['total_pacientes']}
 - Total médicos disponibles: {$d['total_medicos']}
-
+{$seccionPaciente}
 === INTERPRETACIÓN DE PREGUNTAS FRECUENTES ===
 - "¿hay pacientes hoy?" / "¿cuántas citas hay hoy?" / "¿cuántos pacientes vienen hoy?" → responde con "Citas agendadas para HOY": {$d['citas_hoy']}
 - "¿cuántos pacientes hay?" / "¿cuántos pacientes tenemos?" (sin mencionar "hoy") → responde con "Total pacientes registrados": {$d['total_pacientes']}
@@ -282,14 +404,16 @@ Solo puedes responder sobre citas, pacientes, lista de espera y médicos de la I
    Secciones válidas: dashboard, citas, nueva-cita, pacientes, registrar-paciente, lista-espera
    Ejemplos CORRECTOS:
    - "llévame a citas" → [NAVEGAR:citas]
-   - "búscame el paciente 213213" → "Abriendo el directorio para buscar la cédula 213213..." [NAVEGAR:pacientes:213213]
-   - "busca al paciente con cédula 1004567" → "Abriendo el directorio..." [NAVEGAR:pacientes:1004567]
-   - "encuentra al paciente Juan" → "Abriendo el directorio de pacientes..." [NAVEGAR:pacientes]
    - "quiero registrar un paciente" → [NAVEGAR:registrar-paciente]
    - "abre la lista de espera" → [NAVEGAR:lista-espera]
    - "nueva cita" → [NAVEGAR:nueva-cita]
-   IMPORTANTE: cuando el usuario mencione un número de cédula junto a "busca/búscame/encuentra paciente",
-   incluye ese número en el marcador: [NAVEGAR:pacientes:NUMERO_CEDULA]
+   - "búscame el paciente 213213" Y no hay sección PACIENTE ENCONTRADO → [NAVEGAR:pacientes:213213]
+   - "búscame el paciente 213213" Y SÍ hay sección PACIENTE ENCONTRADO → responde con los datos, NO uses [NAVEGAR:], solo [IR:pacientes] al final si quieres sugerir el directorio
+
+   REGLA CRÍTICA SOBRE BÚSQUEDA DE PACIENTES:
+   - Si en este prompt existe la sección "=== PACIENTE ENCONTRADO ===" → RESPONDE con los datos reales (nombre, teléfono, citas, etc.). NO uses [NAVEGAR:]. Puedes usar [IR:pacientes] como sugerencia.
+   - Si NO existe esa sección y el usuario pide buscar un paciente con cédula → usa [NAVEGAR:pacientes:CEDULA]
+   - Si NO existe esa sección y el usuario pide buscar por nombre → usa [NAVEGAR:pacientes]
 
 === PROHIBICIÓN ABSOLUTA — DATOS INDIVIDUALES ===
 NUNCA inventes, adivines ni menciones nombres, cédulas, correos, teléfonos ni ningún dato de un paciente específico.
@@ -306,6 +430,8 @@ Cualquier nombre de paciente que "recuerdes" es INCORRECTO — estás inventando
 
 === RESTRICCIONES ESTRICTAS ===
 - Si te preguntan sobre branding, configuración, solicitudes de empleadores, horarios de médicos o datos administrativos → responde: "Esa información no está disponible en tu panel."
+- Si te preguntan por un paciente y NO hay sección "PACIENTE ENCONTRADO" en este prompt → responde que no tienes esa información y navega al directorio con [NAVEGAR:pacientes:CEDULA_SI_LA_HAY].
+- NUNCA inventes datos de pacientes. Solo usa los que aparecen en "PACIENTE ENCONTRADO" si existe.
 - No uses [DESCARGAR:].
 - Responde en español, máximo 2 párrafos cortos.
 PROMPT;

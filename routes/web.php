@@ -154,6 +154,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/citas/excel',     [ReporteController::class, 'citasExcel'])->name('reportes.citas.excel');
         Route::get('/pacientes/pdf',   [ReporteController::class, 'pacientesPdf'])->name('reportes.pacientes.pdf');
         Route::get('/pacientes/excel', [ReporteController::class, 'pacientesExcel'])->name('reportes.pacientes.excel');
+        Route::get('/medicos/excel',   [ReporteController::class, 'medicosExcel'])->name('reportes.medicos.excel');
     });
 
     // ─────────────────────────────────────────────────────────

@@ -292,6 +292,7 @@
             'citas-excel':     { label: 'Descargar Citas Excel',      url: '{{ route('reportes.citas.excel') }}' },
             'pacientes-pdf':   { label: 'Descargar Pacientes PDF',    url: '{{ route('reportes.pacientes.pdf') }}' },
             'pacientes-excel': { label: 'Descargar Pacientes Excel',  url: '{{ route('reportes.pacientes.excel') }}' },
+            'medicos-excel':   { label: 'Descargar Médicos Excel',    url: '{{ route('reportes.medicos.excel') }}' },
         };
 
         function parsearRespuesta(raw) {

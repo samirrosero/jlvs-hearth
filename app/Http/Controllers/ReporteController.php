@@ -72,6 +72,23 @@ class ReporteController extends Controller
 
     // ── Médicos ────────────────────────────────────────────────────────
 
+    public function medicosPdf(): Response
+    {
+        $empresaId = auth()->user()->empresa_id;
+
+        $medicos = \App\Models\Medico::where('empresa_id', $empresaId)
+            ->with('usuario')
+            ->orderBy('id')
+            ->get();
+
+        $empresa = Empresa::findOrFail($empresaId);
+
+        $pdf = Pdf::loadView('pdf.reporte_medicos', compact('medicos', 'empresa'))
+            ->setPaper('letter', 'landscape');
+
+        return $pdf->download('reporte-medicos-' . now()->format('Y-m-d') . '.pdf');
+    }
+
     public function medicosExcel(): BinaryFileResponse
     {
         $empresaId = auth()->user()->empresa_id;

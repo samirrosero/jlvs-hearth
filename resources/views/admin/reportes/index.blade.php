@@ -107,6 +107,32 @@
         </p>
     </div>
 
+    {{-- ── Reporte de Médicos ───────────────────────────────────── --}}
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <div class="flex items-center gap-3 mb-5">
+            <img src="{{ asset('img/icons/medicos.png') }}" alt="Médicos" class="w-8 h-8 flex-shrink-0 opacity-80">
+            <div>
+                <h3 class="font-semibold text-gray-800">Reporte de Médicos</h3>
+                <p class="text-xs text-gray-500">Exporta el directorio de médicos de la IPS</p>
+            </div>
+        </div>
+
+        <p class="text-xs text-gray-400 mb-5">
+            Incluye nombre, identificación, correo, especialidad, registro médico y estado de cuenta.
+        </p>
+
+        <div class="flex gap-3">
+            <a href="{{ route('reportes.medicos.pdf') }}" target="_blank"
+               class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-red-400 hover:bg-red-700 text-white text-sm font-semibold rounded-lg transition">
+                <img src="{{ asset('img/icons/pdf.png') }}" alt="PDF" class="w-4 h-4 flex-shrink-0"> Descargar PDF
+            </a>
+            <a href="{{ route('reportes.medicos.excel') }}" target="_blank"
+               class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg transition">
+                <img src="{{ asset('img/icons/excel.png') }}" alt="Excel" class="w-4 h-4 flex-shrink-0"> Descargar Excel
+            </a>
+        </div>
+    </div>
+
 </div>
 
 {{-- ── Nota legal ──────────────────────────────────────────────── --}}

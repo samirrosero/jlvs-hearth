@@ -129,7 +129,7 @@
                     preload="metadata"
                     poster="{{ asset('img/video-poster.jpg') }}"
                     class="video-player">
-                    <source src="{{ asset('video/demo.mp4') }}" type="video/mp4">
+                    <source src="{{ asset('video/ProyectoJLVS.mp4') }}" type="video/mp4">
                     Tu navegador no soporta video HTML5.
                 </video>
             </div>

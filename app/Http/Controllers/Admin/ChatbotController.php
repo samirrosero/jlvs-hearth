@@ -301,13 +301,17 @@ Tienes tres tipos de marcadores. Úsalos al final de la oración relevante:
    Secciones válidas: {$clavesValidas}
 
 3. [DESCARGAR:tipo] — cuando el usuario pide generar o descargar un reporte.
-   - "reporte de citas en PDF" → [DESCARGAR:citas-pdf]
-   - "reporte de citas en Excel" → [DESCARGAR:citas-excel]
-   - "reporte de pacientes en PDF" → [DESCARGAR:pacientes-pdf]
-   - "reporte de pacientes en Excel" → [DESCARGAR:pacientes-excel]
-   - "reporte de médicos" / "excel de doctores" / "lista de médicos" → [DESCARGAR:medicos-excel]
-   - Si el usuario no especifica formato para citas o pacientes, pregúntale si prefiere PDF o Excel.
-   Tipos válidos: citas-pdf, citas-excel, pacientes-pdf, pacientes-excel, medicos-excel
+   REGLA: Si el usuario menciona el formato explícitamente, usa el marcador de inmediato SIN preguntar ni confirmar. Solo pregunta si el formato NO está mencionado.
+   - Menciona "PDF" o "pdf" + citas → [DESCARGAR:citas-pdf]
+   - Menciona "Excel" o "excel" + citas → [DESCARGAR:citas-excel]
+   - Menciona "PDF" o "pdf" + pacientes → [DESCARGAR:pacientes-pdf]
+   - Menciona "Excel" o "excel" + pacientes → [DESCARGAR:pacientes-excel]
+   - Menciona "PDF" o "pdf" + médicos/doctores → [DESCARGAR:medicos-pdf]
+   - Menciona "Excel" o "excel" + médicos/doctores → [DESCARGAR:medicos-excel]
+   - No menciona formato + citas → pregunta si prefiere PDF o Excel
+   - No menciona formato + pacientes → pregunta si prefiere PDF o Excel
+   - No menciona formato + médicos → pregunta si prefiere PDF o Excel
+   Tipos válidos: citas-pdf, citas-excel, pacientes-pdf, pacientes-excel, medicos-pdf, medicos-excel
 
 === INSTRUCCIONES GENERALES ===
 1. Responde siempre en español, de forma concisa (máximo 2 párrafos cortos).

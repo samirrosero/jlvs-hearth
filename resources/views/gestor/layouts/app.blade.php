@@ -68,34 +68,56 @@
         <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
             @php
                 $nav = [
-    [
-        'route' => 'gestor.dashboard',
-        'icon'  => $empresa?->icono_dashboard_url ?? asset('img/icons/dashboard.png'),
-        'label' => 'Dashboard',
-    ],
-    [
-        'route' => 'gestor.citas',
-        'match' => 'gestor.citas*',
-        'icon'  => $empresa?->icono_card_citas_url ?? asset('img/icons/citas-mes.png'),
-        'label' => 'Citas',
-    ],
-    [
-        'route' => 'gestor.pacientes',
-        'match' => 'gestor.pacientes*',
-        'icon'  => $empresa?->icono_pacientes_url ?? asset('img/icons/pacientes.png'),
-        'label' => 'Pacientes',
-    ],
-];
+                    // ── Dashboard ──────────────────────────────
+                    [
+                        'route' => 'gestor.dashboard',
+                        'icon'  => $empresa?->icono_dashboard_url ?? asset('img/icons/dashboard.png'),
+                        'label' => 'Agenda semanal',
+                        'match' => 'gestor.dashboard',
+                    ],
+                    // ── Sección citas ──────────────────────────
+                    ['divider' => 'Citas'],
+                    [
+                        'route' => 'gestor.citas.create',
+                        'icon'  => asset('img/icons/citas-mes.png'),
+                        'label' => 'Nueva cita',
+                        'match' => 'gestor.citas.create',
+                    ],
+                    [
+                        'route' => 'gestor.citas',
+                        'match' => 'gestor.citas.index',
+                        'icon'  => $empresa?->icono_card_citas_url ?? asset('img/icons/citas-mes.png'),
+                        'label' => 'Ver todas',
+                    ],
+                    // ── Sección pacientes ──────────────────────
+                    ['divider' => 'Pacientes'],
+                    [
+                        'route' => 'gestor.pacientes.create',
+                        'icon'  => asset('img/icons/pacientes.png'),
+                        'label' => 'Registrar paciente',
+                        'match' => 'gestor.pacientes.create',
+                    ],
+                    [
+                        'route' => 'gestor.pacientes',
+                        'match' => 'gestor.pacientes.index',
+                        'icon'  => $empresa?->icono_pacientes_url ?? asset('img/icons/pacientes.png'),
+                        'label' => 'Directorio',
+                    ],
+                ];
             @endphp
 
             @foreach ($nav as $item)
-                @if (Route::has($item['route']))
-                <a href="{{ route($item['route']) }}"
-                   class="nav-item flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition
-                          {{ request()->routeIs($item['match'] ?? $item['route']) ? 'activo' : '' }}">
-                    <img src="{{ $item['icon'] }}" alt="{{ $item['label'] }}" class="w-5 h-5 flex-shrink-0">
-                    {{ $item['label'] }}
-                </a>
+                @if(isset($item['divider']))
+                    <p class="px-4 pt-4 pb-1 text-xs font-bold uppercase tracking-widest" style="color:rgba(255,255,255,.3)">
+                        {{ $item['divider'] }}
+                    </p>
+                @elseif(Route::has($item['route']))
+                    <a href="{{ route($item['route']) }}"
+                       class="nav-item flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition
+                              {{ request()->routeIs($item['match'] ?? $item['route']) ? 'activo' : '' }}">
+                        <img src="{{ $item['icon'] }}" alt="{{ $item['label'] }}" class="w-5 h-5 flex-shrink-0">
+                        {{ $item['label'] }}
+                    </a>
                 @endif
             @endforeach
         </nav>

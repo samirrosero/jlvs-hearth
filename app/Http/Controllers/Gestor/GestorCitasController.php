@@ -109,4 +109,14 @@ class GestorCitasController extends Controller
 
         return redirect()->route('gestor.citas')->with('exito', 'Cita actualizada correctamente.');
     }
+
+    public function cambiarEstado(Request $request, Cita $cita)
+    {
+        abort_if($cita->empresa_id !== auth()->user()->empresa_id, 403);
+
+        $data = $request->validate(['estado_id' => ['required', 'exists:estados_cita,id']]);
+        $cita->update($data);
+
+        return back()->with('success', 'Estado de la cita actualizado.');
+    }
 }

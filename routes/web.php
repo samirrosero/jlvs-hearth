@@ -509,6 +509,10 @@ Route::prefix('gestor')->name('gestor.')->middleware(['auth', 'role:gestor_citas
     Route::get('/pacientes',             [GestorPacientesController::class, 'index'])->name('pacientes');
     Route::get('/pacientes/registrar',   [GestorPacientesController::class, 'create'])->name('pacientes.create');
     Route::post('/pacientes',            [GestorPacientesController::class, 'store'])->name('pacientes.store');
+
+    Route::patch('/citas/{cita}/estado', [GestorCitasController::class, 'cambiarEstado'])->name('citas.estado');
+
+    Route::post('/chatbot', [ChatbotController::class, 'chat'])->name('chatbot');
 });
 
 // ═════════════════════════════════════════════════════════════

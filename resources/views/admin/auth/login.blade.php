@@ -121,14 +121,15 @@
         .pass-eye:hover { color: #475569; }
 
         /* ── Botón ── */
-        .btn-primary {
-            width: 100%; padding: 13px; margin-top: 4px;
+        .btn-submit {
+            display: block; margin: 4px auto 0;
+            padding: 13px 48px;
             background: {{ $colorAccent }}; color: #fff;
             font-size: 14px; font-weight: 700; letter-spacing: .3px;
             border: none; border-radius: 10px; cursor: pointer;
             transition: opacity .2s, transform .15s;
         }
-        .btn-primary:hover { opacity: .9; transform: translateY(-1px); }
+        .btn-submit:hover { opacity: .9; transform: translateY(-1px); }
 
         /* ── Links ── */
         .link-accent { color: {{ $colorAccent }}; font-weight: 600; text-decoration: none; }
@@ -249,7 +250,7 @@
                     <label for="rem" class="text-sm text-slate-500 cursor-pointer select-none">Recordarme</label>
                 </div>
 
-                <button type="submit" class="btn-primary">Ingresar</button>
+                <button type="submit" class="btn-submit">Ingresar</button>
             </form>
 
             {{-- Registrarse --}}

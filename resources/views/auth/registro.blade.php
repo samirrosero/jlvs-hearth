@@ -113,14 +113,15 @@
         #doc-preview { max-height: 80px; margin: 0 auto 8px; display: none; border-radius: 6px; }
 
         /* ── Botón ── */
-        .btn-primary {
-            width: 100%; padding: 13px; margin-top: 6px;
+        .btn-submit {
+            display: block; margin: 6px auto 0;
+            padding: 13px 48px;
             background: {{ $colorAccent }}; color: #fff;
             font-size: 14px; font-weight: 700; letter-spacing: .3px;
             border: none; border-radius: 10px; cursor: pointer;
             transition: opacity .2s, transform .15s;
         }
-        .btn-primary:hover { opacity: .9; transform: translateY(-1px); }
+        .btn-submit:hover { opacity: .9; transform: translateY(-1px); }
 
         .link-accent { color: {{ $colorAccent }}; font-weight: 600; text-decoration: none; }
         .link-accent:hover { text-decoration: underline; }
@@ -350,7 +351,7 @@
                                 <a href="{{ route('terminos') }}" target="_blank" style="color:var(--primario,#0369a1);text-decoration:underline;font-weight:600;">Términos y Condiciones de Uso</a>.
                             </span>
                         </label>
-                        <button type="submit" class="btn-primary"
+                        <button type="submit" class="btn-submit"
                                 :disabled="!aceptaAfiliado"
                                 :style="!aceptaAfiliado ? 'opacity:0.45;cursor:not-allowed;' : ''">
                             Registrarme como Afiliado
@@ -547,7 +548,7 @@
                                 <a href="{{ route('terminos') }}" target="_blank" style="color:var(--primario,#0369a1);text-decoration:underline;font-weight:600;">Términos y Condiciones de Uso</a>.
                             </span>
                         </label>
-                        <button type="submit" class="btn-primary"
+                        <button type="submit" class="btn-submit"
                                 :disabled="!aceptaEmpleador"
                                 :style="!aceptaEmpleador ? 'opacity:0.45;cursor:not-allowed;' : ''">
                             Enviar solicitud

@@ -147,58 +147,105 @@
         </div>
     </div>
 
-    {{-- ── 4 Stats compactas ── --}}
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+    {{-- ── 6 Stats compactas ── --}}
+    <div class="grid grid-cols-2 lg:grid-cols-6 gap-3">
 
-        <div class="bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-4 flex items-center gap-3">
-            <div class="bg-blue-50 rounded-lg p-2.5 shrink-0">
-                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-5 flex items-start gap-4">
+            <div class="bg-blue-50 rounded-2xl p-3 shrink-0">
+                <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                           d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                 </svg>
             </div>
-            <div>
-                <p class="text-xl font-bold text-gray-900 leading-none">{{ $citasHoy }}</p>
-                <p class="text-xs text-gray-500 mt-0.5">Citas hoy</p>
+            <div class="flex-1">
+                <p class="text-3xl font-bold text-gray-900 leading-none">{{ $citasHoy }}</p>
+                <p class="text-xs text-gray-500 mt-1">Citas hoy</p>
+                <p class="text-xs font-semibold mt-2 {{ $citasHoyDiff >= 0 ? 'text-emerald-600' : 'text-red-600' }}">
+                    {{ $citasHoyDiff >= 0 ? '+' : '' }}{{ $citasHoyDiff }} vs ayer
+                </p>
             </div>
         </div>
 
-        <div class="bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-4 flex items-center gap-3">
-            <div class="bg-amber-50 rounded-lg p-2.5 shrink-0">
-                <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-5 flex items-start gap-4">
+            <div class="bg-amber-50 rounded-2xl p-3 shrink-0">
+                <svg class="w-8 h-8 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                           d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
             </div>
             <div>
-                <p class="text-xl font-bold text-gray-900 leading-none">{{ $citasPendientes }}</p>
-                <p class="text-xs text-gray-500 mt-0.5">Pendientes</p>
+                <p class="text-3xl font-bold text-gray-900 leading-none">{{ $citasPendientes }}</p>
+                <p class="text-xs text-gray-500 mt-1">Pendientes</p>
+                <p class="text-xs text-gray-500 mt-2">Revisa las confirmaciones y llegadas</p>
             </div>
         </div>
 
-        <div class="bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-4 flex items-center gap-3">
-            <div class="bg-emerald-50 rounded-lg p-2.5 shrink-0">
-                <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-5 flex items-start gap-4">
+            <div class="bg-emerald-50 rounded-2xl p-3 shrink-0">
+                <svg class="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                          d="M5 13l4 4L19 7"/>
                 </svg>
             </div>
             <div>
-                <p class="text-xl font-bold text-gray-900 leading-none">{{ $totalPacientes }}</p>
-                <p class="text-xs text-gray-500 mt-0.5">Pacientes</p>
+                <p class="text-3xl font-bold text-gray-900 leading-none">{{ $citasConfirmadasHoy }}</p>
+                <p class="text-xs text-gray-500 mt-1">Confirmadas hoy</p>
+                <p class="text-xs text-gray-500 mt-2">Datos reales desde la agenda</p>
             </div>
         </div>
 
-        <div class="bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-4 flex items-center gap-3">
-            <div class="bg-purple-50 rounded-lg p-2.5 shrink-0">
-                <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-5 flex items-start gap-4">
+            <div class="bg-sky-50 rounded-2xl p-3 shrink-0">
+                <svg class="w-8 h-8 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M3 7h18M7 7v13M17 7v13M5 20h14"/>
+                </svg>
+            </div>
+            <div>
+                <p class="text-3xl font-bold text-gray-900 leading-none">{{ $totalPacientes }}</p>
+                <p class="text-xs text-gray-500 mt-1">Pacientes</p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-5 flex items-start gap-4">
+            <div class="bg-purple-50 rounded-2xl p-3 shrink-0">
+                <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                           d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                 </svg>
             </div>
             <div>
-                <p class="text-xl font-bold text-gray-900 leading-none">{{ $totalMedicos }}</p>
-                <p class="text-xs text-gray-500 mt-0.5">Médicos</p>
+                <p class="text-3xl font-bold text-gray-900 leading-none">{{ $totalMedicos }}</p>
+                <p class="text-xs text-gray-500 mt-1">Médicos</p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-4 flex flex-col justify-between gap-4">
+            <div class="flex items-start gap-4">
+                <div class="bg-cyan-50 rounded-2xl p-3 shrink-0">
+                    <svg class="w-8 h-8 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M3 3v18h18M7 17V7m6 10V5m6 12V11"/>
+                    </svg>
+                </div>
+                <div class="flex-1">
+                    <p class="text-3xl font-bold text-gray-900 leading-none">{{ $citasSemanaTotal }}</p>
+                    <p class="text-xs text-gray-500 mt-1">Citas esta semana</p>
+                    <p class="text-xs font-semibold mt-2 {{ $citasSemanaDiff >= 0 ? 'text-emerald-600' : 'text-red-600' }}">
+                        {{ $citasSemanaDiff >= 0 ? '+' : '' }}{{ $citasSemanaDiff }} vs anterior
+                    </p>
+                </div>
+            </div>
+            <div class="space-y-2">
+                @foreach ($citasSemanaDias as $dia)
+                    <div class="flex items-center gap-2 text-[11px]">
+                        <span class="w-10 text-gray-500">{{ $dia['label'] }}</span>
+                        <div class="h-2 rounded-full bg-slate-100 flex-1 overflow-hidden">
+                            <div class="h-full rounded-full bg-cyan-500" style="width: {{ $dia['percent'] }}%"></div>
+                        </div>
+                        <span class="w-6 text-right text-gray-700">{{ $dia['count'] }}</span>
+                    </div>
+                @endforeach
             </div>
         </div>
 

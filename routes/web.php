@@ -499,10 +499,11 @@ Route::prefix('gestor')->name('gestor.')->middleware(['auth', 'role:gestor_citas
     Route::get('/',          fn () => redirect()->route('gestor.dashboard'));
     Route::get('/dashboard', GestorDashboardController::class)->name('dashboard');
 
-    Route::get('/citas',          [GestorCitasController::class, 'index'])->name('citas');
-    Route::get('/citas/crear',    [GestorCitasController::class, 'create'])->name('citas.create');
-    Route::post('/citas',         [GestorCitasController::class, 'store'])->name('citas.store');
-    Route::get('/citas/{cita}',   [GestorCitasController::class, 'show'])->name('citas.show');
+    Route::get('/citas',              [GestorCitasController::class, 'index'])->name('citas');
+    Route::get('/citas/crear',        [GestorCitasController::class, 'create'])->name('citas.create');
+    Route::get('/citas/buscar-hoy',   [GestorCitasController::class, 'buscarHoy'])->name('citas.buscar-hoy');
+    Route::post('/citas',             [GestorCitasController::class, 'store'])->name('citas.store');
+    Route::get('/citas/{cita}',       [GestorCitasController::class, 'show'])->name('citas.show');
     Route::get('/citas/{cita}/editar', [GestorCitasController::class, 'edit'])->name('citas.edit');
     Route::put('/citas/{cita}',   [GestorCitasController::class, 'update'])->name('citas.update');
 
@@ -514,6 +515,8 @@ Route::prefix('gestor')->name('gestor.')->middleware(['auth', 'role:gestor_citas
 
     Route::post('/citas/agendar',         [GestorCitasController::class, 'agendar'])->name('citas.agendar');
     Route::patch('/citas/{cita}/estado', [GestorCitasController::class, 'cambiarEstado'])->name('citas.estado');
+
+    Route::get('/lista-espera', fn () => view('gestor.lista-espera.index'))->name('lista-espera');
 
     Route::post('/chatbot', [ChatbotController::class, 'chat'])->name('chatbot');
 });

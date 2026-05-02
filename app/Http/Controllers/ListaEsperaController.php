@@ -24,6 +24,11 @@ class ListaEsperaController extends Controller
         if ($request->filled('medico_id')) {
             $query->where('medico_id', $request->integer('medico_id'));
         }
+        if ($request->filled('identificacion')) {
+            $query->whereHas('paciente', fn ($q) =>
+                $q->where('identificacion', 'like', $request->input('identificacion') . '%')
+            );
+        }
 
         return response()->json($query->orderBy('created_at')->get());
     }

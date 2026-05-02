@@ -28,6 +28,80 @@
         </a>
     </div>
 
+    {{-- ── Alerta reasignación masiva (solo cuando hay médico + fecha filtrados) ── --}}
+    @if(request('medico_id') && request('fecha'))
+    <div x-data="{
+            cargando: false,
+            resultado: '',
+            tipo: '',
+            async reasignar() {
+                if (!confirm('¿Confirmas que el médico está ausente y deseas reasignar todas sus citas pendientes del {{ request('fecha') }}?')) return;
+                this.cargando  = true;
+                this.resultado = '';
+                try {
+                    const res  = await fetch('{{ route('citas.reasignar-medico') }}', {
+                        method:  'POST',
+                        headers: {
+                            'Accept':       'application/json',
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name=\'csrf-token\']').content,
+                        },
+                        body: JSON.stringify({
+                            medico_id_ausente: {{ (int) request('medico_id') }},
+                            fecha:             '{{ request('fecha') }}',
+                        }),
+                    });
+                    const data = await res.json();
+                    this.resultado = data.message;
+                    this.tipo      = res.ok ? 'ok' : 'error';
+                    if (res.ok) setTimeout(() => location.reload(), 2200);
+                } catch (e) {
+                    this.resultado = 'Error al conectar. Intenta de nuevo.';
+                    this.tipo      = 'error';
+                } finally {
+                    this.cargando = false;
+                }
+            }
+        }"
+         class="bg-red-50 border border-red-200 rounded-2xl px-5 py-4 flex flex-wrap items-center justify-between gap-4">
+        <div>
+            <p class="text-sm font-semibold text-red-800 flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                </svg>
+                Médico ausente — reasignación masiva
+            </p>
+            <p class="text-xs text-red-600 mt-0.5">
+                Redistribuye todas las citas pendientes de este médico del
+                <strong>{{ \Carbon\Carbon::parse(request('fecha'))->format('d/m/Y') }}</strong>
+                al médico disponible con menor carga.
+            </p>
+        </div>
+        <div class="flex items-center gap-3">
+            <div x-show="resultado"
+                 :class="tipo === 'ok' ? 'text-green-700 bg-green-50 border-green-200' : 'text-red-700 bg-red-100 border-red-300'"
+                 class="text-xs font-medium border rounded-lg px-3 py-1.5 max-w-xs"
+                 x-text="resultado"
+                 style="display:none"></div>
+            <button type="button"
+                    @click="reasignar()"
+                    :disabled="cargando"
+                    class="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold text-sm px-4 py-2.5 rounded-xl transition-colors whitespace-nowrap">
+                <svg x-show="cargando" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                </svg>
+                <svg x-show="!cargando" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+                </svg>
+                <span x-text="cargando ? 'Reasignando...' : 'Reasignar citas'"></span>
+            </button>
+        </div>
+    </div>
+    @endif
+
     {{-- ── Filtros ── --}}
     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-4">
         <form method="GET" action="{{ route('gestor.citas') }}" class="flex flex-wrap items-end gap-3">
@@ -65,6 +139,14 @@
                         </option>
                     @endforeach
                 </select>
+            </div>
+
+            <div class="flex flex-col gap-1 min-w-[160px]">
+                <label for="filtro_cedula" class="block text-sm font-medium text-gray-700 mb-1">Cédula / Documento</label>
+                <input type="text" id="filtro_cedula" name="cedula"
+                       value="{{ request('cedula') }}"
+                       placeholder="Buscar por cédula"
+                       class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
             </div>
 
             <div class="flex items-end gap-2 pb-0">

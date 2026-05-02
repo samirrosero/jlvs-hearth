@@ -110,19 +110,28 @@ function chatbot(endpoint, rutas, storageKey, mensajeInicialTexto) {
     function parsearRespuesta(raw) {
         const acciones = [];
 
-        // [NAVEGAR:clave] — redirige automáticamente
-        const matchNav = raw.match(/\[NAVEGAR:(\w+)\]/);
-        const navegar  = (matchNav && rutas[matchNav[1]]) ? rutas[matchNav[1]] : null;
+        // [NAVEGAR:clave] o [NAVEGAR:clave:parametro] — redirige automáticamente
+        const matchNav = raw.match(/\[NAVEGAR:([\w-]+)(?::([^\]]*))?\]/);
+        let navegar = null;
+        if (matchNav && rutas[matchNav[1]]) {
+            const param = (matchNav[2] ?? '').trim();
+            navegar = {
+                ...rutas[matchNav[1]],
+                url: param
+                    ? rutas[matchNav[1]].url + '?buscar=' + encodeURIComponent(param)
+                    : rutas[matchNav[1]].url,
+            };
+        }
 
         // [IR:clave] — botones de sugerencia
-        const marcador = /\[IR:(\w+)\]/g;
+        const marcador = /\[IR:([\w-]+)\]/g;
         let match;
         while ((match = marcador.exec(raw)) !== null) {
             if (rutas[match[1]]) acciones.push(rutas[match[1]]);
         }
 
         const texto = raw
-            .replace(/\[NAVEGAR:\w+\]/g, '')
+            .replace(/\[NAVEGAR:[\w-]+(?::[^\]]*)?\]/g, '')
             .replace(/\[IR:\w+\]/g, '')
             .replace(/\s{2,}/g, ' ')
             .trim();

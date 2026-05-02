@@ -89,6 +89,14 @@
                         'icon'  => $empresa?->icono_card_citas_url ?? asset('img/icons/citas-mes.png'),
                         'label' => 'Ver todas',
                     ],
+                    // ── Lista de espera ───────────────────────
+                    ['divider' => 'Espera'],
+                    [
+                        'route' => 'gestor.lista-espera',
+                        'match' => 'gestor.lista-espera',
+                        'icon'  => asset('img/icons/pacientes.png'),
+                        'label' => 'Lista de espera',
+                    ],
                     // ── Sección pacientes ──────────────────────
                     ['divider' => 'Pacientes'],
                     [
@@ -186,9 +194,12 @@
     @if (Route::has('gestor.chatbot'))
     @php
         $chatbotRutas = collect([
-            ['clave' => 'dashboard',  'label' => 'Ir al Dashboard',   'ruta' => 'gestor.dashboard'],
-            ['clave' => 'citas',      'label' => 'Ver Citas',      'ruta' => 'gestor.citas'],
-            ['clave' => 'pacientes',  'label' => 'Ver Pacientes',  'ruta' => 'gestor.pacientes'],
+            ['clave' => 'dashboard',          'label' => 'Ir al Dashboard',     'ruta' => 'gestor.dashboard'],
+            ['clave' => 'citas',              'label' => 'Ver Citas',           'ruta' => 'gestor.citas'],
+            ['clave' => 'nueva-cita',         'label' => 'Nueva Cita',          'ruta' => 'gestor.citas.create'],
+            ['clave' => 'pacientes',          'label' => 'Ver Pacientes',       'ruta' => 'gestor.pacientes'],
+            ['clave' => 'registrar-paciente', 'label' => 'Registrar Paciente',  'ruta' => 'gestor.pacientes.create'],
+            ['clave' => 'lista-espera',       'label' => 'Ver Lista de Espera', 'ruta' => 'gestor.lista-espera'],
         ])->filter(fn ($s) => Route::has($s['ruta']))
           ->mapWithKeys(fn ($s) => [$s['clave'] => ['label' => $s['label'], 'url' => route($s['ruta'])]])
           ->toJson();
@@ -198,7 +209,7 @@
         endpoint="{{ route('gestor.chatbot') }}"
         storage-key="gestor"
         :rutas-json="$chatbotRutas"
-        mensaje-inicial="¡Hola! Soy tu asistente. Puedo decirte cuántas citas hay hoy, buscar pacientes o ayudarte a navegar. ¿En qué te puedo ayudar?"
+        mensaje-inicial="¡Hola! Soy tu asistente. Puedo decirte cuántas citas hay hoy, quién está en lista de espera, buscar pacientes o llevarte a cualquier sección del panel. ¿En qué te ayudo?"
     />
     @endif
 

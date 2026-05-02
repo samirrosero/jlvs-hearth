@@ -58,6 +58,95 @@
         </a>
     </div>
 
+    {{-- ── Buscar pacientes ── --}}
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-4"
+         x-data="checkIn()">
+
+        <div class="flex items-center gap-2 mb-3">
+            <svg class="w-4 h-4 text-blue-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <h3 class="text-sm font-semibold text-gray-800">Buscar pacientes</h3>
+            <span class="text-xs text-gray-400 ml-auto">Hoy &mdash; {{ now()->format('d/m/Y') }}</span>
+        </div>
+
+        <div class="flex gap-2">
+            <input type="text" x-model="cedula" @keydown.enter="buscar()"
+                   placeholder="Número de cédula / documento"
+                   class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+            <button type="button" @click="buscar()" :disabled="buscando || !cedula.trim()"
+                    class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold text-sm px-4 py-2 rounded-lg transition-colors">
+                <svg x-show="buscando" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                </svg>
+                <svg x-show="!buscando" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+                <span x-text="buscando ? 'Buscando...' : 'Buscar'"></span>
+            </button>
+        </div>
+
+        {{-- Sin resultados --}}
+        <div x-show="buscado && citas.length === 0" style="display:none"
+             class="mt-3 text-sm text-gray-500 flex items-center gap-2">
+            <svg class="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+            No se encontraron citas para hoy con ese documento.
+        </div>
+
+        {{-- Resultados --}}
+        <div x-show="citas.length > 0" style="display:none" class="mt-3 space-y-2">
+            <template x-for="cita in citas" :key="cita.id">
+                <div class="flex items-center justify-between gap-3 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
+                    <div class="flex-1 min-w-0">
+                        <p class="font-semibold text-gray-800 text-sm leading-snug" x-text="cita.paciente?.nombre_completo ?? '\u2014'"></p>
+                        <p class="text-xs text-gray-500 mt-0.5">
+                            <span x-text="cita.servicio?.nombre ?? 'Sin servicio'"></span>
+                            &bull;
+                            <span class="tabular-nums font-medium" x-text="(cita.hora ?? '').slice(0,5)"></span>
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0">
+                        <span :class="{
+                                'bg-amber-100 text-amber-700': cita.estado?.nombre === 'Pendiente',
+                                'bg-blue-100 text-blue-700':   cita.estado?.nombre === 'Confirmada',
+                                'bg-green-100 text-green-700': cita.estado?.nombre === 'Atendida',
+                                'bg-red-100 text-red-600':     cita.estado?.nombre === 'Cancelada',
+                                'bg-gray-100 text-gray-500':   cita.estado?.nombre === 'No asistió',
+                              }"
+                              class="text-xs font-semibold px-2.5 py-1 rounded-full"
+                              x-text="cita.estado?.nombre ?? '\u2014'"></span>
+
+                        <button type="button"
+                                x-show="cita.estado?.nombre === 'Pendiente'"
+                                @click="confirmarLlegada(cita.id)"
+                                :disabled="confirmando === cita.id"
+                                class="inline-flex items-center gap-1.5 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold text-xs px-3 py-1.5 rounded-lg transition-colors">
+                            <svg x-show="confirmando === cita.id" class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                            </svg>
+                            <svg x-show="confirmando !== cita.id" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            Confirmar llegada
+                        </button>
+
+                        <span x-show="cita.estado?.nombre === 'Confirmada' && confirmado === cita.id"
+                              class="text-xs text-green-700 font-semibold flex items-center gap-1" style="display:none">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            Registrado
+                        </span>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </div>
+
     {{-- ── 4 Stats compactas ── --}}
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
 
@@ -283,4 +372,65 @@
     </div>
 
 </div>
+@push('scripts')
+<script>
+function checkIn() {
+    return {
+        cedula:      '',
+        buscando:    false,
+        citas:       [],
+        buscado:     false,
+        confirmando: null,
+        confirmado:  null,
+
+        async buscar() {
+            if (!this.cedula.trim()) return;
+            this.buscando = true;
+            this.citas    = [];
+            this.buscado  = false;
+            this.confirmado = null;
+            try {
+                const res = await fetch('/gestor/citas/buscar-hoy?identificacion=' + encodeURIComponent(this.cedula), {
+                    headers: { 'Accept': 'application/json' },
+                });
+                this.citas   = await res.json();
+                this.buscado = true;
+            } catch (e) {
+                this.citas   = [];
+                this.buscado = true;
+            } finally {
+                this.buscando = false;
+            }
+        },
+
+        async confirmarLlegada(id) {
+            this.confirmando = id;
+            try {
+                const res = await fetch('/gestor/citas/' + id + '/estado', {
+                    method:  'PATCH',
+                    headers: {
+                        'Accept':       'application/json',
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    },
+                    body: JSON.stringify({ estado_id: 2 }),
+                });
+                if (res.ok) {
+                    this.confirmado = id;
+                    this.citas = this.citas.map(c =>
+                        c.id === id
+                            ? { ...c, estado: { ...c.estado, nombre: 'Confirmada' } }
+                            : c
+                    );
+                }
+            } catch (e) {}
+            finally {
+                this.confirmando = null;
+            }
+        },
+    };
+}
+</script>
+@endpush
+
 @endsection

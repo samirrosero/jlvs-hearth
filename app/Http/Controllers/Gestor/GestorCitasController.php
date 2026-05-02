@@ -24,6 +24,9 @@ class GestorCitasController extends Controller
             ->when(request('fecha'), fn ($q) => $q->where('fecha', request('fecha')))
             ->when(request('medico_id'), fn ($q) => $q->where('medico_id', request('medico_id')))
             ->when(request('estado_id'), fn ($q) => $q->where('estado_id', request('estado_id')))
+            ->when(request('cedula'), fn ($q) => $q->whereHas('paciente',
+                fn ($p) => $p->where('identificacion', 'like', request('cedula') . '%')
+            ))
             ->orderByDesc('fecha')->orderByDesc('hora')
             ->paginate(15)
             ->withQueryString();
@@ -120,7 +123,27 @@ class GestorCitasController extends Controller
         $data = $request->validate(['estado_id' => ['required', 'exists:estados_cita,id']]);
         $cita->update($data);
 
+        if ($request->wantsJson()) {
+            return response()->json(['message' => 'Estado actualizado.']);
+        }
         return back()->with('success', 'Estado de la cita actualizado.');
+    }
+
+    public function buscarHoy(Request $request)
+    {
+        $request->validate(['identificacion' => ['required', 'string', 'max:30']]);
+
+        $empresaId = auth()->user()->empresa_id;
+
+        $citas = Cita::where('empresa_id', $empresaId)
+            ->whereDate('fecha', today())
+            ->where('activo', true)
+            ->whereHas('paciente', fn ($q) => $q->where('identificacion', $request->identificacion))
+            ->with('paciente', 'medico.usuario', 'estado', 'servicio')
+            ->orderBy('hora')
+            ->get();
+
+        return response()->json($citas);
     }
 
     /**

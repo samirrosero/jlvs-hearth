@@ -314,6 +314,42 @@
             <span x-text="mensajeError"></span>
         </div>
 
+        {{-- Lista de espera (cuando no hay disponibilidad y ya hay paciente seleccionado) --}}
+        <div x-show="mensajeError && pacienteId && !listaEsperaOk" style="display:none"
+             class="bg-white border border-amber-200 rounded-xl px-4 py-3 space-y-2">
+            <p class="text-sm font-semibold text-gray-700">No hay cupos disponibles — ¿registrar en lista de espera?</p>
+            <p class="text-xs text-gray-500">
+                El paciente quedará en espera para
+                <strong x-text="especialidad"></strong> el <strong x-text="fecha"></strong>.
+                El gestor lo contactará cuando se libere un cupo.
+            </p>
+            <div x-show="errorEspera" x-text="errorEspera"
+                 class="text-red-600 text-xs bg-red-50 border border-red-200 rounded-lg px-3 py-2"
+                 style="display:none"></div>
+            <button type="button"
+                    @click="registrarEnEspera()"
+                    :disabled="registrandoEspera"
+                    class="inline-flex items-center gap-2 bg-amber-600 hover:bg-amber-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold text-sm px-4 py-2 rounded-xl transition-colors">
+                <svg x-show="registrandoEspera" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                </svg>
+                <span x-text="registrandoEspera ? 'Registrando...' : 'Registrar en lista de espera'"></span>
+            </button>
+        </div>
+
+        {{-- Confirmacion lista de espera --}}
+        <div x-show="listaEsperaOk" style="display:none"
+             class="flex items-center gap-3 bg-green-50 border border-green-200 rounded-xl px-4 py-3">
+            <svg class="w-5 h-5 text-green-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <div>
+                <p class="text-sm font-semibold text-green-800">Paciente registrado en lista de espera.</p>
+                <p class="text-xs text-green-700 mt-0.5">Se le notificara cuando se libere un cupo.</p>
+            </div>
+        </div>
+
         {{-- Slots --}}
         <div x-show="slots.length > 0" style="display:none">
             <p class="text-xs font-medium text-gray-500 mb-2">Horarios disponibles — selecciona uno:</p>
@@ -457,6 +493,9 @@ function agendarGestor() {
         registrando:      false,
         errorReg:         '',
         passwordTemporal: '',
+        listaEsperaOk:    false,
+        registrandoEspera: false,
+        errorEspera:      '',
 
         // Especialidad y servicio
         especialidad:  '{{ old('especialidad', '') }}',
@@ -569,16 +608,55 @@ function agendarGestor() {
 
         // ── Disponibilidad ────────────────────────────────────
         resetBusqueda() {
-            this.fecha        = '';
-            this.hora         = '';
-            this.slots        = [];
-            this.mensajeError = '';
+            this.fecha             = '';
+            this.hora              = '';
+            this.slots             = [];
+            this.mensajeError      = '';
+            this.listaEsperaOk     = false;
+            this.registrandoEspera = false;
+            this.errorEspera       = '';
         },
 
         resetHora() {
-            this.hora         = '';
-            this.slots        = [];
-            this.mensajeError = '';
+            this.hora              = '';
+            this.slots             = [];
+            this.mensajeError      = '';
+            this.listaEsperaOk     = false;
+            this.registrandoEspera = false;
+            this.errorEspera       = '';
+        },
+
+        async registrarEnEspera() {
+            this.registrandoEspera = true;
+            this.errorEspera       = '';
+            try {
+                const res = await fetch('/lista-espera', {
+                    method:  'POST',
+                    headers: {
+                        'Accept':       'application/json',
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    },
+                    body: JSON.stringify({
+                        paciente_id:      this.pacienteId,
+                        fecha_solicitada: this.fecha,
+                        servicio_id:      this.servicioId || null,
+                        notas:            'Sin disponibilidad para ' + this.especialidad,
+                    }),
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    this.errorEspera = data.errors
+                        ? Object.values(data.errors).flat().join(' ')
+                        : (data.message || 'Error al registrar.');
+                    return;
+                }
+                this.listaEsperaOk = true;
+            } catch (e) {
+                this.errorEspera = 'Error al registrar. Intenta de nuevo.';
+            } finally {
+                this.registrandoEspera = false;
+            }
         },
 
         async buscarDisponibilidad() {

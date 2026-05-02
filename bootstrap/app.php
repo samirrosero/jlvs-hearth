@@ -34,6 +34,11 @@ return Application::configure(basePath: dirname(__DIR__))
         });
 
         $exceptions->render(function (\Illuminate\Validation\ValidationException $e, $request) {
+            // Solo devolver JSON para peticiones que lo esperan (fetch/AJAX)
+            // Los formularios Blade normales redirigen de vuelta con $errors
+            if (! $request->expectsJson()) {
+                return null;
+            }
             return response()->json([
                 'message' => 'Los datos enviados no son válidos.',
                 'errores' => $e->errors(),

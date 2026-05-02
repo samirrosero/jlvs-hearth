@@ -12,9 +12,11 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         :root {
-            --color-sidebar:    {{ $empresa?->color_doctor   ?? '#0f172a' }};
+            --color-sidebar:    {{ $empresa?->color_gestor   ?? '#4c1d95' }};
             --color-primario:   {{ $empresa?->color_primario ?? '#0369a1' }};
             --color-secundario: {{ $empresa?->color_secundario ?? '#075985' }};
+            --bs-primary:       {{ $empresa?->color_primario  ?? '#0369a1' }};
+            --bs-primary-rgb:   3, 105, 161;
         }
         #gestor-sidebar {
             background-color: var(--color-sidebar) !important;
@@ -101,7 +103,7 @@
         {{-- Usuario + Logout --}}
         <div class="sidebar-divider border-t px-4 py-4">
             <p class="sidebar-username text-xs font-medium truncate">{{ auth()->user()->nombre }}</p>
-            <p class="sidebar-role text-xs mb-1">{{ auth()->user()->medico?->especialidad ?? 'Médico' }}</p>
+            <p class="sidebar-role text-xs mb-1">{{ ucwords(str_replace('_', ' ', auth()->user()->rol?->nombre ?? 'Gestor de Citas')) }}</p>
             <p class="sidebar-role text-xs mb-3 opacity-70">{{ $empresa?->nombre }}</p>
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
@@ -159,39 +161,25 @@
     </div>
 
     {{-- ── Chatbot flotante ────────────────────────────────────── --}}
+    @if (Route::has('gestor.chatbot'))
     @php
         $chatbotRutas = collect([
-            ['clave' => 'dashboard',  'label' => 'Ir al Dashboard',   'ruta' => 'medico.dashboard'],
-            ['clave' => 'citas',      'label' => 'Ver Mis Citas',      'ruta' => 'medico.citas'],
-            ['clave' => 'pacientes',  'label' => 'Ver Mis Pacientes',  'ruta' => 'medico.pacientes'],
+            ['clave' => 'dashboard',  'label' => 'Ir al Dashboard',   'ruta' => 'gestor.dashboard'],
+            ['clave' => 'citas',      'label' => 'Ver Citas',      'ruta' => 'gestor.citas'],
+            ['clave' => 'pacientes',  'label' => 'Ver Pacientes',  'ruta' => 'gestor.pacientes'],
         ])->filter(fn ($s) => Route::has($s['ruta']))
           ->mapWithKeys(fn ($s) => [$s['clave'] => ['label' => $s['label'], 'url' => route($s['ruta'])]])
           ->toJson();
     @endphp
 
     <x-chatbot
-        endpoint="{{ route('medico.chatbot') }}"
-        storage-key="medico"
+        endpoint="{{ route('gestor.chatbot') }}"
+        storage-key="gestor"
         :rutas-json="$chatbotRutas"
-        mensaje-inicial="¡Hola! Soy tu asistente médico. Puedo decirte cuántas citas tienes hoy, el estado de tus pacientes o ayudarte a navegar. ¿En qué te puedo ayudar?"
+        mensaje-inicial="¡Hola! Soy tu asistente. Puedo decirte cuántas citas hay hoy, buscar pacientes o ayudarte a navegar. ¿En qué te puedo ayudar?"
     />
-{{-- Chatbot flotante --}}
-@php
-    $chatbotRutas = collect([
-        ['clave' => 'dashboard',  'label' => 'Ir al Dashboard',  'ruta' => 'gestor.dashboard'],
-        ['clave' => 'citas',      'label' => 'Ver Citas',         'ruta' => 'gestor.citas'],
-        ['clave' => 'pacientes',  'label' => 'Ver Pacientes',     'ruta' => 'gestor.pacientes'],
-    ])->filter(fn ($s) => Route::has($s['ruta']))
-      ->mapWithKeys(fn ($s) => [$s['clave'] => ['label' => $s['label'], 'url' => route($s['ruta'])]])
-      ->toJson();
-@endphp
+    @endif
 
-<x-chatbot
-    endpoint="{{ route('gestor.chatbot') }}"
-    storage-key="gestor"
-    :rutas-json="$chatbotRutas"
-    mensaje-inicial="¡Hola! Soy tu asistente. Puedo decirte cuántas citas hay hoy, buscar pacientes o ayudarte a navegar. ¿En qué te puedo ayudar?"
-/>
 
     @stack('scripts')
 

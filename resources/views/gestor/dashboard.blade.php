@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('gestor.layouts.app')
 
 @section('content')
 <style>
@@ -30,7 +30,7 @@
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center bg-white p-3 shadow-sm rounded-3">
                 <div>
-                    <h4 class="fw-bold text-primary mb-0">Gestión de Citas - IPS SaludIT</h4>
+                    <h4 class="fw-bold text-primary mb-0">Gestión de Citas - {{ Auth::user()->empresa->nombre }}</h4>
                     <small class="text-muted">Panel de Operaciones Administrativas</small>
                 </div>
                 <div class="text-end">
@@ -197,7 +197,7 @@
             <div class="modal-body p-5 text-center">
                 <i class="fas fa-exclamation-circle text-danger mb-4" style="font-size: 4rem;"></i>
                 <h4 class="fw-bold">¿Cancelar Cita Médica?</h4>
-                <p class="text-muted">Por favor, ingrese el ID de la cita que desea anular del sistema SaludIT.</p>
+                <p class="text-muted">Por favor, ingrese el ID de la cita que desea anular.</p>
                 <form action="{{ route('gestor.citas.cancelar', 'ID_A_REEMPLAZAR') }}" method="POST">
                     @csrf
                     @method('DELETE')

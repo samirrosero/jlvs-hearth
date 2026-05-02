@@ -11,9 +11,11 @@ use App\Http\Controllers\Admin\ChatbotController;
 use App\Http\Controllers\Admin\AdminHorarioController;
 use App\Http\Controllers\Admin\AdminServicioController;
 use App\Http\Controllers\Admin\AdminPortafolioController;
+use App\Http\Controllers\Admin\AdminValoracionesController;
 use App\Http\Controllers\Medico\MedicoDashboardController;
 use App\Http\Controllers\Medico\MedicoCitasController;
 use App\Http\Controllers\Medico\MedicoPacientesController;
+use App\Http\Controllers\Medico\MedicoValoracionesController;
 use App\Http\Controllers\Admin\LoginController;
 use App\Http\Controllers\AntecedentesPacienteController;
 use App\Http\Controllers\CambiarPasswordController;
@@ -447,6 +449,8 @@ Route::prefix('medico')->name('medico.')->middleware(['auth', 'role:medico'])->g
 
     Route::get('/ordenes', [\App\Http\Controllers\Medico\MedicoOrdenesController::class, 'index'])->name('ordenes');
 
+    Route::get('/valoraciones', [\App\Http\Controllers\Medico\MedicoValoracionesController::class, 'index'])->name('valoraciones');
+
     Route::post('/chatbot', [ChatbotController::class, 'chat'])->name('chatbot');
 });
 
@@ -562,6 +566,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         // Reportes — descarga de PDF/Excel (delega a ReporteController ya existente)
         Route::get('/reportes', fn () => view('admin.reportes.index'))->name('reportes');
+
+        // Valoraciones del sistema
+        Route::get('/valoraciones', [\App\Http\Controllers\Admin\AdminValoracionesController::class, 'index'])->name('valoraciones.index');
 
         // Identidad visual (branding) de la IPS
         Route::get('/branding',  [BrandingController::class, 'edit'])->name('branding');

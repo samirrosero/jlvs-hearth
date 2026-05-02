@@ -53,13 +53,24 @@ class BrandingController extends Controller
             'icono_pac_perfil'    => ['nullable', 'file', 'mimes:png,svg,webp', 'max:512'],
             // Iconos panel del médico
             'icono_medico_dashboard'  => ['nullable', 'file', 'mimes:png,svg,webp', 'max:512'],
+            'icono_medico_agenda'     => ['nullable', 'file', 'mimes:png,svg,webp', 'max:512'],
             'icono_medico_citas'      => ['nullable', 'file', 'mimes:png,svg,webp', 'max:512'],
             'icono_medico_pacientes'  => ['nullable', 'file', 'mimes:png,svg,webp', 'max:512'],
+            'icono_medico_horario'    => ['nullable', 'file', 'mimes:png,svg,webp', 'max:512'],
+            'icono_medico_ordenes'    => ['nullable', 'file', 'mimes:png,svg,webp', 'max:512'],
+            'icono_medico_perfil'     => ['nullable', 'file', 'mimes:png,svg,webp', 'max:512'],
             // Icono horarios + nuevos iconos admin
             'icono_horarios'          => ['nullable', 'file', 'mimes:png,svg,webp', 'max:512'],
             'icono_servicios'         => ['nullable', 'file', 'mimes:png,svg,webp', 'max:512'],
             'icono_convenios'         => ['nullable', 'file', 'mimes:png,svg,webp', 'max:512'],
             'icono_auditoria'         => ['nullable', 'file', 'mimes:png,svg,webp', 'max:512'],
+            // Iconos panel del gestor de citas
+            'icono_gestor_dashboard'  => ['nullable', 'file', 'mimes:png,svg,webp', 'max:512'],
+            'icono_gestor_nueva_cita' => ['nullable', 'file', 'mimes:png,svg,webp', 'max:512'],
+            'icono_gestor_citas'      => ['nullable', 'file', 'mimes:png,svg,webp', 'max:512'],
+            'icono_gestor_espera'     => ['nullable', 'file', 'mimes:png,svg,webp', 'max:512'],
+            'icono_gestor_registrar'  => ['nullable', 'file', 'mimes:png,svg,webp', 'max:512'],
+            'icono_gestor_pacientes'  => ['nullable', 'file', 'mimes:png,svg,webp', 'max:512'],
         ]);
 
         $datos = $request->only([
@@ -156,9 +167,28 @@ class BrandingController extends Controller
 
         // ── Iconos del panel del médico ──────────────────────────────────────
         $iconosMedico = [
-            'icono_medico_dashboard', 'icono_medico_citas', 'icono_medico_pacientes',
+            'icono_medico_dashboard', 'icono_medico_agenda',
+            'icono_medico_citas', 'icono_medico_pacientes',
+            'icono_medico_horario', 'icono_medico_ordenes', 'icono_medico_perfil',
         ];
         foreach ($iconosMedico as $icono) {
+            if ($request->hasFile($icono)) {
+                $pathField = $icono . '_path';
+                if ($empresa->$pathField) {
+                    Storage::disk('public')->delete($empresa->$pathField);
+                }
+                $datos[$pathField] = $request->file($icono)
+                    ->store("empresas/{$empresa->id}/iconos", 'public');
+            }
+        }
+
+        // ── Iconos del panel del gestor de citas ─────────────────────────────
+        $iconosGestor = [
+            'icono_gestor_dashboard', 'icono_gestor_nueva_cita',
+            'icono_gestor_citas', 'icono_gestor_espera',
+            'icono_gestor_registrar', 'icono_gestor_pacientes',
+        ];
+        foreach ($iconosGestor as $icono) {
             if ($request->hasFile($icono)) {
                 $pathField = $icono . '_path';
                 if ($empresa->$pathField) {

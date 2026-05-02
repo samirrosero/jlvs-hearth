@@ -71,7 +71,7 @@
                     // ── Dashboard ──────────────────────────────
                     [
                         'route' => 'gestor.dashboard',
-                        'icon'  => $empresa?->icono_dashboard_url ?? asset('img/icons/dashboard.png'),
+                        'icon'  => $empresa?->icono_gestor_dashboard_url ?? asset('img/icons/dashboard.png'),
                         'label' => 'Agenda semanal',
                         'match' => 'gestor.dashboard',
                     ],
@@ -79,14 +79,14 @@
                     ['divider' => 'Citas'],
                     [
                         'route' => 'gestor.citas.create',
-                        'icon'  => asset('img/icons/citas-mes.png'),
+                        'icon'  => $empresa?->icono_gestor_nueva_cita_url ?? asset('img/icons/citas-mes.png'),
                         'label' => 'Nueva cita',
                         'match' => 'gestor.citas.create',
                     ],
                     [
                         'route' => 'gestor.citas',
                         'match' => 'gestor.citas.index',
-                        'icon'  => $empresa?->icono_card_citas_url ?? asset('img/icons/citas-mes.png'),
+                        'icon'  => $empresa?->icono_gestor_citas_url ?? asset('img/icons/citas-mes.png'),
                         'label' => 'Ver todas',
                     ],
                     // ── Lista de espera ───────────────────────
@@ -94,21 +94,21 @@
                     [
                         'route' => 'gestor.lista-espera',
                         'match' => 'gestor.lista-espera',
-                        'icon'  => asset('img/icons/pacientes.png'),
+                        'icon'  => $empresa?->icono_gestor_espera_url ?? asset('img/icons/pacientes.png'),
                         'label' => 'Lista de espera',
                     ],
                     // ── Sección pacientes ──────────────────────
                     ['divider' => 'Pacientes'],
                     [
                         'route' => 'gestor.pacientes.create',
-                        'icon'  => asset('img/icons/pacientes.png'),
+                        'icon'  => $empresa?->icono_gestor_registrar_url ?? asset('img/icons/pacientes.png'),
                         'label' => 'Registrar paciente',
                         'match' => 'gestor.pacientes.create',
                     ],
                     [
                         'route' => 'gestor.pacientes',
                         'match' => 'gestor.pacientes.index',
-                        'icon'  => $empresa?->icono_pacientes_url ?? asset('img/icons/pacientes.png'),
+                        'icon'  => $empresa?->icono_gestor_pacientes_url ?? asset('img/icons/pacientes.png'),
                         'label' => 'Directorio',
                     ],
                 ];

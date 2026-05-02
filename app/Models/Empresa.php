@@ -58,6 +58,18 @@ class Empresa extends Model
         'icono_servicios_path',
         'icono_convenios_path',
         'icono_auditoria_path',
+        // Iconos del panel del gestor de citas
+        'icono_gestor_dashboard_path',
+        'icono_gestor_nueva_cita_path',
+        'icono_gestor_citas_path',
+        'icono_gestor_espera_path',
+        'icono_gestor_registrar_path',
+        'icono_gestor_pacientes_path',
+        // Iconos adicionales del panel del médico
+        'icono_medico_agenda_path',
+        'icono_medico_horario_path',
+        'icono_medico_ordenes_path',
+        'icono_medico_perfil_path',
     ];
 
     protected $appends = [
@@ -72,11 +84,17 @@ class Empresa extends Model
         'icono_pac_inicio_url', 'icono_pac_citas_url',
         'icono_pac_historial_url', 'icono_pac_perfil_url',
         // Iconos panel médico
-        'icono_medico_dashboard_url', 'icono_medico_citas_url', 'icono_medico_pacientes_url',
+        'icono_medico_dashboard_url', 'icono_medico_agenda_url',
+        'icono_medico_citas_url', 'icono_medico_pacientes_url',
+        'icono_medico_horario_url', 'icono_medico_ordenes_url', 'icono_medico_perfil_url',
         // Icono horarios (admin)
         'icono_horarios_url',
         // Iconos nuevos del sidebar admin
         'icono_servicios_url', 'icono_convenios_url', 'icono_auditoria_url',
+        // Iconos panel gestor de citas
+        'icono_gestor_dashboard_url', 'icono_gestor_nueva_cita_url',
+        'icono_gestor_citas_url', 'icono_gestor_espera_url',
+        'icono_gestor_registrar_url', 'icono_gestor_pacientes_url',
     ];
 
     protected function casts(): array
@@ -193,6 +211,10 @@ class Empresa extends Model
     {
         return $this->icono_medico_dashboard_path ? Storage::disk('public')->url($this->icono_medico_dashboard_path) : null;
     }
+    public function getIconoMedicoAgendaUrlAttribute(): ?string
+    {
+        return $this->icono_medico_agenda_path ? Storage::disk('public')->url($this->icono_medico_agenda_path) : null;
+    }
     public function getIconoMedicoCitasUrlAttribute(): ?string
     {
         return $this->icono_medico_citas_path ? Storage::disk('public')->url($this->icono_medico_citas_path) : null;
@@ -200,6 +222,18 @@ class Empresa extends Model
     public function getIconoMedicoPacientesUrlAttribute(): ?string
     {
         return $this->icono_medico_pacientes_path ? Storage::disk('public')->url($this->icono_medico_pacientes_path) : null;
+    }
+    public function getIconoMedicoHorarioUrlAttribute(): ?string
+    {
+        return $this->icono_medico_horario_path ? Storage::disk('public')->url($this->icono_medico_horario_path) : null;
+    }
+    public function getIconoMedicoOrdenesUrlAttribute(): ?string
+    {
+        return $this->icono_medico_ordenes_path ? Storage::disk('public')->url($this->icono_medico_ordenes_path) : null;
+    }
+    public function getIconoMedicoPerfilUrlAttribute(): ?string
+    {
+        return $this->icono_medico_perfil_path ? Storage::disk('public')->url($this->icono_medico_perfil_path) : null;
     }
 
     // ── Icono de Horarios (admin) ─────────────────────────────────────────
@@ -220,6 +254,32 @@ class Empresa extends Model
     public function getIconoAuditoriaUrlAttribute(): ?string
     {
         return $this->icono_auditoria_path ? Storage::disk('public')->url($this->icono_auditoria_path) : null;
+    }
+
+    // ── Iconos del panel del gestor de citas ─────────────────────────────
+    public function getIconoGestorDashboardUrlAttribute(): ?string
+    {
+        return $this->icono_gestor_dashboard_path ? Storage::disk('public')->url($this->icono_gestor_dashboard_path) : null;
+    }
+    public function getIconoGestorNuevaCitaUrlAttribute(): ?string
+    {
+        return $this->icono_gestor_nueva_cita_path ? Storage::disk('public')->url($this->icono_gestor_nueva_cita_path) : null;
+    }
+    public function getIconoGestorCitasUrlAttribute(): ?string
+    {
+        return $this->icono_gestor_citas_path ? Storage::disk('public')->url($this->icono_gestor_citas_path) : null;
+    }
+    public function getIconoGestorEsperaUrlAttribute(): ?string
+    {
+        return $this->icono_gestor_espera_path ? Storage::disk('public')->url($this->icono_gestor_espera_path) : null;
+    }
+    public function getIconoGestorRegistrarUrlAttribute(): ?string
+    {
+        return $this->icono_gestor_registrar_path ? Storage::disk('public')->url($this->icono_gestor_registrar_path) : null;
+    }
+    public function getIconoGestorPacientesUrlAttribute(): ?string
+    {
+        return $this->icono_gestor_pacientes_path ? Storage::disk('public')->url($this->icono_gestor_pacientes_path) : null;
     }
 
     // Una empresa tiene muchos usuarios

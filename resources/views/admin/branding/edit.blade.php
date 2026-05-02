@@ -418,15 +418,19 @@
                 <p class="text-xs text-gray-400 mt-0.5">Iconos exclusivos del menú lateral que ve el médico. Independientes del panel administrativo. PNG, SVG o WEBP · máx. 512 KB.</p>
             </div>
             <div class="p-6">
-                <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
                     @php
-                        $iconosGestor = [
-                            'icono_gestor_dashboard'  => ['label' => 'Dashboard',      'sub' => 'Inicio del gestor',         'preview' => $empresa->icono_gestor_dashboard_url],
-                            'icono_gestor_citas'      => ['label' => 'Mis Citas',       'sub' => 'Agenda del gestor',          'preview' => $empresa->icono_gestor_citas_url],
-                            'icono_gestor_pacientes'  => ['label' => 'Mis Pacientes',   'sub' => 'Lista de pacientes',         'preview' => $empresa->icono_gestor_pacientes_url],
+                        $iconosMedico = [
+                            'icono_medico_dashboard'  => ['label' => 'Dashboard',         'sub' => 'Inicio del médico',         'preview' => $empresa->icono_medico_dashboard_url],
+                            'icono_medico_agenda'     => ['label' => 'Mi Agenda',          'sub' => 'Agenda semanal',            'preview' => $empresa->icono_medico_agenda_url],
+                            'icono_medico_citas'      => ['label' => 'Mis Citas',          'sub' => 'Listado de citas',          'preview' => $empresa->icono_medico_citas_url],
+                            'icono_medico_pacientes'  => ['label' => 'Mis Pacientes',      'sub' => 'Directorio de pacientes',   'preview' => $empresa->icono_medico_pacientes_url],
+                            'icono_medico_horario'    => ['label' => 'Mi Horario',         'sub' => 'Configuración de horario',  'preview' => $empresa->icono_medico_horario_url],
+                            'icono_medico_ordenes'    => ['label' => 'Órdenes Emitidas',   'sub' => 'Órdenes y documentos',      'preview' => $empresa->icono_medico_ordenes_url],
+                            'icono_medico_perfil'     => ['label' => 'Mi Perfil',          'sub' => 'Datos del médico',          'preview' => $empresa->icono_medico_perfil_url],
                         ];
                     @endphp
-                    @foreach($iconosGestor as $key => $info)
+                    @foreach($iconosMedico as $key => $info)
                     <div>
                         <p class="text-xs font-medium text-gray-700 mb-0.5">{{ $info['label'] }}</p>
                         <p class="text-[10px] text-gray-400 mb-2">{{ $info['sub'] }}</p>
@@ -449,7 +453,7 @@
             </div>
         </div>
 
-         {{-- ══ FILA 6: Iconos del Panel del Gestor de citas ════════════════════════════ --}}
+        {{-- ══ FILA 6: Iconos del Panel del Gestor de Citas ═══════════════════ --}}
         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
             <div class="px-6 py-4 border-b border-gray-100">
                 <h2 class="text-sm font-semibold text-gray-800">Iconos del panel del gestor de citas</h2>
@@ -459,9 +463,12 @@
                 <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
                     @php
                         $iconosGestor = [
-                            'icono_gestor_dashboard'  => ['label' => 'Dashboard',      'sub' => 'Inicio del gestor',         'preview' => $empresa->icono_gestor_dashboard_url],
-                            'icono_gestor_citas'      => ['label' => 'Mis Citas',       'sub' => 'Agenda del gestor',          'preview' => $empresa->icono_gestor_citas_url],
-                            'icono_gestor_pacientes'  => ['label' => 'Mis Pacientes',   'sub' => 'Lista de pacientes',         'preview' => $empresa->icono_gestor_pacientes_url],
+                            'icono_gestor_dashboard'  => ['label' => 'Agenda Semanal',     'sub' => 'Dashboard / inicio',        'preview' => $empresa->icono_gestor_dashboard_url],
+                            'icono_gestor_nueva_cita' => ['label' => 'Nueva Cita',          'sub' => 'Registrar nueva cita',      'preview' => $empresa->icono_gestor_nueva_cita_url],
+                            'icono_gestor_citas'      => ['label' => 'Ver Todas',           'sub' => 'Listado de citas',          'preview' => $empresa->icono_gestor_citas_url],
+                            'icono_gestor_espera'     => ['label' => 'Lista de Espera',     'sub' => 'Cola de espera',            'preview' => $empresa->icono_gestor_espera_url],
+                            'icono_gestor_registrar'  => ['label' => 'Registrar Paciente',  'sub' => 'Nuevo paciente',            'preview' => $empresa->icono_gestor_registrar_url],
+                            'icono_gestor_pacientes'  => ['label' => 'Directorio',          'sub' => 'Lista de pacientes',        'preview' => $empresa->icono_gestor_pacientes_url],
                         ];
                     @endphp
                     @foreach($iconosGestor as $key => $info)

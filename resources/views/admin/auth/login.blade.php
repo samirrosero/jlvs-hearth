@@ -12,7 +12,7 @@
     <title>Ingresar — {{ $empresa?->nombre ?? 'JLVS Hearth' }}</title>
     <link rel="icon" href="{{ $fv }}" type="image/x-icon">
     <link rel="shortcut icon" href="{{ $fv }}" type="image/x-icon">
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/accesibilidad.js'])
     <style>
         html, body { height: 100%; margin: 0; background: #f8fafc; overflow: hidden; }
         .wrap { display: flex; height: 100vh; overflow: hidden; }
@@ -277,7 +277,5 @@ function loginPage() {
 }
 </script>
 
-{{-- UserWay: widget de accesibilidad --}}
-<script src="https://cdn.userway.org/widget.js" data-account="P4wy9GEOmv"></script>
 </body>
 </html>

@@ -7,7 +7,7 @@
     <link rel="icon" href="{{ asset('favicon.ico') }}" type="image/x-icon">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/accesibilidad.js'])
     <style>
         *, *::before, *::after { box-sizing: border-box; }
         html, body { margin: 0; font-family: 'Inter', sans-serif; background: #f8fafc; color: #1e293b; }

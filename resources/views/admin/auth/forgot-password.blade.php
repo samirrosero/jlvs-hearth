@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Recuperar contraseña — JLVS Hearth</title>
     <link rel="icon" href="{{ asset('favicon.ico') }}" type="image/x-icon">
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/accesibilidad.js'])
 </head>
 <body class="bg-gray-50 min-h-screen flex items-center justify-center p-4">
 
@@ -67,7 +67,5 @@
         </p>
     </div>
 
-    {{-- UserWay: widget de accesibilidad --}}
-    <script src="https://cdn.userway.org/widget.js" data-account="P4wy9GEOmv"></script>
 </body>
 </html>

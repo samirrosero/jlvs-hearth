@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Términos y Condiciones de Uso</title>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/accesibilidad.js'])
     <style>
         body { font-family: 'Inter', sans-serif; background: #f8fafc; color: #1e293b; }
         .container { max-width: 800px; margin: 0 auto; padding: 40px 24px; }

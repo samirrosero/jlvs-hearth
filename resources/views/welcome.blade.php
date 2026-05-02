@@ -369,9 +369,7 @@
     </div>
 
     <script src="{{ asset('js/landing.js') }}"></script>
-
-    {{-- UserWay: widget de accesibilidad --}}
-    <script src="https://cdn.userway.org/widget.js" data-account="P4wy9GEOmv"></script>
+    @vite(['resources/js/accesibilidad.js'])
 
 </body>
 </html>

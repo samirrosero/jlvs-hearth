@@ -14,7 +14,7 @@
     <link rel="shortcut icon" href="{{ asset('favicon.ico') }}" type="image/x-icon">
 
     {{-- Carga Tailwind CSS + Alpine.js compilados por Vite --}}
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/accesibilidad.js'])
 
     {{-- Espacio para estilos adicionales de cada página --}}
     @stack('styles')
@@ -27,7 +27,5 @@
     {{-- Espacio para scripts adicionales de cada página --}}
     @stack('scripts')
 
-    {{-- UserWay: widget de accesibilidad --}}
-    <script src="https://cdn.userway.org/widget.js" data-account="P4wy9GEOmv"></script>
 </body>
 </html>

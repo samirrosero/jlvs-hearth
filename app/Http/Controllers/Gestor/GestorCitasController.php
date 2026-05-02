@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Gestor;
 use App\Http\Controllers\Controller;
 use App\Models\Cita;
 use App\Models\EstadoCita;
+use App\Models\HorarioMedico;
 use App\Models\Medico;
 use App\Models\ModalidadCita;
 use App\Models\Paciente;
 use App\Models\Servicio;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class GestorCitasController extends Controller
@@ -18,7 +20,7 @@ class GestorCitasController extends Controller
         $empresaId = auth()->user()->empresa_id;
 
         $citas = Cita::where('empresa_id', $empresaId)
-            ->with('paciente', 'medico.usuario', 'estado', 'servicio')
+            ->with('paciente', 'medico.usuario', 'estado', 'servicio', 'modalidad')
             ->when(request('fecha'), fn ($q) => $q->where('fecha', request('fecha')))
             ->when(request('medico_id'), fn ($q) => $q->where('medico_id', request('medico_id')))
             ->when(request('estado_id'), fn ($q) => $q->where('estado_id', request('estado_id')))
@@ -36,15 +38,16 @@ class GestorCitasController extends Controller
     {
         $empresaId = auth()->user()->empresa_id;
 
-        // Datos para poblar el formulario
-        $pacientes  = Paciente::where('empresa_id', $empresaId)->orderBy('nombre_completo')->get();
-        $medicos    = Medico::where('empresa_id', $empresaId)->with('usuario')->get();
-        $servicios  = Servicio::where('empresa_id', $empresaId)->get();
+        $especialidades = Medico::where('empresa_id', $empresaId)
+            ->whereNotNull('especialidad')
+            ->distinct()
+            ->orderBy('especialidad')
+            ->pluck('especialidad');
+        $servicios   = Servicio::where('empresa_id', $empresaId)->get();
         $modalidades = ModalidadCita::all();
-        $estados    = EstadoCita::all();
 
         return view('gestor.citas.create', compact(
-            'pacientes', 'medicos', 'servicios', 'modalidades', 'estados'
+            'especialidades', 'servicios', 'modalidades'
         ));
     }
 
@@ -118,5 +121,87 @@ class GestorCitasController extends Controller
         $cita->update($data);
 
         return back()->with('success', 'Estado de la cita actualizado.');
+    }
+
+    /**
+     * Agenda una cita auto-asignando el médico con menor carga
+     * (mismo flujo que el portal del paciente, pero el gestor elige el paciente).
+     */
+    public function agendar(Request $request)
+    {
+        $empresaId = auth()->user()->empresa_id;
+
+        $data = $request->validate([
+            'especialidad' => ['required', 'string', 'max:100'],
+            'fecha'        => ['required', 'date', 'after_or_equal:today'],
+            'hora'         => ['required', 'date_format:H:i'],
+            'modalidad_id' => ['required', 'exists:modalidades_cita,id'],
+            'paciente_id'  => ['required', 'exists:pacientes,id'],
+            'servicio_id'  => ['nullable', 'exists:servicios,id'],
+        ]);
+
+        abort_unless(
+            Paciente::where('id', $data['paciente_id'])->where('empresa_id', $empresaId)->exists(),
+            403
+        );
+
+        $fecha     = Carbon::parse($data['fecha']);
+        $hora      = $data['hora'];
+        $diaSemana = (int) $fecha->format('w');
+        $servicio  = isset($data['servicio_id']) ? Servicio::find($data['servicio_id']) : null;
+        $duracion  = $servicio?->duracion_minutos ?? 30;
+        $horaFin   = Carbon::parse("{$data['fecha']} {$hora}")->addMinutes($duracion)->format('H:i:s');
+
+        $medicosIds = Medico::where('empresa_id', $empresaId)
+            ->where('especialidad', 'like', "%{$data['especialidad']}%")
+            ->pluck('id');
+
+        if ($medicosIds->isEmpty()) {
+            return back()->withInput()->with('error', 'No hay médicos registrados para esa especialidad.');
+        }
+
+        $medicosConHorario = HorarioMedico::whereIn('medico_id', $medicosIds)
+            ->where('dia_semana', $diaSemana)
+            ->where('hora_inicio', '<=', $hora)
+            ->where('hora_fin', '>=', $horaFin)
+            ->where('activo', true)
+            ->pluck('medico_id')->unique();
+
+        $medicosOcupados = Cita::whereIn('medico_id', $medicosConHorario)
+            ->whereDate('fecha', $fecha->toDateString())
+            ->whereNotIn('estado_id', [4, 5])
+            ->where('activo', true)
+            ->whereRaw('hora < ?', [$horaFin])
+            ->whereRaw('ADDTIME(hora, SEC_TO_TIME(? * 60)) > ?', [$duracion, "{$hora}:00"])
+            ->pluck('medico_id')->unique();
+
+        $medicosLibres = $medicosConHorario->diff($medicosOcupados);
+
+        if ($medicosLibres->isEmpty()) {
+            return back()->withInput()->with('error', 'Ese cupo ya fue tomado. Selecciona otro horario.');
+        }
+
+        $cargaPorMedico = Cita::whereIn('medico_id', $medicosLibres)
+            ->whereDate('fecha', $fecha->toDateString())
+            ->where('activo', true)
+            ->selectRaw('medico_id, COUNT(*) as total')
+            ->groupBy('medico_id')
+            ->pluck('total', 'medico_id');
+
+        $medicoId = $medicosLibres->sortBy(fn($id) => $cargaPorMedico[$id] ?? 0)->first();
+
+        Cita::create([
+            'empresa_id'   => $empresaId,
+            'medico_id'    => $medicoId,
+            'paciente_id'  => $data['paciente_id'],
+            'estado_id'    => 1,
+            'modalidad_id' => $data['modalidad_id'],
+            'servicio_id'  => $data['servicio_id'] ?? null,
+            'fecha'        => $data['fecha'],
+            'hora'         => $hora,
+            'activo'       => true,
+        ]);
+
+        return redirect()->route('gestor.citas')->with('exito', 'Cita agendada correctamente.');
     }
 }

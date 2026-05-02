@@ -187,13 +187,13 @@ Route::middleware('auth')->group(function () {
     // ─────────────────────────────────────────────────────────
     Route::middleware('role:administrador,gestor_citas,medico,paciente')->group(function () {
         Route::get('/citas', [AppointmentController::class, 'index']);
-        Route::get('/citas/{cita}', [AppointmentController::class, 'show']);
+        Route::get('/citas/{cita}', [AppointmentController::class, 'show'])->whereNumber('cita');
     });
     Route::middleware('role:administrador,gestor_citas')->group(function () {
         Route::post('/citas', [AppointmentController::class, 'store']);
-        Route::put('/citas/{cita}', [AppointmentController::class, 'update']);
-        Route::patch('/citas/{cita}', [AppointmentController::class, 'update']);
-        Route::delete('/citas/{cita}', [AppointmentController::class, 'destroy']);
+        Route::put('/citas/{cita}',    [AppointmentController::class, 'update'])->whereNumber('cita');
+        Route::patch('/citas/{cita}',  [AppointmentController::class, 'update'])->whereNumber('cita');
+        Route::delete('/citas/{cita}', [AppointmentController::class, 'destroy'])->whereNumber('cita');
     });
 
     // Disponibilidad — slots libres y días disponibles de un médico
@@ -506,10 +506,13 @@ Route::prefix('gestor')->name('gestor.')->middleware(['auth', 'role:gestor_citas
     Route::get('/citas/{cita}/editar', [GestorCitasController::class, 'edit'])->name('citas.edit');
     Route::put('/citas/{cita}',   [GestorCitasController::class, 'update'])->name('citas.update');
 
-    Route::get('/pacientes',             [GestorPacientesController::class, 'index'])->name('pacientes');
-    Route::get('/pacientes/registrar',   [GestorPacientesController::class, 'create'])->name('pacientes.create');
-    Route::post('/pacientes',            [GestorPacientesController::class, 'store'])->name('pacientes.store');
+    Route::get('/pacientes',                    [GestorPacientesController::class, 'index'])->name('pacientes');
+    Route::get('/pacientes/registrar',          [GestorPacientesController::class, 'create'])->name('pacientes.create');
+    Route::get('/pacientes/buscar',             [GestorPacientesController::class, 'buscar'])->name('pacientes.buscar');
+    Route::post('/pacientes',                   [GestorPacientesController::class, 'store'])->name('pacientes.store');
+    Route::post('/pacientes/registro-rapido',   [GestorPacientesController::class, 'registroRapido'])->name('pacientes.registro-rapido');
 
+    Route::post('/citas/agendar',         [GestorCitasController::class, 'agendar'])->name('citas.agendar');
     Route::patch('/citas/{cita}/estado', [GestorCitasController::class, 'cambiarEstado'])->name('citas.estado');
 
     Route::post('/chatbot', [ChatbotController::class, 'chat'])->name('chatbot');

@@ -4,244 +4,434 @@
 @section('page-title', 'Nueva cita')
 
 @section('content')
-<div class="max-w-2xl mx-auto space-y-5">
+<div class="max-w-2xl mx-auto space-y-4"
+     x-data="agendarGestor()"
+     x-init="init()">
 
-    {{-- ── Encabezado ── --}}
-    <div class="flex items-center justify-between">
-        <h2 class="text-xl font-bold text-gray-900">Agendar nueva cita</h2>
-        <a href="{{ route('gestor.citas') }}"
-           class="text-sm text-gray-600 hover:text-gray-800 font-medium inline-flex items-center gap-1 transition-colors">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-            </svg>
-            Volver a citas
-        </a>
-    </div>
+{{-- Encabezado --}}
+<div class="relative flex items-center justify-center py-2">
+    <a href="{{ route('gestor.citas') }}"
+       class="absolute left-0 text-sm text-gray-600 hover:text-gray-800 font-medium inline-flex items-center gap-1 transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        </svg>
+        <span class="hidden sm:inline">Volver a citas</span>
+    </a>
 
-    {{-- ── Errores de validación ── --}}
+    <h2 class="text-xl font-bold text-gray-900 text-center">
+        Agendar nueva cita
+    </h2>
+</div>
+
+    {{-- Errores de validación --}}
     @if($errors->any())
         <div class="bg-red-50 border border-red-200 text-red-800 rounded-xl px-4 py-3 text-sm space-y-1">
             <p class="font-semibold">Por favor corrige los siguientes errores:</p>
             <ul class="list-disc list-inside space-y-0.5">
-                @foreach($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
+                @foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach
             </ul>
         </div>
     @endif
 
-    {{-- ── Formulario ── --}}
-    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6"
-         x-data="formularioCita()">
+    {{-- ══ PASO 1 — Identificar paciente (siempre visible) ══ --}}
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-4">
 
-        <form method="POST" action="{{ route('gestor.citas.store') }}" @submit.prevent="submitForm($event)">
-            @csrf
+        <h3 class="text-sm font-semibold text-gray-600 uppercase tracking-wide flex items-center gap-2">
+            <span class="inline-flex items-center justify-center w-5 h-5 rounded-full text-xs font-bold text-white"
+                  :class="pacienteId ? 'bg-green-500' : 'bg-blue-600'">
+                <template x-if="pacienteId">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                    </svg>
+                </template>
+                <template x-if="!pacienteId"><span>1</span></template>
+            </span>
+            Identificar paciente
+        </h3>
 
-            <div class="space-y-5">
+        {{-- Barra de búsqueda --}}
+        <div x-show="estadoPac === 'inicial' || estadoPac === 'no_encontrado'" class="flex gap-2">
+            <select x-model="tipoDoco"
+                    class="w-28 border border-gray-300 rounded-lg px-2 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                <option value="CC">CC</option>
+                <option value="CE">CE</option>
+                <option value="TI">TI</option>
+                <option value="RC">RC</option>
+                <option value="PA">Pasaporte</option>
+                <option value="NIT">NIT</option>
+            </select>
+            <input type="text"
+                   x-model="numDoco"
+                   @keydown.enter.prevent="buscarPaciente()"
+                   placeholder="Número de documento…"
+                   autocomplete="off"
+                   class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+            <button type="button"
+                    @click="buscarPaciente()"
+                    :disabled="!numDoco.trim() || buscandoPac"
+                    class="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold text-sm px-4 py-2 rounded-xl transition-colors">
+                <svg x-show="!buscandoPac" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+                <svg x-show="buscandoPac" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                </svg>
+                <span x-text="buscandoPac ? '' : 'Buscar'"></span>
+            </button>
+        </div>
 
-                {{-- Paciente (searchable) --}}
-                <div x-data="{ busqueda: '{{ old('paciente_search', '') }}', abierto: false }">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Paciente <span class="text-red-500">*</span>
-                    </label>
-                    <input type="hidden" name="paciente_id" x-model="pacienteId">
-                    <div class="relative">
-                        <input type="text"
-                               x-model="busqueda"
-                               @focus="abierto = true"
-                               @click.outside="abierto = false"
-                               placeholder="Buscar por nombre o identificación…"
-                               autocomplete="off"
-                               class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
-                        <ul x-show="abierto && busqueda.length >= 1"
-                            class="absolute z-20 w-full bg-white border border-gray-200 rounded-lg shadow-lg mt-1 max-h-52 overflow-y-auto"
-                            style="display:none">
-                            @foreach($pacientes as $pac)
-                                <li>
-                                    <button type="button"
-                                            class="w-full text-left px-4 py-2.5 text-sm hover:bg-blue-50 transition-colors"
-                                            x-show="busqueda.length < 1 || '{{ strtolower($pac->nombre_completo . ' ' . $pac->identificacion) }}'.includes(busqueda.toLowerCase())"
-                                            @click="pacienteId = {{ $pac->id }}; busqueda = '{{ addslashes($pac->nombre_completo) }}'; abierto = false">
-                                        <span class="font-medium text-gray-800">{{ $pac->nombre_completo }}</span>
-                                        <span class="text-gray-400 text-xs ml-2">{{ $pac->identificacion }}</span>
-                                    </button>
-                                </li>
-                            @endforeach
-                        </ul>
-                    </div>
-                    <p class="text-xs text-gray-400 mt-1">
-                        ¿Paciente nuevo?
-                        <a href="{{ route('gestor.pacientes.create') }}" class="text-blue-600 hover:underline">Registrarlo aquí</a>.
+        {{-- Paciente encontrado --}}
+        <div x-show="estadoPac === 'encontrado'" style="display:none"
+             class="flex items-center justify-between bg-green-50 border border-green-200 rounded-xl px-4 py-3">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-green-200 flex items-center justify-center shrink-0">
+                    <svg class="w-4 h-4 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                    </svg>
+                </div>
+                <div>
+                    <p class="font-semibold text-gray-800 text-sm" x-text="pacienteInfo?.nombre_completo"></p>
+                    <p class="text-xs text-gray-500">
+                        <span x-text="tipoDoco"></span> <span x-text="pacienteInfo?.identificacion"></span>
+                        <template x-if="pacienteInfo?.correo">
+                            <span> · <span x-text="pacienteInfo.correo"></span></span>
+                        </template>
                     </p>
-                    @error('paciente_id')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                    @enderror
                 </div>
+            </div>
+            <button type="button" @click="limpiarPaciente()"
+                    class="text-xs text-gray-400 hover:text-red-600 font-medium transition-colors ml-3 shrink-0">
+                Cambiar
+            </button>
+        </div>
 
-                {{-- Médico --}}
+        {{-- No encontrado → registro rápido --}}
+        <div x-show="estadoPac === 'no_encontrado'" style="display:none" class="space-y-3">
+            <div class="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm">
+                <p class="font-semibold text-amber-800">No se encontró ningún paciente con ese documento.</p>
+                <p class="text-amber-700 text-xs mt-0.5">Completa el registro rápido para continuar.</p>
+            </div>
+            <div class="bg-gray-50 rounded-xl border border-gray-200 p-4 space-y-3">
+                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Registro rápido</p>
                 <div>
-                    <label for="medico_id" class="block text-sm font-medium text-gray-700 mb-1">
-                        Médico <span class="text-red-500">*</span>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">
+                        Nombre completo <span class="text-red-500">*</span>
                     </label>
-                    <select id="medico_id" name="medico_id"
-                            x-model="medicoId"
-                            @change="alCambiarMedico()"
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
-                        <option value="">Selecciona un médico</option>
-                        @foreach($medicos as $medico)
-                            <option value="{{ $medico->id }}"
-                                {{ old('medico_id') == $medico->id ? 'selected' : '' }}>
-                                {{ $medico->usuario->name ?? $medico->usuario->nombre ?? '—' }}
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('medico_id')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                    @enderror
+                    <input type="text" x-model="regNombre" placeholder="Nombres y apellidos completos"
+                           class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
                 </div>
-
-                {{-- Servicio --}}
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">
+                            Fecha de nacimiento <span class="text-red-500">*</span>
+                        </label>
+                        <input type="date" x-model="regFechaNac" :max="hoy"
+                               class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">
+                            Sexo <span class="text-red-500">*</span>
+                        </label>
+                        <select x-model="regSexo"
+                                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                            <option value="">Seleccionar</option>
+                            <option value="M">Masculino</option>
+                            <option value="F">Femenino</option>
+                            <option value="Otro">Otro</option>
+                        </select>
+                    </div>
+                </div>
                 <div>
-                    <label for="servicio_id" class="block text-sm font-medium text-gray-700 mb-1">
-                        Servicio <span class="text-red-500">*</span>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">
+                        Teléfono <span class="text-red-500">*</span>
                     </label>
-                    <select id="servicio_id" name="servicio_id"
-                            x-model="servicioId"
-                            @change="alCambiarServicio()"
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
-                        <option value="">Selecciona un servicio</option>
-                        @foreach($servicios as $servicio)
-                            <option value="{{ $servicio->id }}"
-                                {{ old('servicio_id') == $servicio->id ? 'selected' : '' }}>
-                                {{ $servicio->nombre }}
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('servicio_id')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                    @enderror
+                    <input type="tel" x-model="regTelefono" placeholder="Ej. 3001234567"
+                           class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">
+                        Correo electrónico <span class="text-red-500">*</span>
+                    </label>
+                    <input type="email" x-model="regCorreo" placeholder="paciente@correo.com"
+                           class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                </div>
+                <p class="text-xs text-gray-400">
+                    Se generará una contraseña temporal. El paciente la cambiará en su primer ingreso.
+                </p>
+                <div x-show="errorReg" x-text="errorReg"
+                     class="text-red-600 text-xs bg-red-50 border border-red-200 rounded-lg px-3 py-2"
+                     style="display:none"></div>
+                <button type="button"
+                        @click="registrarRapido()"
+                        :disabled="!regNombre.trim() || !regFechaNac || !regSexo || !regTelefono.trim() || !regCorreo.trim() || registrando"
+                        class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold text-sm px-4 py-2 rounded-xl transition-colors">
+                    <svg x-show="registrando" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                    </svg>
+                    <span x-text="registrando ? 'Registrando…' : 'Registrar y continuar'"></span>
+                </button>
+            </div>
+        </div>
+
+        {{-- Registrado exitosamente --}}
+        <div x-show="estadoPac === 'registrado'" style="display:none"
+             class="space-y-2">
+            <div class="bg-green-50 border border-green-200 rounded-xl px-4 py-3">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="font-semibold text-green-800 text-sm">
+                            Paciente registrado — <span x-text="pacienteInfo?.nombre_completo"></span>
+                        </p>
+                        <p class="text-xs text-gray-500 mt-0.5">
+                            <span x-text="tipoDoco"></span> <span x-text="pacienteInfo?.identificacion"></span>
+                        </p>
+                    </div>
+                    <button type="button" @click="limpiarPaciente()"
+                            class="text-xs text-gray-400 hover:text-red-600 font-medium ml-3 shrink-0">
+                        Cambiar
+                    </button>
+                </div>
+                <div class="mt-3 flex items-center gap-2 bg-white border border-green-200 rounded-lg px-3 py-2 w-fit">
+                    <svg class="w-3.5 h-3.5 text-amber-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+                    </svg>
+                    <span class="text-xs text-gray-500">Contraseña temporal:</span>
+                    <code class="font-mono font-bold text-green-700 text-sm" x-text="passwordTemporal"></code>
+                </div>
+                <p class="text-xs text-gray-400 mt-1">Entrega esta contraseña al paciente.</p>
+            </div>
+        </div>
+
+    </div>
+
+    {{-- ══ PASO 2 — Especialidad y servicio (aparece al identificar paciente) ══ --}}
+    <div x-show="pacienteId"
+         x-transition:enter="transition ease-out duration-150"
+         x-transition:enter-start="opacity-0 translate-y-1"
+         x-transition:enter-end="opacity-100 translate-y-0"
+         style="display:none"
+         class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-4">
+
+        <h3 class="text-sm font-semibold text-gray-600 uppercase tracking-wide flex items-center gap-2">
+            <span class="inline-flex items-center justify-center w-5 h-5 rounded-full text-xs font-bold text-white"
+                  :class="especialidad ? 'bg-green-500' : 'bg-blue-600'">
+                <template x-if="especialidad">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                    </svg>
+                </template>
+                <template x-if="!especialidad"><span>2</span></template>
+            </span>
+            Especialidad y servicio
+        </h3>
+
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+                Especialidad <span class="text-red-500">*</span>
+            </label>
+            <select x-model="especialidad" @change="resetBusqueda()"
+                    class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                <option value="">Selecciona una especialidad</option>
+                @foreach($especialidades as $esp)
+                    <option value="{{ $esp }}" {{ old('especialidad') === $esp ? 'selected' : '' }}>
+                        {{ $esp }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+                Servicio <span class="text-gray-400 font-normal">(opcional)</span>
+            </label>
+            <select x-model="servicioId" @change="resetHora()"
+                    class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                <option value="">Sin servicio específico</option>
+                @foreach($servicios as $servicio)
+                    <option value="{{ $servicio->id }}" {{ old('servicio_id') == $servicio->id ? 'selected' : '' }}>
+                        {{ $servicio->nombre }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+    </div>
+
+    {{-- ══ PASO 3 — Fecha y horario (aparece al elegir especialidad) ══ --}}
+    <div x-show="pacienteId && especialidad"
+         x-transition:enter="transition ease-out duration-150"
+         x-transition:enter-start="opacity-0 translate-y-1"
+         x-transition:enter-end="opacity-100 translate-y-0"
+         style="display:none"
+         class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-4">
+
+        <h3 class="text-sm font-semibold text-gray-600 uppercase tracking-wide flex items-center gap-2">
+            <span class="inline-flex items-center justify-center w-5 h-5 rounded-full text-xs font-bold text-white"
+                  :class="hora ? 'bg-green-500' : 'bg-blue-600'">
+                <template x-if="hora">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                    </svg>
+                </template>
+                <template x-if="!hora"><span>3</span></template>
+            </span>
+            Fecha y horario
+        </h3>
+
+        <div class="flex items-end gap-3">
+            <div class="flex-1">
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    Fecha <span class="text-red-500">*</span>
+                </label>
+                <input type="date" x-model="fecha" @change="resetHora()" :min="hoy"
+                       class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+            </div>
+            <button type="button"
+                    @click="buscarDisponibilidad()"
+                    :disabled="!fecha || buscando"
+                    class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold text-sm px-5 py-2.5 rounded-xl transition-colors">
+                <svg x-show="!buscando" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+                <svg x-show="buscando" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                </svg>
+                <span x-text="buscando ? 'Buscando…' : 'Buscar disponibilidad'"></span>
+            </button>
+        </div>
+
+        {{-- Sin disponibilidad --}}
+        <div x-show="mensajeError" style="display:none"
+             class="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-800">
+            <svg class="w-4 h-4 mt-0.5 shrink-0 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+            </svg>
+            <span x-text="mensajeError"></span>
+        </div>
+
+        {{-- Slots --}}
+        <div x-show="slots.length > 0" style="display:none">
+            <p class="text-xs font-medium text-gray-500 mb-2">Horarios disponibles — selecciona uno:</p>
+            <div class="flex flex-wrap gap-2">
+                <template x-for="slot in slots" :key="slot">
+                    <button type="button"
+                            @click="hora = slot"
+                            :class="hora === slot
+                                ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                                : 'bg-white text-gray-700 border-gray-300 hover:border-blue-400 hover:text-blue-600'"
+                            class="px-3 py-1.5 rounded-lg border text-sm font-medium transition-all tabular-nums">
+                        <span x-text="slot"></span>
+                    </button>
+                </template>
+            </div>
+            <p class="text-xs text-green-700 mt-2" x-show="hora">
+                Horario seleccionado: <strong x-text="hora"></strong>
+                — el médico se asignará automáticamente.
+            </p>
+        </div>
+    </div>
+
+    {{-- ══ PASO 4 — Confirmar (aparece al seleccionar horario) ══ --}}
+    <div x-show="hora"
+         x-transition:enter="transition ease-out duration-150"
+         x-transition:enter-start="opacity-0 translate-y-1"
+         x-transition:enter-end="opacity-100 translate-y-0"
+         style="display:none">
+
+        <form method="POST" action="{{ route('gestor.citas.agendar') }}">
+            @csrf
+            <input type="hidden" name="especialidad" x-model="especialidad">
+            <input type="hidden" name="fecha"        x-model="fecha">
+            <input type="hidden" name="hora"         x-model="hora">
+            <input type="hidden" name="servicio_id"  x-model="servicioId">
+            <input type="hidden" name="paciente_id"  x-model="pacienteId">
+
+            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-5">
+
+                <h3 class="text-sm font-semibold text-gray-600 uppercase tracking-wide flex items-center gap-2">
+                    <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-600 text-xs font-bold text-white">4</span>
+                    Confirmar cita
+                </h3>
+
+                {{-- Resumen --}}
+                <div class="bg-gray-50 rounded-xl border border-gray-100 p-4 grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                        <p class="text-xs text-gray-400 font-medium uppercase tracking-wide mb-0.5">Paciente</p>
+                        <p class="font-semibold text-gray-800" x-text="pacienteInfo?.nombre_completo ?? '—'"></p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-400 font-medium uppercase tracking-wide mb-0.5">Especialidad</p>
+                        <p class="font-semibold text-gray-800" x-text="especialidad || '—'"></p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-400 font-medium uppercase tracking-wide mb-0.5">Fecha</p>
+                        <p class="font-semibold text-gray-800" x-text="fecha || '—'"></p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-400 font-medium uppercase tracking-wide mb-0.5">Hora</p>
+                        <p class="font-semibold text-gray-800" x-text="hora || '—'"></p>
+                    </div>
                 </div>
 
                 {{-- Modalidad --}}
                 <div>
-                    <label for="modalidad_id" class="block text-sm font-medium text-gray-700 mb-1">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
                         Modalidad <span class="text-red-500">*</span>
                     </label>
-                    <select id="modalidad_id" name="modalidad_id"
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
-                        <option value="">Selecciona una modalidad</option>
+                    <div class="grid grid-cols-3 gap-2">
                         @foreach($modalidades as $modalidad)
-                            <option value="{{ $modalidad->id }}"
-                                {{ old('modalidad_id') == $modalidad->id ? 'selected' : '' }}>
-                                {{ $modalidad->nombre }}
-                            </option>
+                            @php
+                                $icons = [
+                                    'Presencial'   => 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4',
+                                    'Virtual'      => 'M15 10l4.553-2.276A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z',
+                                    'Domiciliaria' => 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6',
+                                ];
+                                $iconPath = $icons[$modalidad->nombre] ?? 'M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0-18 0';
+                            @endphp
+                            <button type="button"
+                                    @click="modalidadId = '{{ $modalidad->id }}'"
+                                    :class="modalidadId == '{{ $modalidad->id }}'
+                                        ? 'border-blue-500 bg-blue-50 shadow-sm'
+                                        : 'border-gray-200 bg-white hover:border-blue-300 hover:bg-blue-50/40'"
+                                    class="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl border-2 transition-all text-center w-full cursor-pointer">
+                                <svg :class="modalidadId == '{{ $modalidad->id }}' ? 'text-blue-600' : 'text-gray-400'"
+                                     class="w-5 h-5 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $iconPath }}"/>
+                                </svg>
+                                <span :class="modalidadId == '{{ $modalidad->id }}' ? 'text-blue-700' : 'text-gray-600'"
+                                      class="text-xs font-semibold transition-colors">
+                                    {{ $modalidad->nombre }}
+                                </span>
+                            </button>
                         @endforeach
-                    </select>
+                    </div>
+                    <input type="hidden" name="modalidad_id" x-model="modalidadId">
                     @error('modalidad_id')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                     @enderror
                 </div>
 
-                {{-- Fecha --}}
-                <div>
-                    <label for="fecha" class="block text-sm font-medium text-gray-700 mb-1">
-                        Fecha <span class="text-red-500">*</span>
-                    </label>
-                    <input type="date"
-                           id="fecha"
-                           name="fecha"
-                           x-model="fecha"
-                           @change="alCambiarFecha()"
-                           :min="hoy"
-                           value="{{ old('fecha') }}"
-                           :disabled="!medicoId"
-                           class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed">
-                    <p class="text-xs text-gray-400 mt-1" x-show="!medicoId">
-                        Selecciona un médico primero para habilitar la fecha.
-                    </p>
-                    <p class="text-xs text-blue-600 mt-1"
-                       x-show="medicoId && diasDisponibles.length > 0 && !fecha">
-                        El médico tiene <span x-text="diasDisponibles.length"></span> días disponibles este mes.
-                    </p>
-                    @error('fecha')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                {{-- Hora (slot pills) --}}
-                <div x-show="fecha && medicoId">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Hora <span class="text-red-500">*</span>
-                    </label>
-
-                    {{-- Cargando --}}
-                    <div x-show="cargandoSlots" class="flex items-center gap-2 text-sm text-gray-500 py-2">
-                        <svg class="w-4 h-4 animate-spin text-blue-500" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                {{-- Acciones --}}
+                <div class="flex items-center justify-between pt-2 border-t border-gray-100">
+                    <a href="{{ route('gestor.citas') }}"
+                       class="text-sm text-gray-500 hover:text-gray-800 font-medium transition-colors">
+                        Cancelar
+                    </a>
+                    <button type="submit"
+                            class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm px-6 py-2.5 rounded-xl transition-colors shadow-sm">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                         </svg>
-                        Consultando disponibilidad…
-                    </div>
-
-                    {{-- Sin disponibilidad --}}
-                    <div x-show="!cargandoSlots && sinDisponibilidad"
-                         class="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-800">
-                        No hay disponibilidad para la fecha seleccionada. Elige otro día o médico.
-                    </div>
-
-                    {{-- Slots pill --}}
-                    <div x-show="!cargandoSlots && slots.length > 0"
-                         class="flex flex-wrap gap-2 pt-1">
-                        <input type="hidden" name="hora" x-model="hora">
-                        <template x-for="slot in slots" :key="slot">
-                            <button type="button"
-                                    @click="hora = slot"
-                                    :class="hora === slot
-                                        ? 'bg-blue-600 text-white border-blue-600'
-                                        : 'bg-white text-gray-700 border-gray-300 hover:border-blue-400 hover:text-blue-600'"
-                                    class="px-3 py-1.5 rounded-lg border text-sm font-medium transition-colors tabular-nums"
-                                    x-text="slot">
-                            </button>
-                        </template>
-                    </div>
-                    @error('hora')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                    @enderror
+                        Agendar cita
+                    </button>
                 </div>
-
-                {{-- Estado --}}
-                <div>
-                    <label for="estado_id" class="block text-sm font-medium text-gray-700 mb-1">
-                        Estado
-                    </label>
-                    <select id="estado_id" name="estado_id"
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
-                        @foreach($estados as $estado)
-                            <option value="{{ $estado->id }}"
-                                {{ (old('estado_id', 1) == $estado->id) ? 'selected' : '' }}>
-                                {{ $estado->nombre }}
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('estado_id')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
-
             </div>
-
-            {{-- Acciones --}}
-            <div class="flex items-center justify-between pt-6 mt-2 border-t border-gray-100">
-                <a href="{{ route('gestor.citas') }}"
-                   class="text-sm text-gray-600 hover:text-gray-800 font-medium transition-colors">
-                    Cancelar
-                </a>
-                <button type="submit"
-                        class="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm px-5 py-2.5 rounded-xl transition-colors">
-                    Guardar cita
-                </button>
-            </div>
-
         </form>
     </div>
 
@@ -250,82 +440,170 @@
 
 @push('scripts')
 <script>
-function formularioCita() {
+function agendarGestor() {
     return {
-        medicoId:         '{{ old('medico_id', '') }}',
-        servicioId:       '{{ old('servicio_id', '') }}',
-        pacienteId:       '{{ old('paciente_id', '') }}',
-        fecha:            '{{ old('fecha', '') }}',
-        hora:             '{{ old('hora', '') }}',
-        slots:            [],
-        diasDisponibles:  [],
-        cargandoSlots:    false,
-        sinDisponibilidad: false,
-        hoy:              new Date().toISOString().split('T')[0],
-        mesActual:        new Date().toISOString().slice(0, 7),
+        // Paciente
+        pacienteId:       '',
+        tipoDoco:         'CC',
+        numDoco:          '',
+        buscandoPac:      false,
+        estadoPac:        'inicial',
+        pacienteInfo:     null,
+        regNombre:        '',
+        regFechaNac:      '',
+        regSexo:          '',
+        regTelefono:      '',
+        regCorreo:        '',
+        registrando:      false,
+        errorReg:         '',
+        passwordTemporal: '',
 
-        async alCambiarMedico() {
-            this.fecha = '';
-            this.hora = '';
-            this.slots = [];
-            this.sinDisponibilidad = false;
-            if (!this.medicoId) return;
-            await this.cargarDiasDisponibles(this.mesActual);
-        },
+        // Especialidad y servicio
+        especialidad:  '{{ old('especialidad', '') }}',
+        servicioId:    '{{ old('servicio_id', '') }}',
+        modalidadId:   '{{ old('modalidad_id', '') }}',
 
-        async alCambiarServicio() {
-            if (this.fecha && this.medicoId) {
-                await this.cargarSlots();
+        // Fecha y hora
+        fecha:        '{{ old('fecha', '') }}',
+        hora:         '',
+        buscando:     false,
+        slots:        [],
+        mensajeError: '',
+        hoy:          new Date().toISOString().split('T')[0],
+
+        init() {
+            const savedHora = '{{ old('hora', '') }}';
+            if (this.especialidad && this.fecha) {
+                this.buscarDisponibilidad().then(() => {
+                    if (savedHora && this.slots.includes(savedHora)) {
+                        this.hora = savedHora;
+                    }
+                });
             }
         },
 
-        async cargarDiasDisponibles(mes) {
+        // ── Paciente ──────────────────────────────────────────
+        async buscarPaciente() {
+            if (!this.numDoco.trim()) return;
+            this.buscandoPac  = true;
+            this.estadoPac    = 'inicial';
+            this.pacienteInfo = null;
+            this.pacienteId   = '';
+            this.errorReg     = '';
             try {
-                const res = await fetch(`/medicos/${this.medicoId}/dias-disponibles?mes=${mes}`, {
-                    headers: this.headers(),
+                const res  = await fetch(
+                    '{{ route('gestor.pacientes.buscar') }}?identificacion=' + encodeURIComponent(this.numDoco.trim()),
+                    { headers: { 'Accept': 'application/json' } }
+                );
+                const data = await res.json();
+                if (data.encontrado) {
+                    this.pacienteInfo = data.paciente;
+                    this.pacienteId   = data.paciente.id;
+                    this.estadoPac    = 'encontrado';
+                } else {
+                    this.estadoPac   = 'no_encontrado';
+                    this.regNombre   = '';
+                    this.regFechaNac = '';
+                    this.regSexo     = '';
+                    this.regTelefono = '';
+                    this.regCorreo   = '';
+                }
+            } catch (e) {
+                this.estadoPac = 'no_encontrado';
+            } finally {
+                this.buscandoPac = false;
+            }
+        },
+
+        async registrarRapido() {
+            this.registrando = true;
+            this.errorReg    = '';
+            try {
+                const res = await fetch('{{ route('gestor.pacientes.registro-rapido') }}', {
+                    method:  'POST',
+                    headers: {
+                        'Accept':       'application/json',
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    },
+                    body: JSON.stringify({
+                        nombre_completo:  this.regNombre.trim(),
+                        identificacion:   this.numDoco.trim(),
+                        fecha_nacimiento: this.regFechaNac,
+                        sexo:             this.regSexo,
+                        telefono:         this.regTelefono.trim(),
+                        email_cuenta:     this.regCorreo.trim(),
+                    }),
                 });
                 const data = await res.json();
-                this.diasDisponibles = data.dias_disponibles ?? [];
+                if (!res.ok) {
+                    this.errorReg = data.errors
+                        ? Object.values(data.errors).flat().join(' ')
+                        : (data.message || 'Error al registrar.');
+                    return;
+                }
+                this.pacienteInfo     = data.paciente;
+                this.pacienteId       = data.paciente.id;
+                this.passwordTemporal = data.password_temporal;
+                this.estadoPac        = 'registrado';
             } catch (e) {
-                this.diasDisponibles = [];
-            }
-        },
-
-        async alCambiarFecha() {
-            this.hora = '';
-            this.slots = [];
-            this.sinDisponibilidad = false;
-            if (!this.fecha || !this.medicoId) return;
-            await this.cargarSlots();
-        },
-
-        async cargarSlots() {
-            this.cargandoSlots = true;
-            this.slots = [];
-            this.sinDisponibilidad = false;
-            try {
-                let url = `/citas/disponibilidad?medico_id=${this.medicoId}&fecha=${this.fecha}`;
-                if (this.servicioId) url += `&servicio_id=${this.servicioId}`;
-                const res  = await fetch(url, { headers: this.headers() });
-                const data = await res.json();
-                this.slots             = data.slots ?? [];
-                this.sinDisponibilidad = !data.disponible;
-            } catch (e) {
-                this.sinDisponibilidad = true;
+                this.errorReg = 'Error al registrar. Intenta de nuevo.';
             } finally {
-                this.cargandoSlots = false;
+                this.registrando = false;
             }
         },
 
-        submitForm(event) {
-            event.target.submit();
+        limpiarPaciente() {
+            this.estadoPac        = 'inicial';
+            this.pacienteId       = '';
+            this.pacienteInfo     = null;
+            this.numDoco          = '';
+            this.regNombre        = '';
+            this.regFechaNac      = '';
+            this.regSexo          = '';
+            this.regTelefono      = '';
+            this.regCorreo        = '';
+            this.errorReg         = '';
+            this.passwordTemporal = '';
         },
 
-        headers() {
-            return {
-                'Accept': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-            };
+        // ── Disponibilidad ────────────────────────────────────
+        resetBusqueda() {
+            this.fecha        = '';
+            this.hora         = '';
+            this.slots        = [];
+            this.mensajeError = '';
+        },
+
+        resetHora() {
+            this.hora         = '';
+            this.slots        = [];
+            this.mensajeError = '';
+        },
+
+        async buscarDisponibilidad() {
+            if (!this.especialidad || !this.fecha) return;
+            this.buscando     = true;
+            this.slots        = [];
+            this.hora         = '';
+            this.mensajeError = '';
+            try {
+                let url = '{{ route('citas.disponibilidad-especialidad') }}'
+                    + '?especialidad=' + encodeURIComponent(this.especialidad)
+                    + '&fecha='        + this.fecha;
+                if (this.servicioId) url += '&servicio_id=' + this.servicioId;
+                const res  = await fetch(url, { headers: { 'Accept': 'application/json' } });
+                const data = await res.json();
+                if (data.disponible && data.slots?.length > 0) {
+                    this.slots = data.slots;
+                } else {
+                    this.mensajeError = data.mensaje || 'No hay citas disponibles para esa fecha. Selecciona otra.';
+                }
+            } catch (e) {
+                this.mensajeError = 'Error al consultar disponibilidad. Intenta de nuevo.';
+            } finally {
+                this.buscando = false;
+            }
         },
     };
 }

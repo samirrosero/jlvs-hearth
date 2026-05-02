@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Auth;
 class LoginController extends Controller
 {
     // Roles que pueden acceder al panel Blade
-    private const ROLES_PANEL = ['administrador', 'medico', 'gestor_citas', 'paciente'];
+    private const ROLES_PANEL = ['administrador', 'medico', 'gestor_citas'];
 
     public function showLogin(Request $request)
     {

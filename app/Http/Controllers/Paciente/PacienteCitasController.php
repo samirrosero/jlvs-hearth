@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Paciente;
 use App\Http\Controllers\Controller;
 use App\Models\Cita;
 use App\Models\EstadoCita;
+use App\Models\Valoracion;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -106,5 +107,75 @@ class PacienteCitasController extends Controller
         ]);
 
         return back()->with('success', 'Cita cancelada correctamente.');
+    }
+
+    public function valorar(Request $request, Cita $cita)
+    {
+        // Verificar que la cita pertenezca al paciente y esté atendida (o al menos terminada)
+        abort_if($cita->paciente_id !== auth()->user()->paciente->id, 403);
+        
+        // Si ya tiene valoración, redirigir
+        $yaValorada = Valoracion::where('cita_id', $cita->id)->exists();
+        if ($yaValorada) {
+            return redirect()->route('paciente.citas')->with('info', 'Esta cita ya ha sido valorada. ¡Gracias!');
+        }
+
+        $cita->load('medico.usuario', 'servicio');
+        $puntuacionInicial = $request->integer('puntuacion', 0);
+
+        return view('paciente.citas.valorar', compact('cita', 'puntuacionInicial'));
+    }
+
+    public function valorarClick(Request $request, $id)
+    {
+        $cita = Cita::find($id);
+        if (!$cita) abort(404, 'Cita no encontrada');
+
+        // Ya no necesitamos auth() porque la ruta está protegida por firma (signed URL)
+        // y es única para esta cita.
+        
+        $puntuacion = $request->integer('puntuacion', 0);
+        abort_if($puntuacion < 1 || $puntuacion > 5, 400);
+
+        // Evitar duplicados
+        $valoracion = Valoracion::where('cita_id', $cita->id)->first();
+        
+        if (!$valoracion) {
+            $valoracion = Valoracion::create([
+                'cita_id' => $cita->id,
+                'paciente_id' => $cita->paciente_id,
+                'puntuacion' => $puntuacion,
+                'comentario' => 'Valoración rápida desde correo',
+            ]);
+        }
+
+        return view('paciente.citas.gracias', [
+            'puntuacion' => $puntuacion,
+            'cita' => $cita->load('medico.usuario', 'empresa')
+        ]);
+    }
+
+    public function guardarValoracion(Request $request, Cita $cita)
+    {
+        abort_if($cita->paciente_id !== auth()->user()->paciente->id, 403);
+
+        $request->validate([
+            'puntuacion' => 'required|integer|min:1|max:5',
+            'comentario' => 'nullable|string|max:500',
+        ]);
+
+        // Evitar duplicados
+        if (Valoracion::where('cita_id', $cita->id)->exists()) {
+            return redirect()->route('paciente.citas')->with('error', 'Esta cita ya fue valorada.');
+        }
+
+        Valoracion::create([
+            'cita_id' => $cita->id,
+            'paciente_id' => auth()->user()->paciente->id,
+            'puntuacion' => $request->puntuacion,
+            'comentario' => $request->comentario,
+        ]);
+
+        return redirect()->route('paciente.citas')->with('success', '¡Gracias por tu valoración!');
     }
 }

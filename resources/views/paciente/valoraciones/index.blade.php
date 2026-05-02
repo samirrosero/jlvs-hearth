@@ -39,6 +39,16 @@
                             @endfor
                         </div>
                     </div>
+                    @if ($valoracion->comentario)
+                        <div class="mt-3 p-3 bg-gray-50 border border-gray-100 rounded-lg">
+                            <p class="text-sm text-gray-700">
+                                <span class="font-semibold text-gray-500">Comentario:</span>
+                            </p>
+                            <p class="text-sm text-gray-600 mt-1 italic">
+                                "{{ $valoracion->comentario }}"
+                            </p>
+                        </div>
+                    @endif
                 </div>
             @empty
                 <div class="px-6 py-16 text-center">

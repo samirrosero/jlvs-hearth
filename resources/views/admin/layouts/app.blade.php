@@ -90,6 +90,11 @@
                         'label' => 'Reportes',
                     ],
                     [
+                        'route' => 'admin.valoraciones.index',
+                        'icon'  => asset('img/icons/dashboard.png'),
+                        'label' => 'Valoraciones',
+                    ],
+                    [
                         'route' => 'admin.solicitudes.index',
                         'icon'  => $empresa?->icono_solicitudes_url ?? asset('img/icons/pacientes.png'),
                         'label' => 'Solicitudes personal',

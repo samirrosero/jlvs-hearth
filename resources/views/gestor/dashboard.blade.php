@@ -193,10 +193,10 @@
                         {{-- Hora --}}
                         <div class="w-20 flex-shrink-0 text-center">
                             <p class="text-2xl font-bold text-blue-700">
-                                {{ \Carbon\Carbon::parse($cita->fecha . ' ' . $cita->hora)->format('H:i') }}
+                                {{ \Carbon\Carbon::parse($cita->hora)->format('H:i') }}
                             </p>
                             <p class="text-xs text-gray-500 font-medium">
-                                {{ \Carbon\Carbon::parse($cita->fecha)->format('d/m') }}
+                                {{ $cita->fecha->format('d/m') }}
                             </p>
                         </div>
 

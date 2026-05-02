@@ -30,33 +30,36 @@ class BrandingController extends Controller
             'color_gestor'     => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'color_paciente'   => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'color_pdf'        => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
-            'logo'             => ['nullable', 'image', 'mimes:png,jpg,jpeg,svg,webp', 'max:2048'],
-            'favicon'          => ['nullable', 'image', 'mimes:png,ico,svg', 'max:512'],
-            'imagen_login'     => ['nullable', 'image', 'mimes:png,jpg,jpeg,webp', 'max:4096'],
-            'imagen_registro'  => ['nullable', 'image', 'mimes:png,jpg,jpeg,webp', 'max:4096'],
+            'logo'             => ['nullable', 'file', 'mimes:png,jpg,jpeg,svg,webp', 'max:2048'],
+            'favicon'          => ['nullable', 'file', 'mimes:png,ico,svg', 'max:512'],
+            'imagen_login'     => ['nullable', 'file', 'mimes:png,jpg,jpeg,webp', 'max:4096'],
+            'imagen_registro'  => ['nullable', 'file', 'mimes:png,jpg,jpeg,webp', 'max:4096'],
             // Iconos del sidebar (PNG, idealmente 24x24 o 32x32)
-            'icono_dashboard'  => ['nullable', 'image', 'mimes:png,svg,webp', 'max:512'],
-            'icono_pacientes'  => ['nullable', 'image', 'mimes:png,svg,webp', 'max:512'],
-            'icono_medicos'    => ['nullable', 'image', 'mimes:png,svg,webp', 'max:512'],
-            'icono_reportes'   => ['nullable', 'image', 'mimes:png,svg,webp', 'max:512'],
-            'icono_solicitudes'=> ['nullable', 'image', 'mimes:png,svg,webp', 'max:512'],
-            'icono_identidad'  => ['nullable', 'image', 'mimes:png,svg,webp', 'max:512'],
+            'icono_dashboard'  => ['nullable', 'file', 'mimes:png,svg,webp', 'max:512'],
+            'icono_pacientes'  => ['nullable', 'file', 'mimes:png,svg,webp', 'max:512'],
+            'icono_medicos'    => ['nullable', 'file', 'mimes:png,svg,webp', 'max:512'],
+            'icono_reportes'   => ['nullable', 'file', 'mimes:png,svg,webp', 'max:512'],
+            'icono_solicitudes'=> ['nullable', 'file', 'mimes:png,svg,webp', 'max:512'],
+            'icono_identidad'  => ['nullable', 'file', 'mimes:png,svg,webp', 'max:512'],
             // Iconos de las tarjetas del dashboard (PNG, idealmente 40x40 o 48x48)
-            'icono_card_pacientes' => ['nullable', 'image', 'mimes:png,svg,webp', 'max:512'],
-            'icono_card_medicos'   => ['nullable', 'image', 'mimes:png,svg,webp', 'max:512'],
-            'icono_card_citas'     => ['nullable', 'image', 'mimes:png,svg,webp', 'max:512'],
-            'icono_card_total'     => ['nullable', 'image', 'mimes:png,svg,webp', 'max:512'],
+            'icono_card_pacientes' => ['nullable', 'file', 'mimes:png,svg,webp', 'max:512'],
+            'icono_card_medicos'   => ['nullable', 'file', 'mimes:png,svg,webp', 'max:512'],
+            'icono_card_citas'     => ['nullable', 'file', 'mimes:png,svg,webp', 'max:512'],
+            'icono_card_total'     => ['nullable', 'file', 'mimes:png,svg,webp', 'max:512'],
             // Iconos portal paciente
-            'icono_pac_inicio'    => ['nullable', 'image', 'mimes:png,svg,webp', 'max:512'],
-            'icono_pac_citas'     => ['nullable', 'image', 'mimes:png,svg,webp', 'max:512'],
-            'icono_pac_historial' => ['nullable', 'image', 'mimes:png,svg,webp', 'max:512'],
-            'icono_pac_perfil'    => ['nullable', 'image', 'mimes:png,svg,webp', 'max:512'],
+            'icono_pac_inicio'    => ['nullable', 'file', 'mimes:png,svg,webp', 'max:512'],
+            'icono_pac_citas'     => ['nullable', 'file', 'mimes:png,svg,webp', 'max:512'],
+            'icono_pac_historial' => ['nullable', 'file', 'mimes:png,svg,webp', 'max:512'],
+            'icono_pac_perfil'    => ['nullable', 'file', 'mimes:png,svg,webp', 'max:512'],
             // Iconos panel del médico
-            'icono_medico_dashboard'  => ['nullable', 'image', 'mimes:png,svg,webp', 'max:512'],
-            'icono_medico_citas'      => ['nullable', 'image', 'mimes:png,svg,webp', 'max:512'],
-            'icono_medico_pacientes'  => ['nullable', 'image', 'mimes:png,svg,webp', 'max:512'],
-            // Icono horarios (admin)
-            'icono_horarios'          => ['nullable', 'image', 'mimes:png,svg,webp', 'max:512'],
+            'icono_medico_dashboard'  => ['nullable', 'file', 'mimes:png,svg,webp', 'max:512'],
+            'icono_medico_citas'      => ['nullable', 'file', 'mimes:png,svg,webp', 'max:512'],
+            'icono_medico_pacientes'  => ['nullable', 'file', 'mimes:png,svg,webp', 'max:512'],
+            // Icono horarios + nuevos iconos admin
+            'icono_horarios'          => ['nullable', 'file', 'mimes:png,svg,webp', 'max:512'],
+            'icono_servicios'         => ['nullable', 'file', 'mimes:png,svg,webp', 'max:512'],
+            'icono_convenios'         => ['nullable', 'file', 'mimes:png,svg,webp', 'max:512'],
+            'icono_auditoria'         => ['nullable', 'file', 'mimes:png,svg,webp', 'max:512'],
         ]);
 
         $datos = $request->only([
@@ -105,7 +108,8 @@ class BrandingController extends Controller
         // ── Iconos del sidebar ─────────────────────────────────────────────
         $iconosSidebar = [
             'icono_dashboard', 'icono_pacientes', 'icono_medicos',
-            'icono_reportes', 'icono_solicitudes', 'icono_identidad'
+            'icono_reportes', 'icono_solicitudes', 'icono_identidad',
+            'icono_horarios', 'icono_servicios', 'icono_convenios', 'icono_auditoria',
         ];
         foreach ($iconosSidebar as $icono) {
             if ($request->hasFile($icono)) {
@@ -163,15 +167,6 @@ class BrandingController extends Controller
                 $datos[$pathField] = $request->file($icono)
                     ->store("empresas/{$empresa->id}/iconos", 'public');
             }
-        }
-
-        // ── Icono de Horarios (admin) ─────────────────────────────────────────
-        if ($request->hasFile('icono_horarios')) {
-            if ($empresa->icono_horarios_path) {
-                Storage::disk('public')->delete($empresa->icono_horarios_path);
-            }
-            $datos['icono_horarios_path'] = $request->file('icono_horarios')
-                ->store("empresas/{$empresa->id}/iconos", 'public');
         }
 
         $empresa->update($datos);

@@ -175,21 +175,133 @@
     </div>
 
     {{-- ── Antecedentes ────────────────────────────────────────── --}}
-    <div x-show="seccion === 'antecedentes'" class="space-y-3">
-        @forelse ($antecedentes as $ant)
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 text-sm">
-                <div class="flex items-center justify-between mb-1">
-                    <span class="font-semibold text-gray-800">{{ $ant->tipo ?? 'Antecedente' }}</span>
-                    <span class="text-xs text-gray-400">{{ $ant->created_at->format('d/m/Y') }}</span>
+    <div x-show="seccion === 'antecedentes'">
+        <div x-data="antecedentesPanel(@json($antecedentes), {{ $paciente->id }})" class="space-y-5">
+
+            {{-- Formulario para agregar --}}
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+                <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-4">Registrar nuevo antecedente</h4>
+                <form @submit.prevent="guardar()" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="flex flex-col gap-1">
+                            <label class="text-xs text-gray-500 font-medium">Tipo <span class="text-red-400">*</span></label>
+                            <select x-model="form.tipo"
+                                    class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 bg-white">
+                                <option value="">Seleccionar tipo...</option>
+                                <option value="personal">Personal</option>
+                                <option value="familiar">Familiar</option>
+                                <option value="quirurgico">Quirúrgico</option>
+                                <option value="alergico">Alérgico</option>
+                                <option value="farmacologico">Farmacológico</option>
+                                <option value="otros">Otros</option>
+                            </select>
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <label class="text-xs text-gray-500 font-medium">Descripción <span class="text-red-400">*</span></label>
+                            <input type="text" x-model="form.descripcion"
+                                   placeholder="Ej: Hipertensión arterial desde 2018"
+                                   class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900">
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button type="submit" :disabled="cargando"
+                                class="bg-gray-900 hover:bg-gray-700 text-white text-sm px-5 py-2 rounded-lg transition disabled:opacity-40">
+                            <span x-text="cargando ? 'Guardando...' : 'Registrar antecedente'"></span>
+                        </button>
+                        <span x-show="mensaje" x-text="mensaje"
+                              :class="error ? 'text-red-600' : 'text-emerald-600'"
+                              class="text-xs"></span>
+                    </div>
+                </form>
+            </div>
+
+            {{-- Listado agrupado por tipo --}}
+            <template x-if="lista.length === 0">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center text-gray-400 text-sm">
+                    No hay antecedentes registrados para este paciente.
                 </div>
-                <p class="text-gray-600">{{ $ant->descripcion ?? '—' }}</p>
-            </div>
-        @empty
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center text-gray-400 text-sm">
-                No hay antecedentes registrados para este paciente.
-            </div>
-        @endforelse
+            </template>
+
+            <template x-if="lista.length > 0">
+                <div class="space-y-4">
+                    <template x-for="grupo in tipos" :key="grupo.valor">
+                        <div x-show="lista.filter(a => a.tipo === grupo.valor).length > 0"
+                             class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                            <div class="px-5 py-3 border-b border-gray-100 bg-gray-50">
+                                <h4 class="text-xs font-semibold text-gray-600 uppercase tracking-wide" x-text="grupo.etiqueta"></h4>
+                            </div>
+                            <div class="divide-y divide-gray-50">
+                                <template x-for="ant in lista.filter(a => a.tipo === grupo.valor)" :key="ant.id">
+                                    <div class="px-5 py-3 flex items-start justify-between gap-4 text-sm">
+                                        <p class="text-gray-700" x-text="ant.descripcion"></p>
+                                        <span class="text-xs text-gray-400 whitespace-nowrap flex-shrink-0"
+                                              x-text="ant.created_at ? new Date(ant.created_at).toLocaleDateString('es-CO') : ''"></span>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </template>
+        </div>
     </div>
 
 </div>
 @endsection
+
+@push('scripts')
+<script>
+function antecedentesPanel(inicial, pacienteId) {
+    return {
+        lista: inicial,
+        form: { tipo: '', descripcion: '' },
+        cargando: false,
+        mensaje: '',
+        error: false,
+        tipos: [
+            { valor: 'personal',      etiqueta: 'Personal' },
+            { valor: 'familiar',      etiqueta: 'Familiar' },
+            { valor: 'quirurgico',    etiqueta: 'Quirúrgico' },
+            { valor: 'alergico',      etiqueta: 'Alérgico' },
+            { valor: 'farmacologico', etiqueta: 'Farmacológico' },
+            { valor: 'otros',         etiqueta: 'Otros' },
+        ],
+        async guardar() {
+            this.error = false;
+            if (!this.form.tipo || !this.form.descripcion.trim()) {
+                this.mensaje = 'Debes seleccionar el tipo y escribir una descripción.';
+                this.error = true;
+                return;
+            }
+            this.cargando = true;
+            this.mensaje = '';
+            try {
+                const res = await fetch('/antecedentes', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        paciente_id: pacienteId,
+                        tipo:        this.form.tipo,
+                        descripcion: this.form.descripcion,
+                    }),
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    this.lista.unshift(data);
+                    this.form = { tipo: '', descripcion: '' };
+                    this.mensaje = 'Antecedente registrado correctamente.';
+                    setTimeout(() => this.mensaje = '', 3000);
+                } else {
+                    this.mensaje = data.message ?? 'Error al guardar el antecedente.';
+                    this.error = true;
+                }
+            } finally { this.cargando = false; }
+        },
+    };
+}
+</script>
+@endpush

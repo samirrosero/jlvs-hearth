@@ -95,8 +95,18 @@
                         'label' => 'Solicitudes personal',
                     ],
                     [
+                        'route' => 'admin.servicios.index',
+                        'icon'  => $empresa?->icono_servicios_url ?? asset('img/icons/citas-mes.png'),
+                        'label' => 'Servicios',
+                    ],
+                    [
+                        'route' => 'admin.portafolios.index',
+                        'icon'  => $empresa?->icono_convenios_url ?? asset('img/icons/dashboard.png'),
+                        'label' => 'Convenios',
+                    ],
+                    [
                         'route' => 'admin.horarios',
-                        'icon'  => $empresa?->icono_horarios_url ?: asset('img/icons/citas-mes.png'),
+                        'icon'  => $empresa?->icono_horarios_url ?? asset('img/icons/citas-mes.png'),
                         'label' => 'Horarios',
                     ],
                     [
@@ -106,7 +116,7 @@
                     ],
                     [
                         'route' => 'admin.auditoria',
-                        'icon'  => asset('img/icons/reportes.png'),
+                        'icon'  => $empresa?->icono_auditoria_url ?? asset('img/icons/reportes.png'),
                         'label' => 'Auditoría',
                     ],
                 ];

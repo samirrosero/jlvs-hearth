@@ -75,6 +75,16 @@
 
             </div>
 
+            <div class="pt-2">
+                <label class="flex items-center gap-3 cursor-pointer w-fit">
+                    <input type="hidden" name="activo" value="0">
+                    <input type="checkbox" name="activo" value="1"
+                           {{ old('activo', $medico->usuario->activo) ? 'checked' : '' }}
+                           class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                    <span class="text-sm font-medium text-gray-700">Usuario activo (puede iniciar sesión)</span>
+                </label>
+            </div>
+
             <div class="flex gap-3 pt-2">
                 <button type="submit"
                     class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition">

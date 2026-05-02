@@ -185,14 +185,15 @@
          @keydown.escape.window="rechazarId = null">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
             <h3 class="text-base font-bold text-gray-800 mb-1">Rechazar solicitud</h3>
-            <p class="text-sm text-gray-500 mb-4">Opcionalmente indica el motivo del rechazo.</p>
+            <p class="text-sm text-gray-500 mb-4">Indica el motivo del rechazo. <span class="text-red-500 font-semibold">*</span></p>
 
             <template x-if="rechazarId !== null">
                 <form :action="`{{ url('/admin/solicitudes') }}/${rechazarId}/rechazar`" method="POST">
                     @csrf @method('PATCH')
-                    <textarea name="observaciones" x-model="obs" rows="3"
-                              placeholder="Motivo del rechazo (opcional)..."
-                              class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 resize-none mb-4"></textarea>
+                    <textarea name="observaciones" x-model="obs" rows="3" required minlength="5"
+                              placeholder="Escribe el motivo del rechazo (mínimo 5 caracteres)..."
+                              class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 resize-none mb-1"></textarea>
+                    <p class="text-xs text-gray-400 mb-3">Campo obligatorio — el solicitante recibirá este mensaje por correo.</p>
                     <div class="flex gap-3 justify-end">
                         <button type="button" @click="rechazarId = null"
                                 class="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition">

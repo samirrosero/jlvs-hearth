@@ -47,6 +47,23 @@ class AttachedDocumentController extends Controller
         return response()->json($documento);
     }
 
+    public function descargar(DocumentoAdjunto $documento)
+    {
+        $this->authorize('view', $documento);
+
+        abort_unless(
+            Storage::disk('local')->exists($documento->ruta_almacenamiento),
+            404,
+            'El archivo no se encuentra en el servidor.'
+        );
+
+        return Storage::disk('local')->download(
+            $documento->ruta_almacenamiento,
+            $documento->nombre_archivo,
+            ['Content-Type' => $documento->tipo_mime]
+        );
+    }
+
     public function destroy(DocumentoAdjunto $documento): JsonResponse
     {
         $this->authorize('delete', $documento);

@@ -104,12 +104,14 @@ class AdminMedicoController extends Controller
             'email'           => ['required', 'email', Rule::unique('users', 'email')->ignore($medico->usuario_id)],
             'especialidad'    => ['required', 'string', 'max:100'],
             'registro_medico' => ['required', 'string', 'max:50', Rule::unique('medicos', 'registro_medico')->ignore($medico->id)],
+            'activo'          => ['nullable', 'boolean'],
         ]);
 
         DB::transaction(function () use ($request, $medico) {
             $medico->usuario->update([
                 'nombre' => $request->nombre,
                 'email'  => $request->email,
+                'activo' => $request->boolean('activo'),
             ]);
 
             $medico->update([

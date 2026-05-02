@@ -66,29 +66,32 @@ class SolicitudEmpleadorController extends Controller
 
         $empresa = $solicitud->empresa;
 
-        DB::transaction(function () use ($solicitud, $empresa) {
-            $rol = Rol::where('nombre', $solicitud->rol_solicitado)->firstOrFail();
+        try {
+            DB::transaction(function () use ($solicitud, $empresa) {
+                $rol = Rol::where('nombre', $solicitud->rol_solicitado)->firstOrFail();
 
-            User::create([
-                'empresa_id'      => $solicitud->empresa_id,
-                'rol_id'          => $rol->id,
-                'nombre'          => $solicitud->nombres . ' ' . $solicitud->apellidos,
-                'email'           => $solicitud->correo,
-                'identificacion'  => $solicitud->numero_documento,
-                'tipo_documento'  => $solicitud->tipo_documento,
-                'password'        => $solicitud->password, // ya viene hasheado
-                'activo'          => true,
-            ]);
+                User::create([
+                    'empresa_id'      => $solicitud->empresa_id,
+                    'rol_id'          => $rol->id,
+                    'nombre'          => $solicitud->nombres . ' ' . $solicitud->apellidos,
+                    'email'           => $solicitud->correo,
+                    'identificacion'  => $solicitud->numero_documento,
+                    'tipo_documento'  => $solicitud->tipo_documento,
+                    'password'        => $solicitud->password,
+                    'activo'          => true,
+                ]);
 
-            $solicitud->update([
-                'estado' => 'aprobado',
-                'correo_bienvenida_enviado' => true,
-            ]);
+                $solicitud->update([
+                    'estado' => 'aprobado',
+                    'correo_bienvenida_enviado' => true,
+                ]);
 
-            // Enviar correo de bienvenida
-            Mail::to($solicitud->correo)
-                ->send(new BienvenidaEmpleadorMail($solicitud, $empresa));
-        });
+                Mail::to($solicitud->correo)
+                    ->send(new BienvenidaEmpleadorMail($solicitud, $empresa));
+            });
+        } catch (\Throwable $e) {
+            return back()->with('error', 'Ocurrió un error al aprobar la solicitud. El estado se mantiene como pendiente. Detalle: ' . $e->getMessage());
+        }
 
         return back()->with('exito', 'Solicitud aprobada. El usuario recibirá un correo de bienvenida y ya puede ingresar al sistema.');
     }
@@ -99,7 +102,10 @@ class SolicitudEmpleadorController extends Controller
         $this->authorize('update', auth()->user()->empresa);
 
         $request->validate([
-            'observaciones' => ['nullable', 'string', 'max:500'],
+            'observaciones' => ['required', 'string', 'min:5', 'max:500'],
+        ], [
+            'observaciones.required' => 'Debes indicar el motivo del rechazo.',
+            'observaciones.min'      => 'El motivo debe tener al menos 5 caracteres.',
         ]);
 
         $empresa = $solicitud->empresa;

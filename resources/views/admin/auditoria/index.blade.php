@@ -3,11 +3,22 @@
 @section('page-title', 'Registro de Auditoría')
 
 @section('content')
-<div x-data="auditoria()" x-init="cargar()">
+<div x-data="auditoria()" x-init="init()">
 
     {{-- ── Filtros ──────────────────────────────────────────────────── --}}
     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-5">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
+
+            <div>
+                <label class="block text-xs font-medium text-gray-500 mb-1">Usuario</label>
+                <select x-model="filtros.usuario_id" @change="cargar()"
+                    class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900">
+                    <option value="">Todos</option>
+                    <template x-for="u in usuarios" :key="u.id">
+                        <option :value="u.id" x-text="u.nombre"></option>
+                    </template>
+                </select>
+            </div>
 
             <div>
                 <label class="block text-xs font-medium text-gray-500 mb-1">Acción</label>
@@ -237,11 +248,13 @@ function auditoria() {
         cargando:       false,
         paginaActual:   1,
         logSeleccionado: null,
+        usuarios:       [],
         filtros: {
-            accion:  '',
-            modelo:  '',
-            desde:   '',
-            hasta:   '',
+            usuario_id: '',
+            accion:     '',
+            modelo:     '',
+            desde:      '',
+            hasta:      '',
         },
 
         get paginas() {
@@ -255,14 +268,23 @@ function auditoria() {
             return rango;
         },
 
+        async init() {
+            try {
+                const res = await fetch('/usuarios', { headers: { 'Accept': 'application/json' } });
+                this.usuarios = await res.json();
+            } catch (e) { /* sin usuarios no bloquea la vista */ }
+            this.cargar();
+        },
+
         async cargar() {
             this.cargando = true;
             try {
                 const params = new URLSearchParams({ page: this.paginaActual });
-                if (this.filtros.accion)  params.set('accion',  this.filtros.accion);
-                if (this.filtros.modelo)  params.set('modelo',  this.filtros.modelo);
-                if (this.filtros.desde)   params.set('desde',   this.filtros.desde);
-                if (this.filtros.hasta)   params.set('hasta',   this.filtros.hasta);
+                if (this.filtros.usuario_id) params.set('usuario_id', this.filtros.usuario_id);
+                if (this.filtros.accion)     params.set('accion',     this.filtros.accion);
+                if (this.filtros.modelo)     params.set('modelo',     this.filtros.modelo);
+                if (this.filtros.desde)      params.set('desde',      this.filtros.desde);
+                if (this.filtros.hasta)      params.set('hasta',      this.filtros.hasta);
 
                 const res  = await fetch('/logs?' + params.toString(), {
                     headers: { 'Accept': 'application/json' },
@@ -296,7 +318,7 @@ function auditoria() {
         },
 
         limpiar() {
-            this.filtros = { accion: '', modelo: '', desde: '', hasta: '' };
+            this.filtros = { usuario_id: '', accion: '', modelo: '', desde: '', hasta: '' };
             this.paginaActual = 1;
             this.cargar();
         },

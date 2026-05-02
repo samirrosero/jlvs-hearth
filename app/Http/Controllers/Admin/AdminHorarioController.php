@@ -70,11 +70,27 @@ class AdminHorarioController extends Controller
         $request->merge(['dias' => $dias]);
 
         $request->validate([
-            'medico_id'         => ['required', 'exists:medicos,id'],
-            'dias'              => ['nullable', 'array'],
-            'dias.*.hora_inicio'=> ['required_with:dias.*.activo', 'date_format:H:i'],
-            'dias.*.hora_fin'   => ['required_with:dias.*.activo', 'date_format:H:i', 'after:dias.*.hora_inicio'],
+            'medico_id'          => ['required', 'exists:medicos,id'],
+            'dias'               => ['nullable', 'array'],
+            'dias.*.hora_inicio' => ['required_with:dias.*.activo', 'date_format:H:i'],
+            'dias.*.hora_fin'    => ['required_with:dias.*.activo', 'date_format:H:i'],
         ]);
+
+        // Validación explícita: hora_fin debe ser posterior a hora_inicio en cada día activo
+        $diasInput = $request->input('dias', []);
+        $erroresDias = [];
+        foreach ($diasInput as $num => $dia) {
+            if (!isset($dia['activo'])) continue;
+            $inicio = $dia['hora_inicio'] ?? '';
+            $fin    = $dia['hora_fin']    ?? '';
+            if ($inicio && $fin && $fin <= $inicio) {
+                $nombre = self::DIAS[$num] ?? "Día $num";
+                $erroresDias["dias.{$num}.hora_fin"] = ["{$nombre}: la hora de fin ({$fin}) debe ser posterior a la hora de inicio ({$inicio})."];
+            }
+        }
+        if (!empty($erroresDias)) {
+            return back()->withErrors($erroresDias)->withInput();
+        }
 
         // Verificar que el médico pertenece a esta empresa
         $medico = Medico::where('id', $request->medico_id)

@@ -54,6 +54,10 @@ class Empresa extends Model
         'icono_medico_pacientes_path',
         // Icono de Horarios (admin)
         'icono_horarios_path',
+        // Iconos nuevos del sidebar admin
+        'icono_servicios_path',
+        'icono_convenios_path',
+        'icono_auditoria_path',
     ];
 
     protected $appends = [
@@ -71,6 +75,8 @@ class Empresa extends Model
         'icono_medico_dashboard_url', 'icono_medico_citas_url', 'icono_medico_pacientes_url',
         // Icono horarios (admin)
         'icono_horarios_url',
+        // Iconos nuevos del sidebar admin
+        'icono_servicios_url', 'icono_convenios_url', 'icono_auditoria_url',
     ];
 
     protected function casts(): array
@@ -200,6 +206,20 @@ class Empresa extends Model
     public function getIconoHorariosUrlAttribute(): ?string
     {
         return $this->icono_horarios_path ? Storage::disk('public')->url($this->icono_horarios_path) : null;
+    }
+
+    // ── Iconos nuevos del sidebar admin ──────────────────────────────────
+    public function getIconoServiciosUrlAttribute(): ?string
+    {
+        return $this->icono_servicios_path ? Storage::disk('public')->url($this->icono_servicios_path) : null;
+    }
+    public function getIconoConveniosUrlAttribute(): ?string
+    {
+        return $this->icono_convenios_path ? Storage::disk('public')->url($this->icono_convenios_path) : null;
+    }
+    public function getIconoAuditoriaUrlAttribute(): ?string
+    {
+        return $this->icono_auditoria_path ? Storage::disk('public')->url($this->icono_auditoria_path) : null;
     }
 
     // Una empresa tiene muchos usuarios

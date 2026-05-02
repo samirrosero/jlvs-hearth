@@ -40,7 +40,9 @@ class MedicoCitasController extends Controller
             'ejecucion.signosVitales',
         ]);
 
-        return view('medico.citas.atender', compact('cita'));
+        $antecedentes = $cita->paciente->antecedentes()->orderByDesc('created_at')->get();
+
+        return view('medico.citas.atender', compact('cita', 'antecedentes'));
     }
 
     public function actualizarLink(Request $request, Cita $cita)

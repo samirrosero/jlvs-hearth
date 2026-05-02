@@ -9,6 +9,8 @@ use App\Http\Controllers\Admin\AdminPasswordResetController;
 use App\Http\Controllers\Admin\BrandingController;
 use App\Http\Controllers\Admin\ChatbotController;
 use App\Http\Controllers\Admin\AdminHorarioController;
+use App\Http\Controllers\Admin\AdminServicioController;
+use App\Http\Controllers\Admin\AdminPortafolioController;
 use App\Http\Controllers\Medico\MedicoDashboardController;
 use App\Http\Controllers\Medico\MedicoCitasController;
 use App\Http\Controllers\Medico\MedicoPacientesController;
@@ -274,6 +276,7 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:administrador,medico,gestor_citas,paciente')->group(function () {
         Route::get('/documentos', [AttachedDocumentController::class, 'index']);
         Route::get('/documentos/{documento}', [AttachedDocumentController::class, 'show']);
+        Route::get('/documentos/{documento}/descargar', [AttachedDocumentController::class, 'descargar'])->name('documentos.descargar');
     });
     Route::middleware('role:administrador,medico')->group(function () {
         Route::post('/documentos', [AttachedDocumentController::class, 'store']);
@@ -541,6 +544,20 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/solicitudes',                            [SolicitudEmpleadorController::class, 'index'])->name('solicitudes.index');
         Route::patch('/solicitudes/{solicitud}/aprobar',      [SolicitudEmpleadorController::class, 'aprobar'])->name('solicitudes.aprobar');
         Route::patch('/solicitudes/{solicitud}/rechazar',     [SolicitudEmpleadorController::class, 'rechazar'])->name('solicitudes.rechazar');
+
+        // Convenios / Portafolios
+        Route::get('/portafolios',                         [AdminPortafolioController::class, 'index'])->name('portafolios.index');
+        Route::post('/portafolios',                        [AdminPortafolioController::class, 'store'])->name('portafolios.store');
+        Route::get('/portafolios/{portafolio}/editar',     [AdminPortafolioController::class, 'edit'])->name('portafolios.edit');
+        Route::put('/portafolios/{portafolio}',            [AdminPortafolioController::class, 'update'])->name('portafolios.update');
+        Route::delete('/portafolios/{portafolio}',         [AdminPortafolioController::class, 'destroy'])->name('portafolios.destroy');
+
+        // Servicios médicos
+        Route::get('/servicios',                       [AdminServicioController::class, 'index'])->name('servicios.index');
+        Route::post('/servicios',                      [AdminServicioController::class, 'store'])->name('servicios.store');
+        Route::get('/servicios/{servicio}/editar',     [AdminServicioController::class, 'edit'])->name('servicios.edit');
+        Route::put('/servicios/{servicio}',            [AdminServicioController::class, 'update'])->name('servicios.update');
+        Route::delete('/servicios/{servicio}',         [AdminServicioController::class, 'destroy'])->name('servicios.destroy');
 
         // Horarios de médicos
         Route::get('/horarios',  [AdminHorarioController::class, 'index'])->name('horarios');

@@ -13,13 +13,14 @@
     $ordenes      = $historia?->ordenesMedicas ?? collect();
     $esVirtual    = ($cita->modalidad->nombre ?? '') === 'Telemedicina';
     $consultaData = [
-        'cita_id'   => $cita->id,
-        'ejecucion' => $ejecucion,
-        'historia'  => $historia,
-        'signos'    => $signos,
-        'receta'    => $receta,
-        'ordenes'   => $ordenes->values()->toArray(),
-        'paciente_id' => $cita->paciente_id,
+        'cita_id'      => $cita->id,
+        'ejecucion'    => $ejecucion,
+        'historia'     => $historia,
+        'signos'       => $signos,
+        'receta'       => $receta,
+        'ordenes'      => $ordenes->values()->toArray(),
+        'paciente_id'  => $cita->paciente_id,
+        'antecedentes' => $antecedentes->values()->toArray(),
     ];
 @endphp
 
@@ -210,15 +211,16 @@
     </div>
 
     {{-- ── Tabs ──────────────────────────────────────────────────── --}}
-    <div x-data="{ tab: 'signos' }" class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <div x-data="{ tab: 'antecedentes' }" class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
 
         {{-- Tab nav --}}
         <div class="flex border-b border-gray-100 overflow-x-auto">
             @foreach ([
-                ['signos',  'Signos Vitales'],
-                ['historia','Historia Clínica'],
-                ['receta',  'Receta Médica'],
-                ['ordenes', 'Órdenes Médicas'],
+                ['antecedentes', 'Antecedentes'],
+                ['signos',       'Signos Vitales'],
+                ['historia',     'Historia Clínica'],
+                ['receta',       'Receta Médica'],
+                ['ordenes',      'Órdenes Médicas'],
             ] as [$key, $label])
             <button @click="tab = '{{ $key }}'"
                     :class="tab === '{{ $key }}' ? 'border-b-2 border-gray-900 text-gray-900 font-semibold' : 'text-gray-500 hover:text-gray-700'"
@@ -308,6 +310,73 @@
                 </div>
             </form>
             @endif
+        </div>
+
+        {{-- ── Tab: Antecedentes ───────────────────────────────────── --}}
+        <div x-show="tab === 'antecedentes'" class="p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="font-semibold text-gray-700">Antecedentes del Paciente</h3>
+                <span class="text-xs text-gray-400" x-text="estado.antecedentes.length + ' antecedente(s)'"></span>
+            </div>
+
+            {{-- Formulario nuevo antecedente --}}
+            <form @submit.prevent="guardarAntecedente()" class="space-y-3 mb-6 pb-6 border-b border-gray-100">
+                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Registrar nuevo antecedente</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="flex flex-col gap-1">
+                        <label class="text-xs text-gray-500 font-medium">Tipo <span class="text-red-400">*</span></label>
+                        <select x-model="formAntecedente.tipo"
+                                class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 bg-white">
+                            <option value="">Seleccionar tipo...</option>
+                            <option value="personal">Personal</option>
+                            <option value="familiar">Familiar</option>
+                            <option value="quirurgico">Quirúrgico</option>
+                            <option value="alergico">Alérgico</option>
+                            <option value="farmacologico">Farmacológico</option>
+                            <option value="otros">Otros</option>
+                        </select>
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <label class="text-xs text-gray-500 font-medium">Descripción <span class="text-red-400">*</span></label>
+                        <input type="text" x-model="formAntecedente.descripcion"
+                               placeholder="Ej: Hipertensión arterial desde 2018"
+                               class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900">
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button type="submit" :disabled="cargando"
+                            class="bg-gray-900 hover:bg-gray-700 text-white text-sm px-5 py-2 rounded-lg transition disabled:opacity-40">
+                        Registrar antecedente
+                    </button>
+                    <span x-show="mensajes.antecedente" x-text="mensajes.antecedente"
+                          :class="mensajes.antecedente_error ? 'text-red-600' : 'text-emerald-600'"
+                          class="text-xs"></span>
+                </div>
+            </form>
+
+            {{-- Listado agrupado por tipo --}}
+            <template x-if="estado.antecedentes.length === 0">
+                <p class="text-sm text-gray-400 text-center py-6">No hay antecedentes registrados para este paciente.</p>
+            </template>
+
+            <template x-if="estado.antecedentes.length > 0">
+                <div class="space-y-4">
+                    <template x-for="grupo in tiposAntecedente" :key="grupo.valor">
+                        <div x-show="estado.antecedentes.filter(a => a.tipo === grupo.valor).length > 0">
+                            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2" x-text="grupo.etiqueta"></p>
+                            <div class="space-y-2">
+                                <template x-for="ant in estado.antecedentes.filter(a => a.tipo === grupo.valor)" :key="ant.id">
+                                    <div class="bg-gray-50 rounded-lg px-4 py-3 text-sm text-gray-700 flex items-start justify-between gap-2">
+                                        <p x-text="ant.descripcion"></p>
+                                        <span class="text-xs text-gray-400 whitespace-nowrap flex-shrink-0"
+                                              x-text="ant.created_at ? new Date(ant.created_at).toLocaleDateString('es-CO') : ''"></span>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </template>
         </div>
 
         {{-- ── Tab: Historia Clínica ────────────────────────────── --}}
@@ -427,7 +496,9 @@
                         <span x-text="estado.receta ? 'Actualizar receta' : 'Emitir receta'"></span>
                     </button>
                     <span x-show="!estado.historia" class="text-xs text-amber-600">Guarda la historia clínica primero</span>
-                    <span x-show="mensajes.receta" x-text="mensajes.receta" class="text-xs text-emerald-600"></span>
+                    <span x-show="mensajes.receta" x-text="mensajes.receta"
+                          :class="mensajes.receta_error ? 'text-red-600' : 'text-emerald-600'"
+                          class="text-xs"></span>
                 </div>
             </form>
         </div>
@@ -507,6 +578,7 @@
                 </template>
             </div>
         </div>
+
     </div>
 
 </div>
@@ -524,13 +596,14 @@ function consulta(inicial) {
     return {
         cargando: false,
         estado: {
-            ejecucion: inicial.ejecucion,
-            historia:  inicial.historia,
-            signos:    inicial.signos,
-            receta:    inicial.receta,
-            ordenes:   inicial.ordenes ?? [],
+            ejecucion:    inicial.ejecucion,
+            historia:     inicial.historia,
+            signos:       inicial.signos,
+            receta:       inicial.receta,
+            ordenes:      inicial.ordenes ?? [],
+            antecedentes: inicial.antecedentes ?? [],
         },
-        mensajes: { signos: '', historia: '', receta: '', orden: '' },
+        mensajes: { signos: '', historia: '', receta: '', receta_error: false, orden: '', antecedente: '', antecedente_error: false },
 
         formSignos: {
             peso_kg:                inicial.signos?.peso_kg                ?? '',
@@ -566,9 +639,24 @@ function consulta(inicial) {
             instrucciones: '',
         },
 
+        formAntecedente: { tipo: '', descripcion: '' },
+
+        tiposAntecedente: [
+            { valor: 'personal',      etiqueta: 'Personal' },
+            { valor: 'familiar',      etiqueta: 'Familiar' },
+            { valor: 'quirurgico',    etiqueta: 'Quirúrgico' },
+            { valor: 'alergico',      etiqueta: 'Alérgico' },
+            { valor: 'farmacologico', etiqueta: 'Farmacológico' },
+            { valor: 'otros',         etiqueta: 'Otros' },
+        ],
+
         formatHora(dt) {
             if (!dt) return '';
-            return new Date(dt).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
+            return new Date(dt).toLocaleTimeString('es-CO', {
+                timeZone: 'America/Bogota',
+                hour: '2-digit',
+                minute: '2-digit',
+            });
         },
 
         async iniciarAtencion() {
@@ -577,7 +665,7 @@ function consulta(inicial) {
                 const res = await fetch('/ejecuciones', {
                     method: 'POST',
                     headers: jsonHeaders(),
-                    body: JSON.stringify({ cita_id: inicial.cita_id, inicio_atencion: new Date().toISOString() }),
+                    body: JSON.stringify({ cita_id: inicial.cita_id, inicio_atencion: new Date().toLocaleString('sv-SE', { timeZone: 'America/Bogota' }) }),
                 });
                 const data = await res.json();
                 if (res.ok) this.estado.ejecucion = data;
@@ -591,7 +679,7 @@ function consulta(inicial) {
                 const res = await fetch(`/ejecuciones/${this.estado.ejecucion.id}`, {
                     method: 'PATCH',
                     headers: jsonHeaders(),
-                    body: JSON.stringify({ fin_atencion: new Date().toISOString() }),
+                    body: JSON.stringify({ fin_atencion: new Date().toLocaleString('sv-SE', { timeZone: 'America/Bogota' }) }),
                 });
                 const data = await res.json();
                 if (res.ok) this.estado.ejecucion = data;
@@ -628,6 +716,12 @@ function consulta(inicial) {
 
         async guardarReceta() {
             if (!this.estado.historia) return;
+            this.mensajes.receta_error = false;
+            if (!this.formReceta.medicamentos.trim()) {
+                this.mensajes.receta = 'Debes ingresar al menos un medicamento para emitir la receta.';
+                this.mensajes.receta_error = true;
+                return;
+            }
             this.cargando = true;
             this.mensajes.receta = '';
             const payload = { ...this.formReceta, historia_clinica_id: this.estado.historia.id };
@@ -657,6 +751,38 @@ function consulta(inicial) {
                     this.formOrden = { tipo: '', descripcion: '', instrucciones: '' };
                     this.mensajes.orden = 'Orden registrada correctamente.';
                     setTimeout(() => this.mensajes.orden = '', 3000);
+                }
+            } finally { this.cargando = false; }
+        },
+
+        async guardarAntecedente() {
+            this.mensajes.antecedente_error = false;
+            if (!this.formAntecedente.tipo || !this.formAntecedente.descripcion.trim()) {
+                this.mensajes.antecedente = 'Debes seleccionar el tipo y escribir una descripción.';
+                this.mensajes.antecedente_error = true;
+                return;
+            }
+            this.cargando = true;
+            this.mensajes.antecedente = '';
+            try {
+                const res = await fetch('/antecedentes', {
+                    method: 'POST',
+                    headers: jsonHeaders(),
+                    body: JSON.stringify({
+                        paciente_id:  inicial.paciente_id,
+                        tipo:         this.formAntecedente.tipo,
+                        descripcion:  this.formAntecedente.descripcion,
+                    }),
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    this.estado.antecedentes.unshift(data);
+                    this.formAntecedente = { tipo: '', descripcion: '' };
+                    this.mensajes.antecedente = 'Antecedente registrado correctamente.';
+                    setTimeout(() => this.mensajes.antecedente = '', 3000);
+                } else {
+                    this.mensajes.antecedente = data.message ?? 'Error al guardar el antecedente.';
+                    this.mensajes.antecedente_error = true;
                 }
             } finally { this.cargando = false; }
         },

@@ -116,8 +116,19 @@ class DisponibilidadController extends Controller
             }
         }
 
+        if (count($slots) === 0) {
+            return response()->json([
+                'disponible'       => false,
+                'slots'            => [],
+                'fecha'            => $fecha->toDateString(),
+                'duracion_minutos' => $duracionMinutos,
+                'servicio'         => $servicio?->nombre,
+                'mensaje'          => 'El horario está ocupado. No hay disponibilidad para ese día.',
+            ]);
+        }
+
         return response()->json([
-            'disponible'       => count($slots) > 0,
+            'disponible'       => true,
             'slots'            => $slots,
             'fecha'            => $fecha->toDateString(),
             'duracion_minutos' => $duracionMinutos,

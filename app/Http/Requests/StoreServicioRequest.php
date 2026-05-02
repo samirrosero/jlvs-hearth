@@ -21,7 +21,7 @@ class StoreServicioRequest extends FormRequest
                 Rule::unique('servicios')->where('empresa_id', $empresaId),
             ],
             'descripcion'       => ['nullable', 'string'],
-            'duracion_minutos'  => ['nullable', 'integer', 'min:5', 'max:480'],
+            'duracion_minutos'  => ['required', 'integer', 'min:5', 'max:480'],
             'activo'            => ['nullable', 'boolean'],
         ];
     }

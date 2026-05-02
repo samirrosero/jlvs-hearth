@@ -289,12 +289,16 @@
                     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
                         @php
                             $iconosSidebar = [
-                                'icono_dashboard'   => ['label' => 'Dashboard',      'preview' => $empresa->icono_dashboard_url],
-                                'icono_pacientes' => ['label' => 'Pacientes',      'preview' => $empresa->icono_pacientes_url],
-                                'icono_medicos'   => ['label' => 'Médicos',        'preview' => $empresa->icono_medicos_url],
-                                'icono_reportes'  => ['label' => 'Reportes',       'preview' => $empresa->icono_reportes_url],
-                                'icono_solicitudes'=> ['label' => 'Solicitudes',   'preview' => $empresa->icono_solicitudes_url],
-                                'icono_identidad' => ['label' => 'Identidad Visual','preview' => $empresa->icono_identidad_url],
+                                'icono_dashboard'   => ['label' => 'Dashboard',        'preview' => $empresa->icono_dashboard_url],
+                                'icono_pacientes'   => ['label' => 'Pacientes',        'preview' => $empresa->icono_pacientes_url],
+                                'icono_medicos'     => ['label' => 'Médicos',          'preview' => $empresa->icono_medicos_url],
+                                'icono_reportes'    => ['label' => 'Reportes',         'preview' => $empresa->icono_reportes_url],
+                                'icono_solicitudes' => ['label' => 'Solicitudes',      'preview' => $empresa->icono_solicitudes_url],
+                                'icono_identidad'   => ['label' => 'Identidad Visual', 'preview' => $empresa->icono_identidad_url],
+                                'icono_horarios'    => ['label' => 'Horarios',         'preview' => $empresa->icono_horarios_url],
+                                'icono_servicios'   => ['label' => 'Servicios',        'preview' => $empresa->icono_servicios_url],
+                                'icono_convenios'   => ['label' => 'Convenios',        'preview' => $empresa->icono_convenios_url],
+                                'icono_auditoria'   => ['label' => 'Auditoría',        'preview' => $empresa->icono_auditoria_url],
                             ];
                         @endphp
                         @foreach($iconosSidebar as $key => $info)
@@ -441,33 +445,6 @@
                                onchange="previewIcon(this,'{{ $key }}-preview')">
                     </div>
                     @endforeach
-                </div>
-            </div>
-        </div>
-
-        {{-- ══ FILA 6: Icono de Horarios (admin) ══════════════════════════════ --}}
-        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-100">
-                <h2 class="text-sm font-semibold text-gray-800">Icono de Horarios</h2>
-                <p class="text-xs text-gray-400 mt-0.5">Icono para la sección Horarios del panel administrativo. PNG, SVG o WEBP · máx. 512 KB.</p>
-            </div>
-            <div class="p-6">
-                <div class="w-32">
-                    <p class="text-xs font-medium text-gray-700 mb-0.5">Horarios</p>
-                    <p class="text-[10px] text-gray-400 mb-2">Gestión de horarios</p>
-                    <div class="upload-zone-sm" onclick="document.getElementById('icono_horarios-input').click()">
-                        @if($empresa->icono_horarios_url)
-                            <img id="icono_horarios-preview" src="{{ $empresa->icono_horarios_url }}" alt="Horarios" class="h-10 w-10 mx-auto object-contain">
-                        @else
-                            <img id="icono_horarios-preview" src="" alt="" class="h-10 w-10 mx-auto object-contain hidden">
-                            <svg class="w-6 h-6 mx-auto text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14"/>
-                            </svg>
-                        @endif
-                    </div>
-                    <input type="file" name="icono_horarios" id="icono_horarios-input"
-                           accept="image/png,image/svg+xml,image/webp" class="hidden"
-                           onchange="previewIcon(this,'icono_horarios-preview')">
                 </div>
             </div>
         </div>

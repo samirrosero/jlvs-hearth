@@ -442,7 +442,7 @@
                 aria-expanded="false"
                 aria-label="Abrir opciones de accesibilidad"
                 title="Accesibilidad">${ICON_BTN}</button>`;
-        document.body.appendChild(wrap);
+        document.documentElement.appendChild(wrap);
 
         bindEvents();
     }

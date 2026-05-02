@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\EjecucionCita;
+use App\Mail\ValoracionCitaMail;
+use Illuminate\Support\Facades\Mail;
 use App\Http\Requests\StoreAppointmentExecutionRequest;
 use App\Http\Requests\UpdateAppointmentExecutionRequest;
 use Illuminate\Http\JsonResponse;
@@ -61,6 +63,13 @@ class AppointmentExecutionController extends Controller
             $estadoAtendida = \App\Models\EstadoCita::where('nombre', 'like', '%tendida%')->first();
             if ($estadoAtendida) {
                 $ejecucion->cita()->update(['estado_id' => $estadoAtendida->id]);
+
+                // Enviar correo de valoración al paciente
+                $cita = $ejecucion->cita()->with('paciente.usuario', 'empresa', 'medico.usuario', 'servicio')->first();
+                $correo = $cita->paciente->correo ?? $cita->paciente->usuario?->email;
+                if ($correo) {
+                    Mail::to($correo)->send(new ValoracionCitaMail($cita));
+                }
             }
         }
 

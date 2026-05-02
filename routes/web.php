@@ -54,6 +54,7 @@ use App\Http\Controllers\Paciente\PacienteHistorialController;
 use App\Http\Controllers\Paciente\AgendarCitaPacienteController;
 use App\Http\Controllers\Paciente\AgendarCitaVistaController;
 use App\Http\Controllers\Paciente\PacientePerfilController;
+use App\Http\Controllers\Paciente\PacienteValoracionesController;
 use App\Http\Controllers\DisponibilidadEspecialidadController;
 use App\Http\Controllers\GestorCitas\ReasignarCitasMedicoController;
 use Illuminate\Support\Facades\Route;
@@ -61,10 +62,11 @@ use App\Http\Controllers\Gestor\GestorDashboardController;
 use App\Http\Controllers\Gestor\GestorCitasController;
 use App\Http\Controllers\Gestor\GestorPacientesController;
 
-use App\Http\Controllers\GestorController;
+// use App\Http\Controllers\GestorController;
 
 // ... el resto de tus rutas ...
 
+/*
 Route::prefix('gestor')->group(function () {
     // Dashboard
     Route::get('/dashboard', [GestorController::class, 'index'])->name('gestor.dashboard');
@@ -74,6 +76,7 @@ Route::prefix('gestor')->group(function () {
     Route::put('/citas/reprogramar/{id}', [GestorController::class, 'update'])->name('gestor.citas.update');
     Route::delete('/citas/cancelar/{id}', [GestorController::class, 'destroy'])->name('gestor.citas.cancelar');
 });
+*/
 
 // ─────────────────────────────────────────────────────────────
 // Landing page
@@ -446,6 +449,12 @@ Route::prefix('medico')->name('medico.')->middleware(['auth', 'role:medico'])->g
 
     Route::post('/chatbot', [ChatbotController::class, 'chat'])->name('chatbot');
 });
+
+// Valoración pública desde correo (sin necesidad de login, protegida por firma)
+Route::get('/valorar-atencion/{id}', [PacienteCitasController::class, 'valorarClick'])
+    ->name('public.valorar.atencion')
+    ->middleware('signed');
+
 // ═════════════════════════════════════════════════════════════
 // PANEL DE PACIENTE — Vistas Blade
 // ═════════════════════════════════════════════════════════════
@@ -481,8 +490,14 @@ Route::get('/paciente/certificado-afiliacion', [App\Http\Controllers\Paciente\Pa
     Route::get('/agendar/disponible', [AgendarCitaVistaController::class, 'disponible'])->name('agendar.disponible');
     Route::post('/agendar/reservar', [AgendarCitaVistaController::class, 'reservar'])->name('agendar.reservar');
 
+    // Valoración de citas
+    Route::get('/citas/{cita}/valorar', [PacienteCitasController::class, 'valorar'])->name('citas.valorar');
+    Route::post('/citas/{cita}/valorar', [PacienteCitasController::class, 'guardarValoracion'])->name('citas.valorar.store');
+
     Route::get('/ordenes', [\App\Http\Controllers\Paciente\PacienteOrdenesController::class, 'index'])->name('ordenes');
     Route::patch('/ordenes/{ordenMedica}/autorizar', [\App\Http\Controllers\Paciente\PacienteOrdenesController::class, 'autorizar'])->name('ordenes.autorizar');
+
+    Route::get('/valoraciones', [PacienteValoracionesController::class, 'index'])->name('valoraciones');
 
     Route::get('/certificados', function () {
         $paciente = \App\Models\Paciente::with('empresa')

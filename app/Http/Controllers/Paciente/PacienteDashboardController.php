@@ -9,6 +9,7 @@ use App\Models\Medico;
 use App\Models\OrdenMedica;
 use App\Models\Servicio;
 use App\Models\ModalidadCita;
+use App\Models\Valoracion;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class PacienteDashboardController extends Controller
@@ -39,6 +40,12 @@ class PacienteDashboardController extends Controller
             ->orderByDesc('created_at')
             ->get();
 
+        // Valoraciones realizadas por el paciente
+        $valoracionesRealizadas = Valoracion::where('paciente_id', $paciente->id)
+            ->with('cita.medico.usuario', 'cita.servicio')
+            ->orderByDesc('created_at')
+            ->get();
+
         // Datos para el modal de agendamiento
         $medicos = Medico::with('usuario')->get();
         $servicios = Servicio::all();
@@ -46,7 +53,7 @@ class PacienteDashboardController extends Controller
 
         return view('paciente.dashboard', compact(
             'paciente', 'proximasCitas', 'totalCitas', 'totalHistorias',
-            'ordenesPendientes', 'medicos', 'servicios', 'modalidades'
+            'ordenesPendientes', 'valoracionesRealizadas', 'medicos', 'servicios', 'modalidades'
         ));
     }
     // Por ahora solo retornamos un texto para probar que la ruta funciona

@@ -162,7 +162,21 @@
         </form>
     </div>
 
-    {{-- ── Tabla ── --}}
+    <div class="flex items-center gap-2 bg-white rounded-2xl border border-gray-100 shadow-sm p-3">
+        <span class="text-sm font-medium text-gray-600">Visualizar:</span>
+        <div class="flex gap-2">
+            <a href="{{ route('gestor.citas', array_merge(request()->query(), ['vista' => 'tabla'])) }}"
+               class="px-4 py-2 text-sm font-medium rounded-lg transition-all {{ request('vista', 'tabla') === 'tabla' ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-100' }}">
+                Tabla
+            </a>
+            <a href="{{ route('gestor.citas', array_merge(request()->query(), ['vista' => 'columnas'])) }}"
+               class="px-4 py-2 text-sm font-medium rounded-lg transition-all {{ request('vista') === 'columnas' ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-100' }}">
+                Columnas por médico
+            </a>
+        </div>
+    </div>
+
+    @if(request('vista', 'tabla') === 'tabla')
     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
 
         @if($citas->isEmpty())
@@ -251,6 +265,66 @@
         @endif
 
     </div>
+    @endif
+
+    @if(request('vista') === 'columnas')
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        @if($citasPorMedico->isEmpty())
+            <div class="flex flex-col items-center justify-center py-16 text-gray-400">
+                <svg class="w-12 h-12 mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+                <p class="text-sm font-medium text-gray-500">No se encontraron citas</p>
+            </div>
+        @else
+            <div class="overflow-x-auto px-5 py-4">
+                <div class="flex gap-4 min-w-max">
+                    @foreach($citasPorMedico as $medicoId => $citasMedico)
+                        @php
+                            $medico = $medicos->find($medicoId);
+                        @endphp
+                        <div class="w-80 rounded-2xl border border-gray-200 bg-gray-50 overflow-hidden">
+                            <div class="px-4 py-3 bg-white border-b border-gray-200">
+                                <h3 class="text-sm font-semibold text-gray-900">
+                                    {{ $medico?->usuario->name ?? $medico?->usuario->nombre ?? 'Sin médico' }}
+                                </h3>
+                                <p class="text-xs text-gray-500 mt-1">
+                                    {{ $citasMedico->count() }} cita{{ $citasMedico->count() !== 1 ? 's' : '' }}
+                                </p>
+                            </div>
+                            <div class="divide-y divide-gray-200 max-h-[36rem] overflow-y-auto bg-white">
+                                @foreach($citasMedico as $cita)
+                                    @php
+                                        $nombreEstado = $cita->estado?->nombre ?? '';
+                                        $badge = $estadoBadge[$nombreEstado] ?? 'bg-gray-100 text-gray-500';
+                                    @endphp
+                                    <a href="{{ route('gestor.citas.edit', $cita) }}"
+                                       class="block p-3 hover:bg-blue-50 transition-colors">
+                                        <div class="flex items-center justify-between gap-2 mb-2">
+                                            <span class="text-sm font-semibold text-gray-900">
+                                                {{ \Carbon\Carbon::parse($cita->hora)->format('H:i') }}
+                                            </span>
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold {{ $badge }}">
+                                                {{ $nombreEstado ?: '—' }}
+                                            </span>
+                                        </div>
+                                        <p class="text-sm font-medium text-gray-800 truncate">
+                                            {{ $cita->paciente?->nombre_completo ?? '—' }}
+                                        </p>
+                                        <p class="text-xs text-gray-500 truncate">
+                                            {{ $cita->servicio?->nombre ?? '—' }}
+                                        </p>
+                                    </a>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        @endif
+    </div>
+    @endif
 
 </div>
 @endsection

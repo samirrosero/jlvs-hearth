@@ -75,8 +75,8 @@
         </div>
 
         {{-- Tabla --}}
-        <div x-show="!cargando" x-cloak>
-            <table class="w-full text-sm">
+        <div x-show="!cargando" x-cloak class="overflow-x-auto">
+            <table class="w-full text-sm min-w-[800px]">
                 <thead>
                     <tr class="border-b border-gray-100 bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wide">
                         <th class="px-5 py-3 text-left">Fecha</th>

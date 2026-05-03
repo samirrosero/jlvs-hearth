@@ -7,7 +7,7 @@
 @php
     $hora   = now()->hour;
     $saludo = $hora < 12 ? 'Buenos días' : ($hora < 18 ? 'Buenas tardes' : 'Buenas noches');
-    $nombre = auth()->user()->name ?? 'Gestor';
+    $nombre = auth()->user()->nombre;
 
     // Colores por modalidad — normalizados a key
     function modKey(string $nombre): string {
@@ -70,12 +70,12 @@
             <span class="text-xs text-gray-400 ml-auto">Hoy &mdash; {{ now()->format('d/m/Y') }}</span>
         </div>
 
-        <div class="flex gap-2">
+        <div class="flex flex-col sm:flex-row gap-2">
             <input type="text" x-model="cedula" @keydown.enter="buscar()"
                    placeholder="Número de cédula / documento"
                    class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
             <button type="button" @click="buscar()" :disabled="buscando || !cedula.trim()"
-                    class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold text-sm px-4 py-2 rounded-lg transition-colors">
+                    class="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold text-sm px-4 py-2 rounded-lg transition-colors">
                 <svg x-show="buscando" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
@@ -99,7 +99,7 @@
         {{-- Resultados --}}
         <div x-show="citas.length > 0" style="display:none" class="mt-3 space-y-2">
             <template x-for="cita in citas" :key="cita.id">
-                <div class="flex items-center justify-between gap-3 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
                     <div class="flex-1 min-w-0">
                         <p class="font-semibold text-gray-800 text-sm leading-snug" x-text="cita.paciente?.nombre_completo ?? '\u2014'"></p>
                         <p class="text-xs text-gray-500 mt-0.5">
@@ -108,7 +108,7 @@
                             <span class="tabular-nums font-medium" x-text="(cita.hora ?? '').slice(0,5)"></span>
                         </p>
                     </div>
-                    <div class="flex items-center gap-2 shrink-0">
+                    <div class="flex flex-wrap items-center gap-2 shrink-0">
                         <span :class="{
                                 'bg-amber-100 text-amber-700': cita.estado?.nombre === 'Pendiente',
                                 'bg-blue-100 text-blue-700':   cita.estado?.nombre === 'Confirmada',
@@ -148,7 +148,7 @@
     </div>
 
     {{-- ── 6 Stats compactas ── --}}
-    <div class="grid grid-cols-2 lg:grid-cols-6 gap-3">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
 
         <div class="bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-5 flex items-start gap-4">
             <div class="bg-blue-50 rounded-2xl p-3 shrink-0">
@@ -173,10 +173,10 @@
                           d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
             </div>
-            <div>
+            <div class="flex-1 min-w-0">
                 <p class="text-3xl font-bold text-gray-900 leading-none">{{ $citasPendientes }}</p>
                 <p class="text-xs text-gray-500 mt-1">Pendientes</p>
-                <p class="text-xs text-gray-500 mt-2">Revisa las confirmaciones y llegadas</p>
+                <p class="text-xs text-gray-500 mt-2 truncate">Revisa confirmaciones y llegadas</p>
             </div>
         </div>
 
@@ -190,7 +190,6 @@
             <div>
                 <p class="text-3xl font-bold text-gray-900 leading-none">{{ $citasConfirmadasHoy }}</p>
                 <p class="text-xs text-gray-500 mt-1">Confirmadas hoy</p>
-                <p class="text-xs text-gray-500 mt-2">Datos reales desde la agenda</p>
             </div>
         </div>
 

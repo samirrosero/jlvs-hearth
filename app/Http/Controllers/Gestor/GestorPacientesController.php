@@ -103,13 +103,20 @@ class GestorPacientesController extends Controller
 
         $paciente = Paciente::where('empresa_id', auth()->user()->empresa_id)
             ->where('identificacion', $request->input('identificacion'))
-            ->first(['id', 'nombre_completo', 'identificacion', 'correo', 'telefono']);
+            ->with('portafolio')
+            ->first(['id', 'nombre_completo', 'identificacion', 'correo', 'telefono', 'portafolio_id']);
 
         if (! $paciente) {
             return response()->json(['encontrado' => false, 'paciente' => null]);
         }
 
-        return response()->json(['encontrado' => true, 'paciente' => $paciente]);
+        return response()->json([
+            'encontrado' => true,
+            'paciente' => array_merge(
+                $paciente->toArray(),
+                ['portafolio' => $paciente->portafolio]
+            )
+        ]);
     }
 
     public function registroRapido(Request $request)

@@ -245,7 +245,7 @@
             {{-- Paginación --}}
             @if($citas->hasPages())
                 <div class="px-5 py-4 border-t border-gray-100">
-                    {{ $citas->withQueryString()->links() }}
+                    {{ $citas->withQueryString()->links('vendor.pagination.simple-tailwind') }}
                 </div>
             @endif
         @endif

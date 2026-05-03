@@ -58,9 +58,9 @@
 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
     <div class="px-6 py-4 border-b border-gray-50 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <h3 class="font-bold text-gray-800 text-lg">Historial de Citas</h3>
-        
+
         <form action="{{ route('paciente.citas') }}" method="GET" class="flex items-center gap-2">
-            <select name="estado_id" onchange="this.form.submit()" 
+            <select name="estado_id" onchange="this.form.submit()"
                     class="text-xs border-gray-200 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition">
                 <option value="">Todos los estados</option>
                 @foreach ($estados as $e)
@@ -161,7 +161,7 @@
 
     @if ($citas->hasPages())
         <div class="px-6 py-4 border-t border-gray-50 bg-gray-50/50">
-            {{ $citas->links() }}
+            {{ $citas->links('vendor.pagination.simple-tailwind') }}
         </div>
     @endif
 </div>

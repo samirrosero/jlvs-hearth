@@ -35,7 +35,7 @@
                             <p class="text-gray-600 line-clamp-1 max-w-xs">{{ $h->diagnostico ?? 'Ver detalle...' }}</p>
                         </td>
                         <td class="px-6 py-4 text-center">
-                            <a href="{{ route('paciente.historial.show', $h) }}" 
+                            <a href="{{ route('paciente.historial.show', $h) }}"
                                class="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold hover:bg-blue-600 hover:text-white transition">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -58,7 +58,7 @@
 
     @if ($historias->hasPages())
         <div class="px-6 py-4 border-t border-gray-50 bg-gray-50/50">
-            {{ $historias->links() }}
+            {{ $historias->links('vendor.pagination.simple-tailwind') }}
         </div>
     @endif
 </div>

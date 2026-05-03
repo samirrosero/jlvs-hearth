@@ -539,6 +539,13 @@ Route::prefix('gestor')->name('gestor.')->middleware(['auth', 'role:gestor_citas
 
     Route::get('/lista-espera', fn () => view('gestor.lista-espera.index'))->name('lista-espera');
 
+    // Recepción y cobro de citas
+    Route::get('/recepcion',                    [\App\Http\Controllers\Gestor\GestorRecepcionController::class, 'index'])->name('recepcion.index');
+    Route::post('/recepcion/buscar',            [\App\Http\Controllers\Gestor\GestorRecepcionController::class, 'buscar'])->name('recepcion.buscar');
+    Route::get('/recepcion/citas/{cita}/pago',   [\App\Http\Controllers\Gestor\GestorRecepcionController::class, 'formularioPago'])->name('recepcion.pago');
+    Route::post('/recepcion/citas/{cita}/pago',  [\App\Http\Controllers\Gestor\GestorRecepcionController::class, 'registrarPago'])->name('recepcion.pago.store');
+    Route::get('/recepcion/citas/{cita}/llegada', [\App\Http\Controllers\Gestor\GestorRecepcionController::class, 'confirmarLlegada'])->name('recepcion.llegada');
+
     Route::post('/chatbot', [ChatbotController::class, 'chat'])->name('chatbot');
 });
 
@@ -592,6 +599,11 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/servicios/{servicio}/editar',     [AdminServicioController::class, 'edit'])->name('servicios.edit');
         Route::put('/servicios/{servicio}',            [AdminServicioController::class, 'update'])->name('servicios.update');
         Route::delete('/servicios/{servicio}',         [AdminServicioController::class, 'destroy'])->name('servicios.destroy');
+
+        // Precios de servicios por portafolio
+        Route::get('/servicios/{servicio}/precios',                    [\App\Http\Controllers\Admin\AdminPrecioServicioController::class, 'editarPrecios'])->name('servicios.precios');
+        Route::put('/servicios/{servicio}/precios',                    [\App\Http\Controllers\Admin\AdminPrecioServicioController::class, 'actualizarPrecios'])->name('servicios.precios.update');
+        Route::get('/precios/matriz',                                   [\App\Http\Controllers\Admin\AdminPrecioServicioController::class, 'matrizPrecios'])->name('precios.matriz');
 
         // Horarios de médicos
         Route::get('/horarios',  [AdminHorarioController::class, 'index'])->name('horarios');

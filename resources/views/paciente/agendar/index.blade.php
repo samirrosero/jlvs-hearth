@@ -26,7 +26,12 @@
 @section('content')
 
 <div class="max-w-xl mx-auto">
-
+    <div class="relative flex items-center justify-center py-8">
+        <a href="{{ route('paciente.dashboard') }}"
+           class="absolute left-0 text-sm text-gray-600 hover:text-gray-800 font-medium inline-flex items-center gap-1 transition-colors">
+            ← Volver al inicio
+        </a>
+    </div>
     @if (session('error'))
         <div class="mb-6 flex items-start gap-3 px-5 py-4 bg-red-50 border border-red-200 rounded-2xl text-red-700 text-sm font-medium">
             <svg class="w-5 h-5 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -137,13 +142,6 @@
             </button>
 
         </form>
-    </div>
-
-    <div class="mt-4 text-center">
-        <a href="{{ route('paciente.dashboard') }}"
-           class="text-sm text-gray-400 hover:text-gray-700 transition">
-            ← Volver al inicio
-        </a>
     </div>
 
 </div>

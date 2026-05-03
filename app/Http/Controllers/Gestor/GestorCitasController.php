@@ -9,6 +9,7 @@ use App\Models\HorarioMedico;
 use App\Models\Medico;
 use App\Models\ModalidadCita;
 use App\Models\Paciente;
+use App\Models\PrecioServicio;
 use App\Models\Servicio;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -49,8 +50,14 @@ class GestorCitasController extends Controller
         $servicios   = Servicio::where('empresa_id', $empresaId)->get();
         $modalidades = ModalidadCita::all();
 
+        // Precios de servicios por portafolio para mostrar al gestor
+        $preciosPorPortafolio = PrecioServicio::where('empresa_id', $empresaId)
+            ->with('servicio', 'portafolio')
+            ->get()
+            ->groupBy('servicio_id');
+
         return view('gestor.citas.create', compact(
-            'especialidades', 'servicios', 'modalidades'
+            'especialidades', 'servicios', 'modalidades', 'preciosPorPortafolio'
         ));
     }
 

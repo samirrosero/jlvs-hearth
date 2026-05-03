@@ -40,7 +40,7 @@ class StoreAppointmentRequest extends FormRequest
             'estado_id'     => ['required', 'exists:estados_cita,id'],
             'modalidad_id'  => ['required', 'exists:modalidades_cita,id'],
             'portafolio_id' => ['nullable', Rule::exists('portafolios', 'id')->where('empresa_id', $empresaId)],
-            'servicio_id'   => ['nullable', Rule::exists('servicios', 'id')->where('empresa_id', $empresaId)],
+            'servicio_id'   => ['required', Rule::exists('servicios', 'id')->where('empresa_id', $empresaId)],
             'fecha'         => $this->reglasParaFecha(),
             'hora'          => ['required', 'date_format:H:i'],
             'activo'        => ['boolean'],

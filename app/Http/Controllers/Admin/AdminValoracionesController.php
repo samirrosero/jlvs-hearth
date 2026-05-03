@@ -32,7 +32,7 @@ class AdminValoracionesController extends Controller
             ->withCount(['citas as valoraciones_count' => function ($query) {
                 $query->whereHas('valoracion');
             }])
-            ->withAvg('citas as promedio_valoracion', 'valoracion.puntuacion')
+            ->selectRaw('medicos.*, (SELECT AVG(v.puntuacion) FROM citas c JOIN valoraciones v ON c.id = v.cita_id WHERE c.medico_id = medicos.id) as promedio_valoracion')
             ->having('valoraciones_count', '>', 0)
             ->orderByDesc('promedio_valoracion')
             ->limit(5)

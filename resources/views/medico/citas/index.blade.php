@@ -37,19 +37,20 @@
 
 {{-- ── Tabla de citas ───────────────────────────────────────────── --}}
 <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-    <table class="w-full text-sm">
-        <thead class="bg-gray-50 border-b border-gray-100">
-            <tr>
-                <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Paciente</th>
-                <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Fecha y hora</th>
-                <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Servicio</th>
-                <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Modalidad</th>
-                <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Estado</th>
-                <th class="px-5 py-3"></th>
-            </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-50">
-            @forelse ($citas as $cita)
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm min-w-[700px]">
+            <thead class="bg-gray-50 border-b border-gray-100">
+                <tr>
+                    <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Paciente</th>
+                    <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Fecha y hora</th>
+                    <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Servicio</th>
+                    <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Modalidad</th>
+                    <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Estado</th>
+                    <th class="px-5 py-3"></th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-50">
+                @forelse ($citas as $cita)
                 <tr class="hover:bg-gray-50 transition">
                     <td class="px-5 py-4">
                         <p class="font-medium text-gray-800">{{ $cita->paciente->nombre_completo ?? '—' }}</p>
@@ -86,19 +87,20 @@
                         @endif
                     </td>
                 </tr>
-            @empty
+                @empty
                 <tr>
                     <td colspan="6" class="px-5 py-12 text-center text-gray-400 text-sm">
                         No hay citas registradas con los filtros seleccionados.
                     </td>
                 </tr>
-            @endforelse
-        </tbody>
-    </table>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
 
     @if ($citas->hasPages())
         <div class="px-5 py-4 border-t border-gray-100">
-            {{ $citas->links() }}
+            {{ $citas->links('vendor.pagination.simple-tailwind') }}
         </div>
     @endif
 </div>

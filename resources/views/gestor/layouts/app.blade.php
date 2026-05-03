@@ -89,6 +89,14 @@
                         'icon'  => $empresa?->icono_gestor_citas_url ?? asset('img/icons/citas-mes.png'),
                         'label' => 'Ver todas',
                     ],
+                    // ── Recepción y Cobro ──────────────────────
+                    ['divider' => 'Recepción'],
+                    [
+                        'route' => 'gestor.recepcion.index',
+                        'icon'  => asset('img/icons/pacientes.png'),
+                        'label' => '💰 Recepción / Cobro',
+                        'match' => 'gestor.recepcion.*',
+                    ],
                     // ── Lista de espera ───────────────────────
                     ['divider' => 'Espera'],
                     [

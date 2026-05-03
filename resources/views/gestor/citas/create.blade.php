@@ -50,7 +50,7 @@
         </h3>
 
         {{-- Barra de búsqueda --}}
-        <div x-show="estadoPac === 'inicial' || estadoPac === 'no_encontrado'" class="flex gap-2">
+        <div x-show="estadoPac === 'inicial' || estadoPac === 'no_encontrado'" class="flex flex-col sm:flex-row gap-2">
             <select x-model="tipoDoco"
                     class="w-28 border border-gray-300 rounded-lg px-2 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
                 <option value="CC">CC</option>
@@ -83,7 +83,7 @@
 
         {{-- Paciente encontrado --}}
         <div x-show="estadoPac === 'encontrado'" style="display:none"
-             class="flex items-center justify-between bg-green-50 border border-green-200 rounded-xl px-4 py-3">
+             class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-green-50 border border-green-200 rounded-xl px-4 py-3">
             <div class="flex items-center gap-3">
                 <div class="w-8 h-8 rounded-full bg-green-200 flex items-center justify-center shrink-0">
                     <svg class="w-4 h-4 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -122,7 +122,7 @@
                     <input type="text" x-model="regNombre" placeholder="Nombres y apellidos completos"
                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
                 </div>
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-medium text-gray-700 mb-1">
                             Fecha de nacimiento <span class="text-red-500">*</span>
@@ -246,17 +246,25 @@
 
         <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">
-                Servicio <span class="text-gray-400 font-normal">(opcional)</span>
+                Servicio <span class="text-red-500">*</span> <span class="text-blue-600 font-normal">(auto-seleccionado según especialidad)</span>
             </label>
             <select x-model="servicioId" @change="resetHora()"
-                    class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
-                <option value="">Sin servicio específico</option>
+                    required
+                    class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    :class="!servicioId && especialidad ? 'border-red-300 bg-red-50' : 'border-gray-300'">
+                <option value="">— Selecciona un servicio —</option>
                 @foreach($servicios as $servicio)
                     <option value="{{ $servicio->id }}" {{ old('servicio_id') == $servicio->id ? 'selected' : '' }}>
                         {{ $servicio->nombre }}
                     </option>
                 @endforeach
             </select>
+            <p class="text-xs text-red-600 mt-1" x-show="!servicioId && especialidad">
+                <span class="font-semibold">⚠</span> El servicio es obligatorio para facturación. Selecciona uno.
+            </p>
+            <p class="text-xs text-blue-600 mt-1" x-show="servicioId && especialidad">
+                <span>✓</span> Servicio seleccionado para facturación. Puedes cambiarlo si el paciente requiere un procedimiento diferente.
+            </p>
         </div>
     </div>
 
@@ -281,7 +289,7 @@
             Fecha y horario
         </h3>
 
-        <div class="flex items-end gap-3">
+        <div class="flex flex-col sm:flex-row sm:items-end gap-3">
             <div class="flex-1">
                 <label class="block text-sm font-medium text-gray-700 mb-1">
                     Fecha <span class="text-red-500">*</span>
@@ -414,12 +422,35 @@
                     </div>
                 </div>
 
+                {{-- Precio estimado --}}
+                <div class="bg-green-50 border border-green-200 rounded-xl p-4" x-show="pacienteId && servicioId && precioEstimado">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-green-700 font-medium uppercase">Valor a cobrar</p>
+                            <p class="text-2xl font-bold text-green-800">
+                                $<span x-text="formatearPrecio(precioEstimado)"></span>
+                            </p>
+                            <p class="text-xs text-green-600 mt-1" x-show="portafolioPaciente">
+                                Convenio: <span x-text="portafolioPaciente"></span>
+                            </p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-xs text-green-600" x-show="modalidadId == 2 || modalidadId == 3">
+                                ⚠️ Telemedicina: cobrar ANTES de la cita
+                            </p>
+                            <p class="text-xs text-green-600" x-show="modalidadId == 1">
+                                💰 Pago en recepción
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
                 {{-- Modalidad --}}
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">
                         Modalidad <span class="text-red-500">*</span>
                     </label>
-                    <div class="grid grid-cols-3 gap-2">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
                         @foreach($modalidades as $modalidad)
                             @php
                                 $icons = [
@@ -453,9 +484,9 @@
                 </div>
 
                 {{-- Acciones --}}
-                <div class="flex items-center justify-between pt-2 border-t border-gray-100">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-2 border-t border-gray-100">
                     <a href="{{ route('gestor.citas') }}"
-                       class="text-sm text-gray-500 hover:text-gray-800 font-medium transition-colors">
+                       class="text-sm text-gray-500 hover:text-gray-800 font-medium transition-colors text-center sm:text-left py-2">
                         Cancelar
                     </a>
                     <button type="submit"
@@ -502,6 +533,25 @@ function agendarGestor() {
         servicioId:    '{{ old('servicio_id', '') }}',
         modalidadId:   '{{ old('modalidad_id', '') }}',
 
+        // Precios por servicio y portafolio (precargado desde el servidor)
+        preciosServicios: @json(
+            $servicios->mapWithKeys(fn($s) => [$s->id =>
+                $preciosPorPortafolio->get($s->id, collect())
+                    ->mapWithKeys(fn($p) => [$p->portafolio_id => $p->precio])
+                    ->toArray()
+            ])->toArray()
+        ),
+        portafolioPaciente: null,
+        portafolioId: null,
+        precioEstimado: 0,
+
+        // Mapeo especialidad → servicio (auto-selección para facturación)
+        mapaEspecialidadServicio: {
+            'Medicina General': {{ $servicios->firstWhere('nombre', 'Consulta Medicina General')?->id ?? 'null' }},
+            'Pediatría': {{ $servicios->firstWhere('nombre', 'Consulta Pediatría')?->id ?? 'null' }},
+            'Cardiología': {{ $servicios->firstWhere('nombre', 'Electrocardiograma')?->id ?? 'null' }},
+        },
+
         // Fecha y hora
         fecha:        '{{ old('fecha', '') }}',
         hora:         '',
@@ -538,7 +588,10 @@ function agendarGestor() {
                 if (data.encontrado) {
                     this.pacienteInfo = data.paciente;
                     this.pacienteId   = data.paciente.id;
+                    this.portafolioPaciente = data.paciente.portafolio?.nombre_convenio || 'Particular';
+                    this.portafolioId = data.paciente.portafolio_id;
                     this.estadoPac    = 'encontrado';
+                    this.calcularPrecio();
                 } else {
                     this.estadoPac   = 'no_encontrado';
                     this.regNombre   = '';
@@ -615,6 +668,35 @@ function agendarGestor() {
             this.listaEsperaOk     = false;
             this.registrandoEspera = false;
             this.errorEspera       = '';
+            // Auto-seleccionar servicio según especialidad para facturación
+            this.autoSeleccionarServicio();
+        },
+
+        // Auto-seleccionar servicio basado en especialidad
+        autoSeleccionarServicio() {
+            if (this.especialidad && this.mapaEspecialidadServicio[this.especialidad]) {
+                const servicioId = this.mapaEspecialidadServicio[this.especialidad];
+                // Solo auto-seleccionar si no hay un servicio ya seleccionado manualmente
+                if (!this.servicioId) {
+                    this.servicioId = servicioId;
+                }
+            }
+            this.calcularPrecio();
+        },
+
+        // Calcular precio según servicio y portafolio del paciente
+        calcularPrecio() {
+            if (this.servicioId && this.portafolioId && this.preciosServicios[this.servicioId]) {
+                const preciosPortafolio = this.preciosServicios[this.servicioId];
+                this.precioEstimado = preciosPortafolio[this.portafolioId] || 0;
+            } else {
+                this.precioEstimado = 0;
+            }
+        },
+
+        // Formatear precio con separadores de miles
+        formatearPrecio(valor) {
+            return new Intl.NumberFormat('es-CO').format(valor);
         },
 
         resetHora() {

@@ -9,7 +9,7 @@
 @php
     $hora  = now()->hour;
     $saludo = $hora < 12 ? 'Buenos días' : ($hora < 18 ? 'Buenas tardes' : 'Buenas noches');
-    $nombreMedico = auth()->user()->name ?? 'Doctor';
+    $nombreMedico = auth()->user()->nombre ?? 'Doctor';
 
     // Detectar la cita activa ahora mismo o la siguiente pendiente
     $ahoraStr  = now()->format('H:i:s');
@@ -23,7 +23,7 @@
 
 <div class="flex items-center justify-between mb-6">
     <div>
-        <h2 class="text-xl font-bold text-gray-800">{{ $saludo }}, Dr. {{ $nombreMedico }}</h2>
+        <h2 class="text-xl font-bold text-gray-800">{{ $saludo }}, {{ $nombreMedico }}</h2>
         <p class="text-sm text-gray-500 mt-0.5">{{ now()->locale('es')->isoFormat('dddd, D [de] MMMM [de] YYYY') }}</p>
     </div>
     <div class="text-right">
@@ -31,6 +31,20 @@
         <p class="text-xs text-gray-500">citas hoy</p>
     </div>
 </div>
+
+{{-- ── Buscador de pacientes ────────────────────────────────────────── --}}
+<form method="GET" action="{{ route('medico.pacientes') }}" class="mb-6">
+    <div class="flex items-center gap-2 bg-white rounded-xl shadow-sm border border-gray-100 px-4 py-3">
+        <svg class="w-5 h-5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+        </svg>
+        <input type="text" name="buscar" placeholder="Buscar paciente por nombre..."
+               class="flex-1 bg-transparent border-none outline-none text-sm text-gray-700 placeholder-gray-400">
+        <button type="submit" class="text-sm bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition">
+            Buscar
+        </button>
+    </div>
+</form>
 
 {{-- ── AGENDA DE HOY (hero) ─────────────────────────────────────────── --}}
 <div class="bg-white rounded-xl shadow-sm border border-gray-100 mb-6">

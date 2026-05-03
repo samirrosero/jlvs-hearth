@@ -111,7 +111,7 @@
             {{-- Paginación --}}
             @if($pacientes->hasPages())
                 <div class="px-5 py-4 border-t border-gray-100">
-                    {{ $pacientes->withQueryString()->links() }}
+                    {{ $pacientes->withQueryString()->links('vendor.pagination.simple-tailwind') }}
                 </div>
             @endif
         @endif

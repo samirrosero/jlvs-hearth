@@ -19,20 +19,20 @@
 <div class="max-w-2xl mx-auto space-y-5">
 
     {{-- ── Encabezado ── --}}
-    <div class="flex items-center justify-between flex-wrap gap-3">
+    <div class="relative flex items-center justify-center py-2">
+                <a href="{{ route('gestor.citas') }}"
+           class="absolute left-0 text-sm text-gray-600 hover:text-gray-800 font-medium inline-flex items-center gap-1 transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+            <span class="hidden sm:inline">Volver a citas</span>
+        </a>
         <div class="flex items-center gap-3">
             <h2 class="text-xl font-bold text-gray-900">Editar cita</h2>
             <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold {{ $badgeActual }}">
                 {{ $nombreEstadoActual ?: '—' }}
             </span>
         </div>
-        <a href="{{ route('gestor.citas') }}"
-           class="text-sm text-gray-600 hover:text-gray-800 font-medium inline-flex items-center gap-1 transition-colors">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-            </svg>
-            Volver a citas
-        </a>
     </div>
 
     {{-- ── Errores de validación ── --}}

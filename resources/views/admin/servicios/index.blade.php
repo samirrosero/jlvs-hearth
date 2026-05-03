@@ -92,7 +92,16 @@
             <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                 <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
                     <h2 class="text-base font-semibold text-gray-800">Catálogo de servicios</h2>
-                    <span class="text-xs text-gray-400">{{ $servicios->count() }} registrado(s)</span>
+                    <div class="flex items-center gap-3">
+                        <a href="{{ route('admin.precios.matriz') }}"
+                           class="inline-flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-3 py-1.5 rounded-lg transition">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                            Ver precios
+                        </a>
+                        <span class="text-xs text-gray-400">{{ $servicios->count() }} registrado(s)</span>
+                    </div>
                 </div>
 
                 @if($servicios->isEmpty())
@@ -135,6 +144,13 @@
                                           d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                 </svg>
                             </button>
+                            <a href="{{ route('admin.servicios.precios', $s) }}"
+                               class="p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition"
+                               title="Gestionar precios">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                            </a>
                             <form method="POST" action="{{ route('admin.servicios.destroy', $s) }}"
                                   onsubmit="return confirm('¿Desactivar el servicio «{{ $s->nombre }}»?')">
                                 @csrf @method('DELETE')

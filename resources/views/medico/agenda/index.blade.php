@@ -6,9 +6,12 @@
 @push('styles')
 <style>
     .estado-pendiente  { background:#fef3c7; color:#92400e; border-color:#fde68a; }
+    .estado-confirmada { background:#dbeafe; color:#1e40af; border-color:#93c5fd; } /* Azul para Confirmada */
     .estado-atendida   { background:#dcfce7; color:#166534; border-color:#bbf7d0; }
     .estado-cancelada  { background:#fee2e2; color:#991b1b; border-color:#fecaca; }
+    .estado-no-asistio { background:#f3f4f6; color:#4b5563; border-color:#d1d5db; } /* Gris para No asistió */
     .estado-default    { background:#f1f5f9; color:#475569; border-color:#e2e8f0; }
+    .modalidad-telemedicina { background:#f3e8ff; color:#6b21a8; border-color:#d8b4fe; } /* Morado para telemedicina */
     .col-hoy           { background:#f0f9ff; border-color:#bae6fd !important; }
     .col-hoy .day-name { color:#0369a1; }
     .col-hoy .day-num  { background:#0369a1; color:#fff; }
@@ -16,6 +19,54 @@
 @endpush
 
 @section('content')
+
+{{-- ── Filtros de citas ───────────────────────────────────────── --}}
+<div class="mb-4" x-data="{ filtro: 'todos' }">
+    <div class="flex flex-wrap items-center gap-2">
+        <span class="text-xs text-gray-500 font-medium mr-1">Filtrar:</span>
+        <button type="button"
+                @click="filtro = 'todos'"
+                :class="filtro === 'todos' ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
+                class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors">
+            Todos
+        </button>
+        <button type="button"
+                @click="filtro = 'estado-pendiente'"
+                :class="filtro === 'estado-pendiente' ? 'bg-amber-500 text-white' : 'bg-amber-50 text-amber-700 hover:bg-amber-100'"
+                class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-amber-500 inline-block"></span> Pendiente
+        </button>
+        <button type="button"
+                @click="filtro = 'estado-confirmada'"
+                :class="filtro === 'estado-confirmada' ? 'bg-blue-500 text-white' : 'bg-blue-50 text-blue-700 hover:bg-blue-100'"
+                class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-blue-500 inline-block"></span> Confirmada
+        </button>
+        <button type="button"
+                @click="filtro = 'estado-atendida'"
+                :class="filtro === 'estado-atendida' ? 'bg-emerald-500 text-white' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'"
+                class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span> Atendida
+        </button>
+        <button type="button"
+                @click="filtro = 'estado-cancelada'"
+                :class="filtro === 'estado-cancelada' ? 'bg-red-500 text-white' : 'bg-red-50 text-red-700 hover:bg-red-100'"
+                class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-red-500 inline-block"></span> Cancelada
+        </button>
+        <button type="button"
+                @click="filtro = 'estado-no-asistio'"
+                :class="filtro === 'estado-no-asistio' ? 'bg-gray-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
+                class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-gray-400 inline-block"></span> No asistió
+        </button>
+        <button type="button"
+                @click="filtro = 'telemedicina'"
+                :class="filtro === 'telemedicina' ? 'bg-purple-500 text-white' : 'bg-purple-50 text-purple-700 hover:bg-purple-100'"
+                class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-purple-500 inline-block"></span> Telemedicina
+        </button>
+    </div>
 
 {{-- ── Navegación de semana ───────────────────────────────────── --}}
 <div class="flex items-center justify-between mb-5 flex-wrap gap-3">
@@ -86,14 +137,17 @@
                 $estadoNom = strtolower($cita->estado?->nombre ?? '');
                 $claseEstado = match(true) {
                     str_contains($estadoNom, 'pendiente') => 'estado-pendiente',
+                    str_contains($estadoNom, 'confirmada') => 'estado-confirmada',
                     str_contains($estadoNom, 'atendida') || str_contains($estadoNom, 'completada') => 'estado-atendida',
                     str_contains($estadoNom, 'cancelada') => 'estado-cancelada',
+                    str_contains($estadoNom, 'no asist') => 'estado-no-asistio',
                     default => 'estado-default',
                 };
                 $esVirtual = str_contains(strtolower($cita->modalidad?->nombre ?? ''), 'tele');
             @endphp
             <a href="{{ route('medico.citas.atender', $cita) }}"
-               class="block rounded-lg border px-2.5 py-2 {{ $claseEstado }} hover:opacity-80 transition text-left">
+               x-show="filtro === 'todos' || filtro === '{{ $esVirtual ? 'telemedicina' : $claseEstado }}'"
+               class="block rounded-lg border px-2.5 py-2 {{ $esVirtual ? 'modalidad-telemedicina' : $claseEstado }} hover:opacity-80 transition text-left">
                 <div class="flex items-center gap-1 mb-0.5">
                     <span class="text-[10px] font-bold">{{ \Carbon\Carbon::createFromFormat('H:i:s', $cita->hora)->format('g:i A') }}</span>
                     @if ($esVirtual)
@@ -122,22 +176,6 @@
     @endforeach
 </div>
 
-{{-- ── Leyenda ────────────────────────────────────────────────── --}}
-<div class="flex flex-wrap items-center gap-4 mt-5 text-xs text-gray-500">
-    <span class="flex items-center gap-1.5">
-        <span class="w-3 h-3 rounded-sm estado-pendiente border inline-block"></span> Pendiente
-    </span>
-    <span class="flex items-center gap-1.5">
-        <span class="w-3 h-3 rounded-sm estado-atendida border inline-block"></span> Atendida
-    </span>
-    <span class="flex items-center gap-1.5">
-        <span class="w-3 h-3 rounded-sm estado-cancelada border inline-block"></span> Cancelada
-    </span>
-    <span class="flex items-center gap-1.5">
-        <svg class="w-3 h-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/>
-        </svg> Telemedicina
-    </span>
 </div>
 
 @endsection

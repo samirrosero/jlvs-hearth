@@ -20,22 +20,31 @@ class GestorCitasController extends Controller
     {
         $empresaId = auth()->user()->empresa_id;
 
-        $citas = Cita::where('empresa_id', $empresaId)
+        $query = Cita::where('empresa_id', $empresaId)
             ->with('paciente', 'medico.usuario', 'estado', 'servicio', 'modalidad')
             ->when(request('fecha'), fn ($q) => $q->where('fecha', request('fecha')))
             ->when(request('medico_id'), fn ($q) => $q->where('medico_id', request('medico_id')))
             ->when(request('estado_id'), fn ($q) => $q->where('estado_id', request('estado_id')))
             ->when(request('cedula'), fn ($q) => $q->whereHas('paciente',
                 fn ($p) => $p->where('identificacion', 'like', request('cedula') . '%')
-            ))
+            ));
+
+        $citas = $query->clone()
             ->orderByDesc('fecha')->orderByDesc('hora')
             ->paginate(15)
             ->withQueryString();
 
-        $estados = EstadoCita::all();
-        $medicos = Medico::where('empresa_id', $empresaId)->with('usuario')->get();
+        $citasPorMedico = $query->clone()
+            ->orderBy('medico_id')
+            ->orderBy('fecha')
+            ->orderBy('hora')
+            ->get()
+            ->groupBy(fn ($cita) => $cita->medico?->id ?? 'sin_medico');
 
-        return view('gestor.citas.index', compact('citas', 'estados', 'medicos'));
+        $estados = EstadoCita::all();
+        $medicos = Medico::where('empresa_id', $empresaId)->with('usuario')->orderBy('usuario_id')->get();
+
+        return view('gestor.citas.index', compact('citas', 'estados', 'medicos', 'citasPorMedico'));
     }
 
     public function create()

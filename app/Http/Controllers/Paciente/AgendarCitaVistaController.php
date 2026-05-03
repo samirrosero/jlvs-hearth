@@ -164,18 +164,37 @@ class AgendarCitaVistaController extends Controller
             ->sortBy(fn ($id) => $cargaPorMedico[$id] ?? 0)
             ->first();
 
+        // Buscar servicio y portafolio para asociarlos a la cita (necesario para precios)
+        $paciente = auth()->user()->paciente;
+        $servicio = Servicio::where('empresa_id', $empresaId)
+            ->where('nombre', 'like', "%{$data['especialidad']}%")
+            ->where('activo', true)
+            ->first();
+
         $cita = Cita::create([
-            'empresa_id'   => $empresaId,
-            'medico_id'    => $medicoId,
-            'paciente_id'  => auth()->user()->paciente->id,
-            'estado_id'    => self::ESTADO_PENDIENTE,
-            'modalidad_id' => $data['modalidad_id'],
-            'fecha'        => $data['fecha'],
-            'hora'         => $hora,
-            'activo'       => true,
+            'empresa_id'    => $empresaId,
+            'medico_id'     => $medicoId,
+            'paciente_id'   => $paciente->id,
+            'estado_id'     => self::ESTADO_PENDIENTE,
+            'modalidad_id'  => $data['modalidad_id'],
+            'portafolio_id' => $paciente->portafolio_id,
+            'servicio_id'   => $servicio?->id,
+            'fecha'         => $data['fecha'],
+            'hora'          => $hora,
+            'activo'        => true,
         ]);
 
-        $correo = auth()->user()->paciente->correo ?? auth()->user()->email;
+        // Si es telemedicina (modalidad_id=2), redirigir al formulario de pago ANTES de enviar correo
+        $modalidad = ModalidadCita::find($data['modalidad_id']);
+        $esTelemedicina = str_contains(strtolower($modalidad?->nombre ?? ''), 'telemedicina');
+
+        if ($esTelemedicina) {
+            return redirect()->route('paciente.citas.pago', $cita->id)
+                ->with('info', 'Por favor realiza el pago para confirmar tu cita de telemedicina.');
+        }
+
+        // Para otras modalidades: enviar correo y redirigir a citas
+        $correo = $paciente->correo ?? auth()->user()->email;
         if ($correo) {
             Mail::to($correo)->queue(
                 new CitaAgendadaMail($cita->load('medico.usuario', 'paciente', 'estado', 'modalidad', 'empresa'))

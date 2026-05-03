@@ -91,13 +91,18 @@
                     ],
                     [
                         'route' => 'admin.valoraciones.index',
-                        'icon'  => asset('img/icons/dashboard.png'),
+                        'icon'  => $empresa?->icono_valoraciones_url ?? asset('img/icons/dashboard.png'),
                         'label' => 'Valoraciones',
                     ],
                     [
                         'route' => 'admin.solicitudes.index',
                         'icon'  => $empresa?->icono_solicitudes_url ?? asset('img/icons/pacientes.png'),
                         'label' => 'Solicitudes personal',
+                    ],
+                    [
+                        'route' => 'admin.importar.index',
+                        'icon'  => $empresa?->icono_importar_url ?? asset('img/icons/excel.png'),
+                        'label' => 'Importar Datos',
                     ],
                     [
                         'route' => 'admin.servicios.index',
@@ -131,8 +136,14 @@
                 <a href="{{ route($item['route']) }}"
                    class="nav-item flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition
                           {{ request()->routeIs($item['route']) || request()->routeIs($item['route'].'*') ? 'activo' : '' }}">
-                    <img src="{{ $item['icon'] }}" alt="{{ $item['label'] }}"
-                         class="w-5 h-5 flex-shrink-0">
+                    @if(isset($item['svg']))
+                        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            {!! $item['svg'] !!}
+                        </svg>
+                    @else
+                        <img src="{{ $item['icon'] }}" alt="{{ $item['label'] }}"
+                             class="w-5 h-5 flex-shrink-0">
+                    @endif
                     {{ $item['label'] }}
                 </a>
             @endforeach

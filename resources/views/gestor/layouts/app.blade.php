@@ -93,8 +93,8 @@
                     ['divider' => 'Recepción'],
                     [
                         'route' => 'gestor.recepcion.index',
-                        'icon'  => asset('img/icons/pacientes.png'),
-                        'label' => '💰 Recepción / Cobro',
+                        'icon'  => $empresa?->icono_gestor_recepcion_url ?? asset('img/icons/citas-total.png'),
+                        'label' => 'Recepción / Cobro',
                         'match' => 'gestor.recepcion.*',
                     ],
                     // ── Lista de espera ───────────────────────
@@ -131,7 +131,13 @@
                     <a href="{{ route($item['route']) }}"
                        class="nav-item flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition
                               {{ request()->routeIs($item['match'] ?? $item['route']) ? 'activo' : '' }}">
-                        <img src="{{ $item['icon'] }}" alt="{{ $item['label'] }}" class="w-5 h-5 flex-shrink-0">
+                        @if(isset($item['svg']))
+                            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                {!! $item['svg'] !!}
+                            </svg>
+                        @else
+                            <img src="{{ $item['icon'] }}" alt="{{ $item['label'] }}" class="w-5 h-5 flex-shrink-0">
+                        @endif
                         {{ $item['label'] }}
                     </a>
                 @endif
@@ -147,7 +153,10 @@
                 @csrf
                 <button type="submit"
                     class="sidebar-logout w-full text-left text-sm flex items-center gap-2 transition">
-                    <img src="{{ asset('img/icons/logout.png') }}" alt="Cerrar sesión" class="w-4 h-4 flex-shrink-0">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                    </svg>
                     Cerrar sesión
                 </button>
             </form>

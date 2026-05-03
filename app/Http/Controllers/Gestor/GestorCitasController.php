@@ -155,9 +155,28 @@ class GestorCitasController extends Controller
             ->whereDate('fecha', today())
             ->where('activo', true)
             ->whereHas('paciente', fn ($q) => $q->where('identificacion', $request->identificacion))
-            ->with('paciente', 'medico.usuario', 'estado', 'servicio')
+            ->with(['paciente.portafolio', 'medico.usuario', 'estado', 'servicio', 'modalidad', 'pagos'])
             ->orderBy('hora')
             ->get();
+
+        // Enriquecer con precio sugerido y estado de pago
+        $citas->transform(function ($cita) use ($empresaId) {
+            $precioSugerido = null;
+            if ($cita->servicio_id && $cita->paciente?->portafolio_id) {
+                $precio = \App\Models\PrecioServicio::where('empresa_id', $empresaId)
+                    ->where('servicio_id', $cita->servicio_id)
+                    ->where('portafolio_id', $cita->paciente->portafolio_id)
+                    ->value('precio');
+                $precioSugerido = $precio;
+            }
+
+            $pagoPagado = $cita->pagos->where('estado', 'pagado')->first();
+
+            $data = $cita->toArray();
+            $data['precio_sugerido'] = $precioSugerido;
+            $data['pago_estado'] = $pagoPagado ? 'pagado' : 'pendiente';
+            return $data;
+        });
 
         return response()->json($citas);
     }

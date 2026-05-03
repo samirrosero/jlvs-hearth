@@ -299,6 +299,8 @@
                                 'icono_servicios'   => ['label' => 'Servicios',        'preview' => $empresa->icono_servicios_url],
                                 'icono_convenios'   => ['label' => 'Convenios',        'preview' => $empresa->icono_convenios_url],
                                 'icono_auditoria'   => ['label' => 'Auditoría',        'preview' => $empresa->icono_auditoria_url],
+                                'icono_valoraciones'=> ['label' => 'Valoraciones',     'preview' => $empresa->icono_valoraciones_url],
+                                'icono_importar'    => ['label' => 'Importar Datos',   'preview' => $empresa->icono_importar_url],
                             ];
                         @endphp
                         @foreach($iconosSidebar as $key => $info)
@@ -469,6 +471,7 @@
                             'icono_gestor_espera'     => ['label' => 'Lista de Espera',     'sub' => 'Cola de espera',            'preview' => $empresa->icono_gestor_espera_url],
                             'icono_gestor_registrar'  => ['label' => 'Registrar Paciente',  'sub' => 'Nuevo paciente',            'preview' => $empresa->icono_gestor_registrar_url],
                             'icono_gestor_pacientes'  => ['label' => 'Directorio',          'sub' => 'Lista de pacientes',        'preview' => $empresa->icono_gestor_pacientes_url],
+                            'icono_gestor_recepcion'  => ['label' => 'Recepción / Cobro',   'sub' => 'Check-in y cobros',         'preview' => $empresa->icono_gestor_recepcion_url],
                         ];
                     @endphp
                     @foreach($iconosGestor as $key => $info)

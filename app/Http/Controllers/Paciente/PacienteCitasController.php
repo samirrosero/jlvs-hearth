@@ -3,12 +3,16 @@
 namespace App\Http\Controllers\Paciente;
 
 use App\Http\Controllers\Controller;
+use App\Mail\CitaAgendadaMail;
 use App\Models\Cita;
 use App\Models\EstadoCita;
+use App\Models\Pago;
+use App\Models\PrecioServicio;
 use App\Models\Valoracion;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 
 class PacienteCitasController extends Controller
@@ -85,6 +89,80 @@ class PacienteCitasController extends Controller
         return view('paciente.citas.videollamada', compact('cita'));
     }
 
+    /**
+     * Formulario de pago para cita de telemedicina.
+     */
+    public function pago(Cita $cita)
+    {
+        abort_if($cita->paciente_id !== auth()->user()->paciente->id, 403);
+        abort_if(strtolower($cita->modalidad->nombre ?? '') !== 'telemedicina', 404);
+
+        // Si ya tiene pago completado, redirigir
+        $yaPagado = Pago::where('cita_id', $cita->id)->where('estado', 'pagado')->exists();
+        if ($yaPagado) {
+            return redirect()->route('paciente.citas')->with('info', 'Esta cita ya fue pagada.');
+        }
+
+        $cita->load('medico.usuario', 'modalidad', 'servicio', 'paciente.portafolio');
+
+        // Obtener precio sugerido
+        $precio = null;
+        if ($cita->servicio_id && $cita->paciente?->portafolio_id) {
+            $precio = PrecioServicio::where('empresa_id', $cita->empresa_id)
+                ->where('servicio_id', $cita->servicio_id)
+                ->where('portafolio_id', $cita->paciente->portafolio_id)
+                ->value('precio');
+        }
+
+        return view('paciente.citas.pago', compact('cita', 'precio'));
+    }
+
+    /**
+     * Procesa el pago de una cita de telemedicina (simulación de pasarela).
+     */
+    public function procesarPago(Request $request, Cita $cita): RedirectResponse
+    {
+        abort_if($cita->paciente_id !== auth()->user()->paciente->id, 403);
+        abort_if(strtolower($cita->modalidad->nombre ?? '') !== 'telemedicina', 404);
+
+        $data = $request->validate([
+            'metodo_pago' => 'required|in:tarjeta,transferencia,prepagada',
+            'monto'       => 'required|numeric|min:0',
+            'referencia'  => 'nullable|string|max:100',
+        ]);
+
+        // Evitar pagos duplicados
+        $yaPagado = Pago::where('cita_id', $cita->id)->where('estado', 'pagado')->exists();
+        if ($yaPagado) {
+            return redirect()->route('paciente.citas')->with('info', 'Esta cita ya fue pagada.');
+        }
+
+        // Crear registro de pago (simulación — en producción se integraría con pasarela real)
+        Pago::create([
+            'empresa_id'    => $cita->empresa_id,
+            'cita_id'       => $cita->id,
+            'paciente_id'   => $cita->paciente_id,
+            'monto'         => $data['monto'],
+            'metodo_pago'   => $data['metodo_pago'],
+            'estado'        => 'pagado',
+            'tipo_pago'     => 'telemedicina',
+            'referencia'    => $data['referencia'] ?? 'ONLINE-' . strtoupper(uniqid()),
+            'fecha_pago'    => now(),
+            'observaciones' => 'Pago realizado por el paciente desde la app (telemedicina).',
+        ]);
+
+        // Ya pagado: enviar correo de confirmación de cita
+        $correo = $cita->paciente?->correo ?? auth()->user()->email;
+        if ($correo) {
+            Mail::to($correo)->queue(
+                new CitaAgendadaMail($cita->load('medico.usuario', 'paciente', 'estado', 'modalidad', 'servicio', 'empresa'))
+            );
+        }
+
+        return redirect()->route('paciente.citas')
+            ->with('success', '✅ Pago realizado con éxito. Tu cita de telemedicina está confirmada.');
+    }
+
     public function cancelar(Cita $cita): RedirectResponse
     {
         abort_if($cita->paciente_id !== auth()->user()->paciente->id, 403);
@@ -113,7 +191,7 @@ class PacienteCitasController extends Controller
     {
         // Verificar que la cita pertenezca al paciente y esté atendida (o al menos terminada)
         abort_if($cita->paciente_id !== auth()->user()->paciente->id, 403);
-        
+
         // Si ya tiene valoración, redirigir
         $yaValorada = Valoracion::where('cita_id', $cita->id)->exists();
         if ($yaValorada) {
@@ -133,13 +211,13 @@ class PacienteCitasController extends Controller
 
         // Ya no necesitamos auth() porque la ruta está protegida por firma (signed URL)
         // y es única para esta cita.
-        
+
         $puntuacion = $request->integer('puntuacion', 0);
         abort_if($puntuacion < 1 || $puntuacion > 5, 400);
 
         // Evitar duplicados
         $valoracion = Valoracion::where('cita_id', $cita->id)->first();
-        
+
         if (!$valoracion) {
             $valoracion = Valoracion::create([
                 'cita_id' => $cita->id,

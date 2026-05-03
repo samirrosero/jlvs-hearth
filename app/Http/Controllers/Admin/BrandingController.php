@@ -64,6 +64,8 @@ class BrandingController extends Controller
             'icono_servicios'         => ['nullable', 'file', 'mimes:png,svg,webp', 'max:512'],
             'icono_convenios'         => ['nullable', 'file', 'mimes:png,svg,webp', 'max:512'],
             'icono_auditoria'         => ['nullable', 'file', 'mimes:png,svg,webp', 'max:512'],
+            'icono_valoraciones'      => ['nullable', 'file', 'mimes:png,svg,webp', 'max:512'],
+            'icono_importar'          => ['nullable', 'file', 'mimes:png,svg,webp', 'max:512'],
             // Iconos panel del gestor de citas
             'icono_gestor_dashboard'  => ['nullable', 'file', 'mimes:png,svg,webp', 'max:512'],
             'icono_gestor_nueva_cita' => ['nullable', 'file', 'mimes:png,svg,webp', 'max:512'],
@@ -71,6 +73,7 @@ class BrandingController extends Controller
             'icono_gestor_espera'     => ['nullable', 'file', 'mimes:png,svg,webp', 'max:512'],
             'icono_gestor_registrar'  => ['nullable', 'file', 'mimes:png,svg,webp', 'max:512'],
             'icono_gestor_pacientes'  => ['nullable', 'file', 'mimes:png,svg,webp', 'max:512'],
+            'icono_gestor_recepcion'  => ['nullable', 'file', 'mimes:png,svg,webp', 'max:512'],
         ]);
 
         $datos = $request->only([
@@ -121,6 +124,7 @@ class BrandingController extends Controller
             'icono_dashboard', 'icono_pacientes', 'icono_medicos',
             'icono_reportes', 'icono_solicitudes', 'icono_identidad',
             'icono_horarios', 'icono_servicios', 'icono_convenios', 'icono_auditoria',
+            'icono_valoraciones', 'icono_importar',
         ];
         foreach ($iconosSidebar as $icono) {
             if ($request->hasFile($icono)) {
@@ -187,6 +191,7 @@ class BrandingController extends Controller
             'icono_gestor_dashboard', 'icono_gestor_nueva_cita',
             'icono_gestor_citas', 'icono_gestor_espera',
             'icono_gestor_registrar', 'icono_gestor_pacientes',
+            'icono_gestor_recepcion',
         ];
         foreach ($iconosGestor as $icono) {
             if ($request->hasFile($icono)) {

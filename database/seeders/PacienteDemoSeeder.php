@@ -23,7 +23,7 @@ use Illuminate\Support\Facades\Hash;
 /**
  * Paciente de prueba con historia clínica completa.
  *
- * Usuario: carlos.mendoza@email.com / password
+ * Usuario: samirarmero1610@gmail.com / password
  * Crea: perfil, antecedentes, 7 citas (3 atendidas, 1 cancelada,
  *       1 no asistió, 1 pendiente, 1 confirmada), signos vitales,
  *       historias clínicas, recetas y valoraciones.
@@ -67,7 +67,7 @@ class PacienteDemoSeeder extends Seeder
 
         // ── Usuario paciente ─────────────────────────────────────────
         $usuario = User::firstOrCreate(
-            ['email' => 'carlos.mendoza@email.com'],
+            ['email' => 'samirarmero1610@gmail.com'],
             [
                 'nombre'                 => 'Carlos Alberto Mendoza',
                 'identificacion'         => '1098765432',
@@ -89,7 +89,7 @@ class PacienteDemoSeeder extends Seeder
                 'fecha_nacimiento' => '1978-03-15',
                 'sexo'             => 'M',
                 'telefono'         => '3112345678',
-                'correo'           => 'carlos.mendoza@email.com',
+                'correo'           => 'samirarmero1610@gmail.com',
                 'direccion'        => 'Carrera 7 # 45-22 Apto 301, Bogotá',
                 'nombre_aseguradora' => null,
                 'numero_poliza'    => null,
@@ -366,7 +366,7 @@ class PacienteDemoSeeder extends Seeder
         );
 
         $this->command->info('✓ Paciente demo creado: Carlos Alberto Mendoza');
-        $this->command->info('  carlos.mendoza@email.com / password');
+        $this->command->info('  samirarmero1610@gmail.com / password');
         $this->command->info('  7 citas | 3 historias clínicas | 2 recetas | 2 valoraciones');
     }
 }

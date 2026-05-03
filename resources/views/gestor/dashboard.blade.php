@@ -106,7 +106,18 @@
                             <span x-text="cita.servicio?.nombre ?? 'Sin servicio'"></span>
                             &bull;
                             <span class="tabular-nums font-medium" x-text="(cita.hora ?? '').slice(0,5)"></span>
+                            <template x-if="cita.precio_sugerido">
+                                <span class="ml-2 text-emerald-700 font-semibold">
+                                    &bull; $<span x-text="formatearPrecio(cita.precio_sugerido)"></span>
+                                </span>
+                            </template>
                         </p>
+                        <template x-if="cita.modalidad?.nombre === 'Telemedicina'">
+                            <p class="text-xs text-purple-700 font-medium mt-0.5 flex items-center gap-1">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                                Telemedicina — Pago procesado desde la app del paciente
+                            </p>
+                        </template>
                     </div>
                     <div class="flex flex-wrap items-center gap-2 shrink-0">
                         <span :class="{
@@ -119,8 +130,17 @@
                               class="text-xs font-semibold px-2.5 py-1 rounded-full"
                               x-text="cita.estado?.nombre ?? '\u2014'"></span>
 
+                        {{-- Badge pago --}}
+                        <template x-if="cita.pago_estado === 'pagado'">
+                            <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 inline-flex items-center gap-1">
+                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z"/><path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clip-rule="evenodd"/></svg>
+                                Pagado
+                            </span>
+                        </template>
+
+                        {{-- Paso 1: Confirmar llegada (solo citas presenciales pendientes) --}}
                         <button type="button"
-                                x-show="cita.estado?.nombre === 'Pendiente'"
+                                x-show="cita.estado?.nombre === 'Pendiente' && cita.modalidad?.nombre !== 'Telemedicina'"
                                 @click="confirmarLlegada(cita.id)"
                                 :disabled="confirmando === cita.id"
                                 class="inline-flex items-center gap-1.5 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold text-xs px-3 py-1.5 rounded-lg transition-colors">
@@ -131,16 +151,25 @@
                             <svg x-show="confirmando !== cita.id" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                             </svg>
-                            Confirmar llegada
+                            1. Confirmar llegada
                         </button>
 
-                        <span x-show="cita.estado?.nombre === 'Confirmada' && confirmado === cita.id"
-                              class="text-xs text-green-700 font-semibold flex items-center gap-1" style="display:none">
+                        {{-- Paso 2: Cobrar (si está Confirmada y no está pagada) --}}
+                        <a x-show="cita.estado?.nombre === 'Confirmada' && cita.pago_estado !== 'pagado' && cita.modalidad?.nombre !== 'Telemedicina'"
+                           :href="'/gestor/recepcion/citas/' + cita.id + '/pago'"
+                           class="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs px-3 py-1.5 rounded-lg transition-colors"
+                           style="display:none">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                             </svg>
-                            Registrado
-                        </span>
+                            2. Cobrar
+                        </a>
+
+                        {{-- Ver detalle --}}
+                        <a :href="'/gestor/citas/' + cita.id + '/editar'"
+                           class="inline-flex items-center gap-1 text-xs text-gray-600 hover:text-blue-600 font-medium px-2 py-1.5 transition-colors">
+                            Detalle →
+                        </a>
                     </div>
                 </div>
             </template>
@@ -447,6 +476,11 @@ function checkIn() {
             } finally {
                 this.buscando = false;
             }
+        },
+
+        formatearPrecio(valor) {
+            if (!valor) return '0';
+            return new Intl.NumberFormat('es-CO').format(valor);
         },
 
         async confirmarLlegada(id) {

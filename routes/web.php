@@ -490,6 +490,10 @@ Route::get('/paciente/certificado-afiliacion', [App\Http\Controllers\Paciente\Pa
     Route::get('/citas/{cita}/videollamada', [PacienteCitasController::class, 'videollamada'])
         ->name('citas.videollamada');
 
+    // Pago de citas de telemedicina
+    Route::get('/citas/{cita}/pago',  [PacienteCitasController::class, 'pago'])->name('citas.pago');
+    Route::post('/citas/{cita}/pago', [PacienteCitasController::class, 'procesarPago'])->name('citas.pago.store');
+
     Route::get('/agendar', [AgendarCitaVistaController::class, 'index'])->name('agendar');
     Route::get('/agendar/disponible', [AgendarCitaVistaController::class, 'disponible'])->name('agendar.disponible');
     Route::post('/agendar/reservar', [AgendarCitaVistaController::class, 'reservar'])->name('agendar.reservar');
@@ -611,6 +615,15 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         // Chatbot — asistente virtual con Ollama
         Route::post('/chatbot', [ChatbotController::class, 'chat'])->name('chatbot');
+
+        // Importación masiva de datos (migración desde Excel/CSV)
+        Route::get('/importar',                               [\App\Http\Controllers\Admin\AdminImportarController::class, 'index'])->name('importar.index');
+        Route::post('/importar',                              [\App\Http\Controllers\Admin\AdminImportarController::class, 'importar'])->name('importar.procesar');
+        Route::get('/importar/historial',                     [\App\Http\Controllers\Admin\AdminImportarController::class, 'historial'])->name('importar.historial');
+        Route::get('/importar/plantilla/{tipo}',              [\App\Http\Controllers\Admin\AdminImportarController::class, 'descargarPlantilla'])->name('importar.plantilla');
+        Route::get('/importar/{importacion}/progreso',        [\App\Http\Controllers\Admin\AdminImportarController::class, 'progreso'])->name('importar.progreso');
+        Route::get('/importar/{importacion}/estado',          [\App\Http\Controllers\Admin\AdminImportarController::class, 'estado'])->name('importar.estado');
+        Route::get('/importar/{importacion}/resultados',      [\App\Http\Controllers\Admin\AdminImportarController::class, 'resultados'])->name('importar.resultados');
 
         // Auditoría — CU-009
         Route::get('/auditoria', fn () => view('admin.auditoria.index'))->name('auditoria');

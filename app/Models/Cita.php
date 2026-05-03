@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Cita extends Model
@@ -85,5 +86,11 @@ class Cita extends Model
     public function valoracion(): HasOne
     {
         return $this->hasOne(Valoracion::class, 'cita_id');
+    }
+
+    // Una cita puede tener múltiples registros de pago
+    public function pagos(): HasMany
+    {
+        return $this->hasMany(Pago::class, 'cita_id');
     }
 }

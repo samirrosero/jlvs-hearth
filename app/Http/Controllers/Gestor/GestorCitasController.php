@@ -16,6 +16,59 @@ use Illuminate\Http\Request;
 
 class GestorCitasController extends Controller
 {
+    // Estados que liberan el slot (cancelada=4, no asistió=5)
+    private const ESTADOS_LIBERAN = [4, 5];
+
+    private function isHorarioDisponible(int $medicoId, string $fecha, string $hora, ?int $servicioId = null, ?int $excludeCitaId = null): bool
+    {
+        $fechaCarbon = Carbon::parse($fecha);
+        $diaSemana = (int) $fechaCarbon->format('N') % 7;
+
+        $servicio = $servicioId ? Servicio::find($servicioId) : null;
+        $duracionMinutos = $servicio?->duracion_minutos ?? 30;
+
+        // Horarios del médico para ese día de la semana
+        $horarios = HorarioMedico::where('medico_id', $medicoId)
+            ->where('dia_semana', $diaSemana)
+            ->where('activo', true)
+            ->get();
+
+        if ($horarios->isEmpty()) {
+            return false;
+        }
+
+        // Citas ya ocupadas ese día (excluir canceladas y no asistió, y excluir la cita actual si es update)
+        $query = Cita::where('medico_id', $medicoId)
+            ->whereDate('fecha', $fechaCarbon->toDateString())
+            ->whereNotIn('estado_id', self::ESTADOS_LIBERAN)
+            ->where('activo', true);
+
+        if ($excludeCitaId) {
+            $query->where('id', '!=', $excludeCitaId);
+        }
+
+        $horasOcupadas = $query->pluck('hora')
+            ->map(fn ($h) => substr($h, 0, 5)) // HH:MM
+            ->toArray();
+
+        // Generar slots disponibles
+        $slotsDisponibles = [];
+        foreach ($horarios as $horario) {
+            $cursor = Carbon::parse($fechaCarbon->toDateString() . ' ' . $horario->hora_inicio);
+            $fin = Carbon::parse($fechaCarbon->toDateString() . ' ' . $horario->hora_fin);
+
+            while ($cursor->copy()->addMinutes($duracionMinutos)->lte($fin)) {
+                $horaSlot = $cursor->format('H:i');
+                if (!in_array($horaSlot, $horasOcupadas)) {
+                    $slotsDisponibles[] = $horaSlot;
+                }
+                $cursor->addMinutes($duracionMinutos);
+            }
+        }
+
+        return in_array($hora, $slotsDisponibles);
+    }
+
     public function index()
     {
         $empresaId = auth()->user()->empresa_id;
@@ -91,6 +144,11 @@ class GestorCitasController extends Controller
             403
         );
 
+        // Verificar disponibilidad del horario
+        if (!$this->isHorarioDisponible($data['medico_id'], $data['fecha'], $data['hora'], $data['servicio_id'])) {
+            return back()->withInput()->with('error', 'El horario está ocupado. No hay disponibilidad para esa hora.');
+        }
+
         Cita::create(array_merge($data, ['empresa_id' => $empresaId, 'activo' => true]));
 
         return redirect()->route('gestor.citas')->with('exito', 'Cita agendada correctamente.');
@@ -126,6 +184,11 @@ class GestorCitasController extends Controller
             'fecha'        => ['required', 'date'],
             'hora'         => ['required', 'date_format:H:i'],
         ]);
+
+        // Verificar disponibilidad del horario (excluir la cita actual)
+        if (!$this->isHorarioDisponible($data['medico_id'], $data['fecha'], $data['hora'], $data['servicio_id'], $cita->id)) {
+            return back()->withInput()->with('error', 'El horario está ocupado. No hay disponibilidad para esa hora.');
+        }
 
         $cita->update($data);
 

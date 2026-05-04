@@ -75,7 +75,7 @@
 
             {{-- Modal de autorización --}}
             <div x-show="abrirModal" x-cloak
-                 class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+                 class="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm bg-white/10"
                  x-transition:enter="transition duration-200" x-transition:leave="transition duration-150">
                 <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6" @click.stop>
                     <h3 class="text-base font-bold text-gray-800 mb-1">Autorizar orden médica</h3>

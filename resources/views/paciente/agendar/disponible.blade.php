@@ -63,7 +63,7 @@
 
     {{-- MODAL DE CONFIRMACIÓN --}}
     <div x-show="openModal" class="fixed inset-0 z-[100] overflow-y-auto" style="display: none;" x-cloak>
-        <div class="fixed inset-0 bg-black/50 transition-opacity" @click="openModal = false"></div>
+        <div class="fixed inset-0 backdrop-blur-sm bg-white/10 transition-opacity" @click="openModal = false"></div>
 
         <div class="flex min-h-full items-center justify-center p-4">
             {{-- Fondo del modal con el color OKLCH de fondo si fuera necesario, pero lo mantenemos blanco para que resalten los textos --}}

@@ -88,12 +88,78 @@
         </div>
 
         {{-- Sin resultados --}}
-        <div x-show="buscado && citas.length === 0" style="display:none"
-             class="mt-3 text-sm text-gray-500 flex items-center gap-2">
-            <svg class="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-            </svg>
-            No se encontraron citas para hoy con ese documento.
+        <div x-show="buscado && citas.length === 0" style="display:none" class="mt-3 space-y-3">
+
+            <p class="text-sm text-gray-500 flex items-center gap-2">
+                <svg class="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+                No se encontraron citas para hoy con ese documento.
+            </p>
+
+            {{-- Opciones cuando no tiene cita --}}
+            <template x-if="paciente">
+                <div class="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 space-y-3">
+                    <p class="text-sm font-semibold text-amber-800">
+                        <span x-text="paciente.nombre_completo"></span> no tiene cita hoy.
+                    </p>
+
+                    {{-- Selector de servicio (requerido para lista de espera) --}}
+                    <div class="flex flex-col sm:flex-row gap-2 items-start sm:items-end">
+                        <div class="flex-1 min-w-0">
+                            <label class="block text-xs font-medium text-gray-700 mb-1">
+                                Servicio que requiere <span class="text-red-500">*</span>
+                            </label>
+                            <select x-model="servicioId"
+                                    class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white">
+                                <option value="">— Seleccionar servicio —</option>
+                                <template x-for="s in servicios" :key="s.id">
+                                    <option :value="s.id" x-text="s.nombre"></option>
+                                </template>
+                            </select>
+                        </div>
+                        <div class="flex gap-2 shrink-0">
+                            <a :href="'{{ route('gestor.citas.create') }}'"
+                               class="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-3 py-2 rounded-lg transition-colors whitespace-nowrap">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                </svg>
+                                Agendar cita
+                            </a>
+                            <button type="button"
+                                    @click="registrarEnEspera()"
+                                    :disabled="registrandoEspera || esperaOk || !servicioId"
+                                    class="inline-flex items-center gap-1.5 bg-amber-600 hover:bg-amber-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold text-xs px-3 py-2 rounded-lg transition-colors whitespace-nowrap">
+                                <svg x-show="registrandoEspera" class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                                </svg>
+                                <svg x-show="!registrandoEspera" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <span x-text="registrandoEspera ? 'Registrando...' : 'Lista de espera'"></span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <p x-show="esperaOk" class="text-xs text-green-700 font-semibold" style="display:none">
+                        ✓ Paciente registrado en lista de espera para hoy.
+                    </p>
+                    <p x-show="errorEspera" x-text="errorEspera" class="text-xs text-red-600" style="display:none"></p>
+                </div>
+            </template>
+
+            {{-- Paciente no existe en el sistema --}}
+            <template x-if="buscado && citas.length === 0 && !paciente">
+                <div class="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
+                    <p class="text-sm text-gray-600">
+                        No se encontró ningún paciente con ese documento.
+                        <a href="{{ route('gestor.pacientes.create') }}" class="text-blue-600 hover:underline font-medium ml-1">
+                            Registrar paciente →
+                        </a>
+                    </p>
+                </div>
+            </template>
         </div>
 
         {{-- Resultados --}}
@@ -451,30 +517,86 @@
 <script>
 function checkIn() {
     return {
-        cedula:      '',
-        buscando:    false,
-        citas:       [],
-        buscado:     false,
-        confirmando: null,
-        confirmado:  null,
+        cedula:            '',
+        buscando:          false,
+        citas:             [],
+        buscado:           false,
+        confirmando:       null,
+        confirmado:        null,
+        paciente:          null,
+        servicios:         [],
+        servicioId:        '',
+        registrandoEspera: false,
+        esperaOk:          false,
+        errorEspera:       '',
 
         async buscar() {
             if (!this.cedula.trim()) return;
-            this.buscando = true;
-            this.citas    = [];
-            this.buscado  = false;
-            this.confirmado = null;
+            this.buscando    = true;
+            this.citas       = [];
+            this.buscado     = false;
+            this.paciente    = null;
+            this.servicioId  = '';
+            this.esperaOk    = false;
+            this.errorEspera = '';
+            this.confirmado  = null;
             try {
-                const res = await fetch('/gestor/citas/buscar-hoy?identificacion=' + encodeURIComponent(this.cedula), {
-                    headers: { 'Accept': 'application/json' },
-                });
-                this.citas   = await res.json();
+                const [resCitas, resPaciente] = await Promise.all([
+                    fetch('/gestor/citas/buscar-hoy?identificacion=' + encodeURIComponent(this.cedula), {
+                        headers: { 'Accept': 'application/json' },
+                    }),
+                    fetch('/pacientes?buscar=' + encodeURIComponent(this.cedula), {
+                        headers: { 'Accept': 'application/json' },
+                    }),
+                ]);
+                this.citas = await resCitas.json();
+                const pacientes = await resPaciente.json();
+                this.paciente = (Array.isArray(pacientes) ? pacientes : [])
+                    .find(p => p.identificacion === this.cedula.trim()) ?? null;
                 this.buscado = true;
+
+                // Cargar servicios solo cuando se encuentra el paciente sin cita
+                if (this.paciente && this.citas.length === 0 && this.servicios.length === 0) {
+                    const resSrv = await fetch('/servicios', { headers: { 'Accept': 'application/json' } });
+                    if (resSrv.ok) this.servicios = await resSrv.json();
+                }
             } catch (e) {
                 this.citas   = [];
                 this.buscado = true;
             } finally {
                 this.buscando = false;
+            }
+        },
+
+        async registrarEnEspera() {
+            if (!this.paciente || !this.servicioId) return;
+            this.registrandoEspera = true;
+            this.errorEspera       = '';
+            try {
+                const hoy = new Date().toISOString().split('T')[0];
+                const res = await fetch('/lista-espera', {
+                    method:  'POST',
+                    headers: {
+                        'Accept':       'application/json',
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    },
+                    body: JSON.stringify({
+                        paciente_id:      this.paciente.id,
+                        servicio_id:      this.servicioId,
+                        fecha_solicitada: hoy,
+                    }),
+                });
+                if (res.ok) {
+                    this.esperaOk = true;
+                } else {
+                    const data = await res.json();
+                    this.errorEspera = data.message || 'Error al registrar en lista de espera.';
+                }
+            } catch (e) {
+                this.errorEspera = 'Error de conexión. Intenta de nuevo.';
+            } finally {
+                this.registrandoEspera = false;
             }
         },
 

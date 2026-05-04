@@ -93,4 +93,20 @@ class AppointmentController extends Controller
         $cita->update(['activo' => false]);
         return response()->json(['message' => 'Cita cancelada.']);
     }
+
+    // Citas de hoy marcadas como "No asistió" (estado_id=5) — slots reutilizables
+    public function liberadasHoy(): JsonResponse
+    {
+        $empresaId = auth()->user()->empresa_id;
+
+        $citas = Cita::where('empresa_id', $empresaId)
+            ->whereDate('fecha', today())
+            ->where('estado_id', 5)
+            ->where('activo', true)
+            ->with(['medico.usuario', 'servicio', 'paciente'])
+            ->orderBy('hora')
+            ->get();
+
+        return response()->json($citas);
+    }
 }

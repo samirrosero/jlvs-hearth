@@ -10,7 +10,7 @@
 
     {{-- Modal confirmación cancelar --}}
     <div x-show="modalCancelar" class="fixed inset-0 z-50 flex items-center justify-center" style="display:none">
-        <div class="fixed inset-0 bg-black/40 backdrop-blur-sm" @click="modalCancelar = false"
+        <div class="fixed inset-0 backdrop-blur-sm bg-white/10" @click="modalCancelar = false"
              x-transition:enter="transition-opacity duration-200"
              x-transition:enter-start="opacity-0"
              x-transition:enter-end="opacity-100"

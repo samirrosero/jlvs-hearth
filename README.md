@@ -1,8 +1,8 @@
 # JLVS Hearth
 
-Sistema de gestión clínica multi-tenant para IPS colombianas, construido con **Laravel 12**.
+Sistema de gestión clínica multi-tenant para IPS colombianas, construido con **Laravel 11**.
 
-Permite administrar pacientes, médicos, citas, historias clínicas, recetas médicas, signos vitales y auditoría, con aislamiento por empresa (`empresa_id`) y soporte para múltiples roles de usuario.
+Permite administrar pacientes, médicos, citas, historias clínicas, recetas médicas, signos vitales y auditoría, con aislamiento por empresa (`empresa_id`) y soporte para múltiples roles de usuario. Incluye módulos de importación masiva de usuarios, recepción y cobro presencial, y pago de telemedicina por parte del paciente.
 
 ---
 
@@ -10,13 +10,14 @@ Permite administrar pacientes, médicos, citas, historias clínicas, recetas mé
 
 | Capa | Tecnología |
 |------|-----------|
-| Backend | Laravel 12 (PHP 8.2+) |
+| Backend | Laravel 11 (PHP 8.2+) |
 | Frontend | Blade + Tailwind CSS 4 + Alpine.js |
 | Base de datos | MySQL 8.0+ |
 | Bundler | Vite 7 |
 | PDF | barryvdh/laravel-dompdf |
-| Excel | maatwebsite/excel |
-| Colas | Laravel Queue (database driver) |
+| Excel / CSV | maatwebsite/excel + phpoffice/phpspreadsheet |
+| Colas | Laravel Queue (sync/database driver) |
+| Chatbot IA | Ollama local — modelo `deepseek-v3.1:671b-cloud` |
 
 ---
 
@@ -305,12 +306,26 @@ El paciente `carlos.mendoza@email.com` tiene datos completos precargados:
 - Gestión de servicios y tarifas por portafolio
 - Reportes exportables en PDF y Excel
 - Auditoría de acciones (Resolución 1995/1999)
+- **Importación masiva** de pacientes, médicos, gestores y administradores desde XLSX/CSV con barra de progreso en tiempo real, envío automático de credenciales por correo y descarga de plantillas
+
+### Recepción y cobro (Gestor)
+- Búsqueda de paciente por cédula para ver sus citas del día
+- Registro de pago presencial (efectivo, tarjeta, transferencia, prepagada, seguro, empresarial)
+- Confirmación de llegada del paciente sin pago (seguros/prepagadas)
+- Monto sugerido automáticamente según el portafolio del paciente
+
+### Portal paciente
+- Consulta y seguimiento de citas
+- Agendamiento de cita con selección de médico, servicio y horario
+- **Pago de telemedicina** desde el portal antes de la consulta virtual
+- Historial clínico, órdenes médicas y certificados
 
 ### Onboarding y acceso
 - Registro público de nuevas IPS
 - Registro de afiliados (acceso directo) y empleadores (con aprobación)
-- Branding por IPS: logo, favicon, colores, imágenes de login
+- Branding por IPS: logo, favicon, colores, imágenes de login e iconos de sidebar personalizables
 - Flujo de aprobación de solicitudes de empleadores
+- Chatbot IA asistente (Ollama) con navegación entre pantallas
 
 ---
 
@@ -336,9 +351,40 @@ El paciente `carlos.mendoza@email.com` tiene datos completos precargados:
 | GET/PUT | `/admin/pacientes/{id}` | Ver y editar paciente |
 | GET/POST | `/admin/medicos` | Listado y creación de médicos |
 | GET/POST | `/admin/citas` | Gestión de citas |
-| GET | `/admin/branding` | Identidad visual de la IPS |
+| GET/POST | `/admin/branding` | Identidad visual de la IPS |
 | GET | `/admin/solicitudes` | Solicitudes de empleadores |
 | GET | `/admin/reportes` | Reportes PDF/Excel |
+| GET/POST | `/admin/importar` | Importación masiva (subir archivo) |
+| GET | `/admin/importar/{id}/progreso` | Barra de progreso en tiempo real |
+| GET | `/admin/importar/{id}/estado` | Endpoint JSON de progreso (polling) |
+| GET | `/admin/importar/{id}/resultados` | Resumen final con errores |
+| GET | `/admin/importar/historial` | Historial de importaciones |
+| GET | `/admin/importar/plantilla/{tipo}` | Descargar plantilla CSV |
+
+### Panel de gestor de citas (`/gestor/*`)
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| GET | `/gestor/dashboard` | Agenda semanal |
+| GET/POST | `/gestor/citas` | Nueva cita / ver todas |
+| GET | `/gestor/lista-espera` | Lista de espera |
+| GET/POST | `/gestor/pacientes` | Registrar / directorio de pacientes |
+| GET | `/gestor/recepcion` | Recepción — buscar paciente |
+| POST | `/gestor/recepcion/buscar` | Buscar citas del día por cédula |
+| GET/POST | `/gestor/recepcion/citas/{cita}/pago` | Registrar pago |
+| GET | `/gestor/recepcion/citas/{cita}/llegada` | Confirmar llegada sin pago |
+
+### Portal paciente (`/paciente/*`)
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| GET | `/paciente/dashboard` | Inicio del paciente |
+| GET | `/paciente/citas` | Mis citas |
+| GET/POST | `/paciente/citas/{cita}/pago` | Pagar cita de telemedicina |
+| GET | `/paciente/agendar` | Agendar nueva cita |
+| GET | `/paciente/historial` | Historial clínico |
+| GET | `/paciente/ordenes` | Órdenes médicas |
+| GET | `/paciente/certificados` | Certificados |
 
 ### API REST (`/api/*` o raíz con auth)
 
@@ -363,13 +409,15 @@ El paciente `carlos.mendoza@email.com` tiene datos completos precargados:
 jlvs-hearth/
 ├── app/
 │   ├── Http/
-│   │   ├── Controllers/       # Controladores REST y de vistas
+│   │   ├── Controllers/       # Controladores por rol (Admin/, Medico/, Gestor/, Paciente/)
 │   │   ├── Middleware/        # Auth, roles, tenant
 │   │   └── Requests/          # Form Requests con validación
-│   ├── Models/                # 23 modelos Eloquent
-│   └── Policies/              # Autorización por recurso
+│   ├── Models/                # 26+ modelos Eloquent
+│   ├── Jobs/                  # ProcesarImportacionMasiva (background)
+│   ├── Mail/                  # CredencialesImportacionMail
+│   └── Imports/               # UsuariosImport (Maatwebsite/Excel)
 ├── database/
-│   ├── migrations/            # 30+ migraciones ordenadas por timestamp
+│   ├── migrations/            # 35+ migraciones ordenadas por timestamp
 │   └── seeders/               # 8 seeders
 │       ├── DatabaseSeeder.php
 │       ├── RolSeeder.php
@@ -434,3 +482,9 @@ La documentación técnica vive en [`docs/`](docs/):
 
 **Imágenes o archivos no se ven**
 → Asegúrate de haber ejecutado `php artisan storage:link`.
+
+**La importación masiva queda en estado "pendiente" y no avanza**
+→ El Job se procesa en cola. Ejecuta `php artisan queue:work` (o `queue:listen`) en otra terminal. Si el driver de cola es `sync` en `.env` (`QUEUE_CONNECTION=sync`), el Job se ejecuta en la misma solicitud y no requiere worker.
+
+**Los correos de credenciales de importación no llegan**
+→ Verifica la configuración SMTP en `.env` y que el worker de cola esté corriendo. Revisa `php artisan queue:failed` para ver errores.

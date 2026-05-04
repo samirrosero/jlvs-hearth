@@ -131,7 +131,7 @@
     {{-- Modal de autorización --}}
     <template x-if="ordenSeleccionada">
         <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div class="fixed inset-0 bg-black/40 backdrop-blur-sm" @click="ordenSeleccionada = null"></div>
+            <div class="fixed inset-0 backdrop-blur-sm bg-white/10" @click="ordenSeleccionada = null"></div>
             <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-md z-10 p-6"
                  x-transition:enter="transition ease-out duration-200"
                  x-transition:enter-start="opacity-0 scale-95"

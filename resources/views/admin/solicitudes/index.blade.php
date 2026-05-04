@@ -181,7 +181,7 @@
 
     {{-- ── Modal rechazar ──────────────────────────────────────────────── --}}
     <div x-show="rechazarId !== null" x-cloak
-         class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+         class="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-white/10 p-4"
          @keydown.escape.window="rechazarId = null">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
             <h3 class="text-base font-bold text-gray-800 mb-1">Rechazar solicitud</h3>

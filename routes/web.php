@@ -197,6 +197,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/citas/{cita}', [AppointmentController::class, 'show'])->whereNumber('cita');
     });
     Route::middleware('role:administrador,gestor_citas')->group(function () {
+        Route::get('/citas/liberadas-hoy', [AppointmentController::class, 'liberadasHoy'])->name('citas.liberadas-hoy');
         Route::post('/citas', [AppointmentController::class, 'store']);
         Route::put('/citas/{cita}',    [AppointmentController::class, 'update'])->whereNumber('cita');
         Route::patch('/citas/{cita}',  [AppointmentController::class, 'update'])->whereNumber('cita');

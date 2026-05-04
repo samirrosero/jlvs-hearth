@@ -9,7 +9,7 @@ use Illuminate\Console\Command;
 class MarcarNoAsistio extends Command
 {
     protected $signature   = 'citas:marcar-no-asistio';
-    protected $description = 'Marca como "No asistió" las citas de hoy que llevan más de 15 min en Pendiente';
+    protected $description = 'Marca como "No asistió" las citas de hoy que llevan más de 5 min en Pendiente';
 
     public function handle(): int
     {
@@ -21,7 +21,7 @@ class MarcarNoAsistio extends Command
             return self::FAILURE;
         }
 
-        $corte = now()->subMinutes(15)->format('H:i:s');
+        $corte = now()->subMinutes(5)->format('H:i:s');
 
         $actualizadas = Cita::whereDate('fecha', today())
             ->where('activo', true)

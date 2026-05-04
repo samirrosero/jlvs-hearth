@@ -24,7 +24,9 @@ class PacienteCitasController extends Controller
         $citas = Cita::where('paciente_id', $pacienteId)
             ->with('medico.usuario', 'estado', 'servicio.precios', 'modalidad')
             ->when(request('estado_id'), fn ($q) => $q->where('estado_id', request('estado_id')))
-            ->orderByDesc('fecha')
+            ->orderByRaw('(DATE(fecha) >= CURDATE()) DESC')           // futuras/hoy primero
+            ->orderByRaw('CASE WHEN DATE(fecha) >= CURDATE() THEN fecha END ASC') // futuras: más cercana arriba
+            ->orderByDesc('fecha')                                     // pasadas: más reciente arriba
             ->paginate(10)
             ->withQueryString();
 

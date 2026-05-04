@@ -17,6 +17,41 @@
             Historial
         </a>
     </div>
+     {{-- Instrucciones generales --}}
+    <div class="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-8">
+        <h3 class="font-semibold text-blue-900 mb-3 flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            Instrucciones importantes
+        </h3>
+        <ul class="space-y-2 text-sm text-blue-800">
+            <li class="flex items-start gap-2">
+                <span class="font-bold">1.</span>
+                <span>Descarga la plantilla correspondiente y completa los datos.</span>
+            </li>
+            <li class="flex items-start gap-2">
+                <span class="font-bold">2.</span>
+                <span>Los campos <strong>identificacion</strong>, <strong>nombre_completo</strong> y <strong>correo</strong> son obligatorios.</span>
+            </li>
+            <li class="flex items-start gap-2">
+                <span class="font-bold">3.</span>
+                <span>Se generará una contraseña temporal automáticamente para cada usuario.</span>
+            </li>
+            <li class="flex items-start gap-2">
+                <span class="font-bold">4.</span>
+                <span>Los usuarios recibirán un correo con sus credenciales y link de acceso.</span>
+            </li>
+            <li class="flex items-start gap-2">
+                <span class="font-bold">5.</span>
+                <span>En el primer inicio de sesión, se pedirá cambiar la contraseña temporal.</span>
+            </li>
+            <li class="flex items-start gap-2">
+                <span class="font-bold">6.</span>
+                <span>Se omitirán registros con correos o identificaciones duplicadas.</span>
+            </li>
+        </ul>
+    </div>
 
     {{-- Alertas --}}
     @if(session('exito'))
@@ -184,7 +219,7 @@
         </div>
     </div>
 
-    {{-- Instrucciones generales --}}
+    {{-- Instrucciones generales
     <div class="bg-blue-50 border border-blue-200 rounded-xl p-6">
         <h3 class="font-semibold text-blue-900 mb-3 flex items-center gap-2">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -218,7 +253,7 @@
                 <span>Se omitirán registros con correos o identificaciones duplicadas.</span>
             </li>
         </ul>
-    </div>
+    </div> --}}
 
 </div>
 

@@ -183,7 +183,78 @@
                 </button>
                 <h1 class="text-lg font-semibold text-gray-800">@yield('page-title', 'Panel Gestor')</h1>
             </div>
-            <span class="text-sm text-gray-500">{{ now()->format('d M Y') }}</span>
+
+            <div class="flex items-center gap-4">
+                <span class="text-sm text-gray-500">{{ now()->format('d M Y') }}</span>
+
+                {{-- Notificación slots liberados --}}
+                <div x-data="notifSlots()" x-init="init()" class="relative">
+
+                    <button @click="abierto = !abierto"
+                            class="relative p-2 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                        </svg>
+                        <span x-show="slots.length > 0" style="display:none"
+                              x-text="slots.length"
+                              class="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-amber-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 animate-pulse">
+                        </span>
+                    </button>
+
+                    <div x-show="abierto" @click.outside="abierto = false" style="display:none"
+                         class="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-xl border border-gray-100 z-50 overflow-hidden">
+
+                        <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+                            <p class="text-sm font-semibold text-gray-800">Slots liberados hoy</p>
+                            <span x-show="slots.length > 0"
+                                  x-text="slots.length + ' disponible' + (slots.length !== 1 ? 's' : '')"
+                                  class="text-xs font-semibold bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full"
+                                  style="display:none"></span>
+                        </div>
+
+                        <template x-if="slots.length === 0">
+                            <div class="px-4 py-8 text-center">
+                                <svg class="w-8 h-8 text-gray-300 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                </svg>
+                                <p class="text-sm text-gray-400">Sin citas liberadas por ahora</p>
+                            </div>
+                        </template>
+
+                        <template x-if="slots.length > 0">
+                            <div class="divide-y divide-gray-50 max-h-64 overflow-y-auto">
+                                <template x-for="slot in slots" :key="slot.id">
+                                    <a href="{{ route('gestor.lista-espera') }}"
+                                       class="flex items-start gap-3 px-4 py-3 hover:bg-amber-50 transition-colors">
+                                        <span class="flex-shrink-0 flex items-center justify-center w-8 h-8 bg-amber-100 text-amber-600 rounded-full mt-0.5">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                            </svg>
+                                        </span>
+                                        <div class="min-w-0">
+                                            <p class="text-sm font-semibold text-gray-800 truncate"
+                                               x-text="slot.paciente?.nombre_completo ?? '—'"></p>
+                                            <p class="text-xs text-gray-500 truncate"
+                                               x-text="nombreMedico(slot) + ' · ' + formatHora(slot.hora)"></p>
+                                            <p class="text-xs text-amber-600 font-medium mt-0.5">No asistió — slot disponible</p>
+                                        </div>
+                                    </a>
+                                </template>
+                            </div>
+                        </template>
+
+                        <div class="px-4 py-3 border-t border-gray-100">
+                            <a href="{{ route('gestor.lista-espera') }}"
+                               class="text-xs text-blue-600 hover:text-blue-800 font-medium">
+                                Ir a lista de espera →
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </header>
 
         {{-- Flash messages --}}
@@ -230,6 +301,37 @@
     />
     @endif
 
+
+    <script>
+    function notifSlots() {
+        return {
+            slots:   [],
+            abierto: false,
+
+            async init() {
+                await this.cargar();
+                setInterval(() => this.cargar(), 30000);
+            },
+
+            async cargar() {
+                try {
+                    const res = await fetch('/citas/liberadas-hoy', { headers: { 'Accept': 'application/json' } });
+                    if (res.ok) this.slots = await res.json();
+                } catch (e) {}
+            },
+
+            nombreMedico(slot) {
+                return slot?.medico?.usuario?.nombre
+                    ?? slot?.medico?.usuario?.name
+                    ?? 'Dr. —';
+            },
+
+            formatHora(h) {
+                return h ? String(h).substring(0, 5) : '—';
+            },
+        };
+    }
+    </script>
 
     @stack('scripts')
 

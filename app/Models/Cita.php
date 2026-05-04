@@ -93,4 +93,10 @@ class Cita extends Model
     {
         return $this->hasMany(Pago::class, 'cita_id');
     }
+
+    // Una cita puede estar vinculada a un registro en lista de espera
+    public function listaEspera(): HasOne
+    {
+        return $this->hasOne(ListaEspera::class, 'cita_id');
+    }
 }

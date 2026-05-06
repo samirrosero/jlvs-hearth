@@ -1,0 +1,11 @@
+Archivo de Prueba,Nombre del Método,Tipo de Prueba,Descripción,Estado,Detalles Adicionales
+tests/Unit/GestorCitasTest.php,test_retorna_falso_cuando_el_horario_ya_esta_ocupado,Unitaria,Verifica que isHorarioDisponible retorna false cuando el horario ya está ocupado por otra cita,Pasa,Prueba la lógica de validación de disponibilidad de horarios
+tests/Unit/GestorCitasTest.php,test_retorna_true_cuando_hay_disponibilidad,Unitaria,Verifica que isHorarioDisponible retorna true cuando hay slots disponibles,Pasa,Prueba el caso positivo de disponibilidad
+tests/Unit/GestorCitasTest.php,test_retorna_falso_cuando_medico_no_tiene_horarios_configurados,Unitaria,Verifica que isHorarioDisponible retorna false cuando el médico no tiene horarios,Pasa,Prueba validación de existencia de horarios
+tests/Unit/GestorCitasTest.php,test_retorna_falso_cuando_servicio_tiene_duracion_diferente_y_no_cabe,Unitaria,Verifica que servicios con duración mayor no caben en horarios limitados,Pasa,Prueba lógica de duración de servicios (2 horas en horario de 2 horas)
+tests/Unit/GestorCitasTest.php,test_selecciona_medico_con_menor_carga_cuando_hay_varios_disponibles,Unitaria,Verifica que se selecciona el médico con menos citas para balance de carga,Pasa,Prueba algoritmo de distribución de carga entre médicos
+tests/Feature/GestorCitasControllerTest.php,test_un_gestor_no_puede_crear_cita_para_otra_empresa,Feature,Verifica que un gestor no puede crear citas para empresas diferentes,Pasa,Prueba seguridad multi-tenant
+tests/Feature/GestorCitasControllerTest.php,test_retorna_error_si_el_horario_del_medico_esta_ocupado,Feature,Verifica que se muestra error cuando se intenta agendar en horario ocupado,Pasa,Prueba validación de negocio en controlador
+tests/Feature/Paciente/PacienteCitasTest.php,test_un_paciente_puede_agendar_una_cita_correctamente,Feature,Verifica que un paciente puede agendar citas correctamente,Pasa,Prueba flujo completo de agendamiento paciente
+tests/Feature/Paciente/PacienteCitasTest.php,test_un_paciente_no_puede_agendar_cita_si_no_hay_medicos_disponibles,Feature,Verifica manejo de error cuando no hay médicos disponibles,Pasa,Prueba validación de disponibilidad
+tests/Feature/Paciente/PacienteCitasTest.php,test_un_paciente_no_puede_agendar_cita_en_fecha_pasada,Feature,Verifica que no se permiten citas en fechas pasadas,Pasa,Prueba validación de fechas

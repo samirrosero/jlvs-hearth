@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/accesibilidad.js'])
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
         *, *::before, *::after { box-sizing: border-box; }
         html, body { margin: 0; font-family: 'Inter', sans-serif; background: #f8fafc; color: #1e293b; }
@@ -179,7 +180,7 @@
         <a href="{{ route('home') }}" class="header-logo">
             <img src="{{ asset('img/logos/logo1.png') }}" alt="JLVS Hearth">
         </a>
-        <a href="{{ route('login') }}" class="header-login">Iniciar sesión</a>
+        <a href="{{ in_array(request()->getHost(), ['127.0.0.1', 'localhost']) ? route('login') : route('home') }}" class="header-login">Iniciar sesión</a>
     </header>
 
     <section class="hero">

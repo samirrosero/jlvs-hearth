@@ -23,22 +23,24 @@ class ChatbotController extends Controller
         $datos   = $this->recopilarDatos($rol, $mensaje);
         $prompt  = $this->buildPrompt($rol, $datos);
 
-        $respuesta = Http::timeout(60)->post('http://localhost:11434/api/chat', [
-            'model'  => 'deepseek-v3.1:671b-cloud',
-            'stream' => false,
-            'messages' => [
-                ['role' => 'system', 'content' => $prompt],
-                ['role' => 'user',   'content' => $request->input('mensaje')],
-            ],
-        ]);
+        $respuesta = Http::timeout(30)
+            ->withHeaders(['Authorization' => 'Bearer ' . env('GROQ_API_KEY')])
+            ->post('https://api.groq.com/openai/v1/chat/completions', [
+                'model'    => 'llama-3.3-70b-versatile',
+                'messages' => [
+                    ['role' => 'system', 'content' => $prompt],
+                    ['role' => 'user',   'content' => $request->input('mensaje')],
+                ],
+                'max_tokens' => 1024,
+            ]);
 
         if ($respuesta->failed()) {
             return response()->json([
-                'error' => 'No se pudo conectar con el asistente. Asegúrate de que Ollama esté corriendo.',
+                'error' => 'No se pudo conectar con el asistente.',
             ], 503);
         }
 
-        $texto = $respuesta->json('message.content') ?? 'Sin respuesta del modelo.';
+        $texto = $respuesta->json('choices.0.message.content') ?? 'Sin respuesta del modelo.';
 
         return response()->json(['respuesta' => $texto]);
     }
